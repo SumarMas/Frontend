@@ -16,17 +16,8 @@ export class ButtonComponent {
   @Input() variant: Variant = 'primary';
   @Input() outline: boolean = false;
 
-  readonly variantMap = {
-    primary: 'btn-primary',
-    secondary: 'btn-secondary',
-    danger: 'btn-danger',
-    success: 'btn-success',
-    warning: 'btn-warning',
-    error: 'btn-error',
-  } as const satisfies Record<Variant, string>;
-
   get classes(): string[] {
-    const classes = ['btn', this.variantMap[this.variant] ?? 'btn-primary'];
+    const classes = ['btn', `btn-${this.variant}`];
     if (this.outline) classes.push('btn-outline');
     return classes;
   }
