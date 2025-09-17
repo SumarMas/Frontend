@@ -29,6 +29,7 @@ export class InputComponent {
 
 
   get base(): 'input' | 'file-input' { return this.type === 'file' ? 'file-input' : 'input'; }
+  
   get classes(): string[] {
     const b = this.base; const out = [b, `${b}-${this.variant}`];
     if (this.block) out.push('w-full');
