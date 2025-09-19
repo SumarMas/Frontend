@@ -1,0 +1,18 @@
+<div class="join join-vertical w-full max-w-xl mx-auto" [ngClass]="bgClass">
+    @for (c of obj; track $index) {
+    <div class="collapse collapse-arrow join-item border border-base-300">
+        <input [type]="singleOpen ? 'radio' : 'checkbox'" name="faq" [checked]="isOpen($index)" class="peer"
+            (change)="onToggle($index, $event.target.checked)" />
+
+        <!-- Título -->
+        <div class="collapse-title text-lg font-medium transition-colors duration-200" [ngStyle]="activeStyle($index)">
+            {{ c.title }}
+        </div>
+
+        <!-- Contenido -->
+        <div class="collapse-content transition-colors duration-200" [ngStyle]="activeStyle($index)">
+            <p class="leading-relaxed">{{ c.content }}</p>
+        </div>
+    </div>
+    }
+</div>
