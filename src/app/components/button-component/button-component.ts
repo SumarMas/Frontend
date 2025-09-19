@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'success' | 'warning' | 'error' | 'white' | 'violet';
+type Size = 'sm' | 'md' | 'lg' | 'xl';
 
 @Component({
   selector: 'app-button-component',
@@ -16,9 +17,10 @@ export class ButtonComponent {
   @Input() variant: Variant = 'primary';
   @Input() outline: boolean = false;
   @Input() rounded: boolean = false;
+  @Input() size: Size = 'md';
 
   get classes(): string[] {
-    const classes = ['btn', `btn-${this.variant}`];
+    const classes = ['btn', `btn-${this.variant}`, `btn-${this.size}`];
     if (this.outline) classes.push('btn-outline');
     if (this.rounded) classes.push('btn-pill');
     return classes;

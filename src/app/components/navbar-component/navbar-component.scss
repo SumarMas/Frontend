@@ -5,21 +5,11 @@
     @apply text-3xl font-bold bg-gradient-to-bl from-violet-500 to-fuchsia-500 bg-clip-text text-transparent
 }
 
-// .nav-link{
-//     @apply  font-medium text-gray-700 flex gap-10;
 
-//     li{
-//         @apply hover:text-violet-500 
-//     }
-
-//     &.active{
-//         @apply text-violet-500;
-//     }
-// }
 .nav-links { @apply flex gap-10 items-center list-none; }
 
 .nav-a { @apply font-medium text-gray-700 transition-colors; }
+
 .nav-a:hover { @apply text-violet-500; }
 
-/* se aplica cuando la ruta del <a> está activa */
 .nav-a.active { @apply text-violet-500 font-semibold; }
