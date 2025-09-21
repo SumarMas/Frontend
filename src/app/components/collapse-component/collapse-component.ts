@@ -11,7 +11,7 @@ type bg = 'dark' | 'light';
   styleUrl: './collapse-component.scss'
 })
 export class CollapseComponent {
-  @Input() obj: CollapseObj[] = [{ title: 'Title', content: 'Content', check: false }, { title: 'Title', content: 'Content', check: false }];
+  @Input() obj: CollapseObj[] = [];
   @Input() bg: bg = 'light';
   @Input() singleOpen: boolean = true;
   @Input() rounded: boolean = false;
