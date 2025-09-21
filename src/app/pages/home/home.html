@@ -27,7 +27,7 @@
                 <div class="card-body items-center text-center">
                     <p class="text-3xl mt-2">{{ card.icon }}</p>
                     <h3 class="card-title text-lg">{{ card.title }}</h3>
-                    
+
                 </div>
             </div>
             }
@@ -36,14 +36,18 @@
 </section>
 
 <!-- preguntas frecuentes -->
-<!-- <section class="bg-base-100 py-16">
-    <section class="bg-base-100 py-16">
-  <app-collapse-component
-    bg="light"
-    [activeBgColor]="'rgba(102, 126, 234, 0.9)'"
-    [activeTextColor]="'#fff'">
-  </app-collapse-component>
+<section class="bg-base-100 py-16">
+    <div class="max-w-6xl mx-auto px-4 md:px-8 text-center">
+        <h2 class="text-3xl md:text-4xl font-bold">Preguntas frecuentes</h2>
+        <p class="text-base md:text-lg mt-4 text-gray-600">
+            Resolvemos las dudas más comunes sobre cómo funciona Sumar+.
+        </p>
+
+        <!-- collapse -->
+        <div class="mt-10">
+            <app-collapse-component [obj]="collapseInfo" bg="light" [activeBgColor]="'rgba(102, 126, 234, 0.9)'"
+                [activeTextColor]="'#fff'">
+            </app-collapse-component>
+        </div>
+    </div>
 </section>
-
-</section> -->
-
