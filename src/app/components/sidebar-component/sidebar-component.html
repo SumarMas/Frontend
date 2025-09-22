@@ -1,0 +1,15 @@
+<!-- SIDEBAR -->
+<aside class="sidebar" [ngClass]="open ? 'menu-toggle' : ''">
+    <ul class="space-y-2">
+        @for (item of buttons; track $index) {
+        <li>
+            <a class="side-button">
+                <i class="">{{ item.icon }}</i>
+                {{ item.title }}
+            </a>
+        </li>
+        }
+    </ul>
+    <button (click)="toggle()">Toggle Menu</button>
+</aside>
+

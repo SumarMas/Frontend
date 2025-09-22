@@ -1,0 +1,16 @@
+@import 'tailwindcss';
+
+.sidebar{
+    @apply bg-gray-50 w-15 p-2 min-h-screen
+    transition-all duration-400 ease-out overflow-hidden
+}
+
+.sidebar.menu-toggle{
+    @apply w-65
+}
+
+.side-button{
+    @apply flex content-center
+    gap-4 p-2 rounded-2xl whitespace-nowrap overflow-hidden shadow-2xl
+    bg-white text-violet-500 font-semibold hover:bg-gray-50 cursor-pointer
+}
