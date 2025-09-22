@@ -1,7 +1,44 @@
-<ul class="steps">
-    @for (step of steps; track $index; let i = $index) {
-    <li class="step cursor-pointer" [ngClass]="i <= selected ? activeStepClass : ''" (click)="selected = i">
-        {{ step.title }}
-    </li>
-    }
-</ul>
+<section class="py-10">
+    <div class="max-w-5xl mx-auto grid gap-8 grid-cols-1 lg:grid-cols-2 px-4">
+        <!-- izquierda -> pasos -->
+        <div class="flex justify-center ">
+            <ul class="steps steps-vertical">
+                @for (step of steps; track $index; let i = $index) {
+                <li class="step cursor-pointer" [ngClass]="i <= selected ? activeStepClass : ''"
+                    (click)="changeStep(i)">
+                    {{ step.title }}
+                </li>
+                }
+            </ul>
+        </div>
+
+        <!-- derecha -> imagen, progreso y texto -->
+        <div>
+            <!-- imagen -->
+            <div class="rounded-xl overflow-hidden  flex items-center justify-center">
+                @if (steps[selected]?.img) {
+                <img [src]="steps[selected].img" alt=""
+                    class="max-h-72 max-w-md object-cover mx-auto rounded-lg transition-all duration-300"
+                    (mouseenter)="pause()" (mouseleave)="resume()">
+                } @else {
+                <div class="p-10 text-center opacity-70">Sin imagen</div>
+                }
+            </div>
+
+            <!-- barra de progreso -->
+            <div class="">
+                <progress class="progress w-full" [ngClass]="progressClass" [value]="progress" max="100"></progress>
+            </div>
+
+            <!-- texto -->
+            @if (steps[selected]?.subtitle || steps[selected]?.body) {
+            <div class="card bg-base-200 shadow-sm mt-3">
+                <div class="card-body">
+                    <h3 class="card-title">{{ steps[selected].subtitle || steps[selected].title }}</h3>
+                    @if (steps[selected]?.body) { <p class="leading-relaxed">{{ steps[selected].body }}</p> }
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+</section>
