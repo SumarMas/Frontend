@@ -4,7 +4,7 @@ import { Home } from './pages/home/home';
 
 export const routes: Routes = [
     { pathMatch: 'full', path: '', redirectTo: 'home' },
-    { path: 'home', component: Home },
+    { path: 'home', title: 'Sumar+', component: Home },
     
     // { path: 'login' },
     // { path: 'register' },
