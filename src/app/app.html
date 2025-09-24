@@ -1,5 +1,6 @@
 <app-navbar-component></app-navbar-component>
-<app-sidebar-component></app-sidebar-component>
-<router-outlet />
+@if(sidebarService.isLoggedIn()) {
+    <app-sidebar-component></app-sidebar-component>
+}
 
-<app-footer-component></app-footer-component>
+<router-outlet />

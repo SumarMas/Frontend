@@ -2,12 +2,13 @@ import { Component } from '@angular/core';
 import { ButtonComponent } from "../../components/button-component/button-component";
 import { CollapseComponent } from "../../components/collapse-component/collapse-component";
 import { StepsShowcaseComponent } from "../../components/steps-showcase-component/steps-showcase-component";
+import { FooterComponent } from "../../components/footer-component/footer-component";
 
 type Step = { title: string; status: 'completed' | 'failed' | 'pending' };
 
 @Component({
   selector: 'app-home',
-  imports: [ButtonComponent, CollapseComponent, StepsShowcaseComponent],
+  imports: [ButtonComponent, CollapseComponent, StepsShowcaseComponent, FooterComponent],
   templateUrl: './home.html',
   styleUrl: './home.scss'
 })
@@ -42,23 +43,23 @@ export class Home {
       title: 'Crear cuenta',
       subtitle: 'Donante u ONG',
       body: 'Registrate gratis en Sumar+ con tu email y contraseña. Si tenés una ONG podés validarla luego.',
-      img: '/user-create.jpeg'
+      img: 'images/user-create.jpeg'
     },
     {
       title: 'Verificar ONG',
       subtitle: 'Solo organizaciones',
       body: 'Subí la documentación necesaria en PDF o imágenes. Un administrador revisará y validará tu ONG.',
-      img: '/verify-documents.jpeg'
+      img: 'images/verify-documents.jpeg'
     },
     {
       title: 'Publicar campaña',
       body: 'Definí un título, meta económica, fecha de cierre, imágenes y etiquetas para difundir tu causa.',
-      img: '/publish-campaing.jpeg'
+      img: 'images/publish-campaing.jpeg'
     },
     {
       title: 'Recibir donaciones',
       body: 'Comparte tu campaña. Los donantes podrán apoyarla de forma segura y transparente.',
-      img: '/donations.jpeg'
+      img: 'images/donations.jpeg'
     },
   ];
 }
