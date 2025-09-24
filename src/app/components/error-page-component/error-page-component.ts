@@ -24,22 +24,22 @@ export class ErrorPageComponent {
     401: {
       title: 'No autorizado',
       subtitle: 'Lo sentimos, no tienes permiso para acceder a esta página.',
-      image: '/401robot.png'
+      image: '/error/401robot.png'
     },
     403: {
       title: 'Acceso denegado',
       subtitle: 'No contás con permisos suficientes.',
-      image: '/401robot.png'
+      image: '/error/403robot.png'
     },
     404: {
       title: 'Página no encontrada',
       subtitle: 'Lo sentimos, la página que buscas no existe.',
-      image: '/404robot.png'
+      image: '/error/404robot.png'
     },
     500: {
       title: 'Error del servidor',
       subtitle: 'Actualmente no podemos procesar tu solicitud, intenta de nuevo más tarde.',
-      image: '/500robot.png'
+      image: '/error/500robot.png'
     }
   };
 
