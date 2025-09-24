@@ -1,19 +1,26 @@
-import { Component } from '@angular/core';
+import { Component, inject, input } from '@angular/core';
 import { Sidebuttons } from '../../models/nav-item';
 import { NgClass } from '@angular/common';
+import { SidebarService } from '../../services/sidebar-service';
+import { IconComponent } from "../icon-component/icon-component";
+
+type Role = 'ADMIN' | 'DONOR' | 'ORGANIZATION';
 
 @Component({
   selector: 'app-sidebar-component',
-  imports: [NgClass],
+  imports: [NgClass, IconComponent],
   templateUrl: './sidebar-component.html',
   styleUrl: './sidebar-component.scss'
 })
 export class SidebarComponent {
   buttons = Sidebuttons;
+  roles = input<Role[]>(['DONOR', 'ORGANIZATION']);
 
-  open = false;
-
-  toggle(){
-    this.open = !this.open;
-  }
+  sidebarService = inject(SidebarService);
+  
+  getButtonsForRoles(): typeof Sidebuttons {
+  return this.buttons.filter(button =>
+    button.roles.some(role => this.roles().includes(role))
+  );
+}
 }

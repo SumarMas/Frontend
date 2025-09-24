@@ -1,16 +1,41 @@
 @import 'tailwindcss';
 
-.sidebar{
-    @apply bg-gray-50 w-15 p-2 min-h-screen
-    transition-all duration-400 ease-out overflow-hidden
+.sidebar {
+    @apply bg-white w-15 p-2 h-screen transition-all duration-400 ease-out overflow-hidden overflow-y-auto pt-20;
 }
 
-.sidebar.menu-toggle{
-    @apply w-65
+.sidebar.menu-toggle {
+    @apply w-55;
 }
 
-.side-button{
-    @apply flex content-center
-    gap-4 p-2 rounded-2xl whitespace-nowrap overflow-hidden shadow-2xl
-    bg-white text-violet-500 font-semibold hover:bg-gray-50 cursor-pointer
+.side-button {
+    @apply w-full flex items-center gap-4 p-2
+    shadow-md rounded-2xl whitespace-nowrap overflow-hidden cursor-pointer;
+
+    &.violet-variant {
+        @apply bg-violet-500 text-white font-semibold hover:bg-violet-600;
+    }
+
+    &.white-variant {
+        @apply bg-white text-violet-500 font-semibold hover:bg-gray-50;
+    }
+}
+
+//icono arrow a la derecha
+.side-button .caret {
+    @apply ml-auto transition-transform duration-200;
+}
+
+//submeno sangria y espacio entre botones
+.submenu {
+    @apply mt-1 space-y-1;
+}
+
+//callapse animado
+.collapse-box {
+    @apply transition-all duration-300 ease-in-out max-h-0 opacity-0;
+}
+
+.collapse-box.is-open {
+    @apply max-h-[1000px] opacity-100;
 }
