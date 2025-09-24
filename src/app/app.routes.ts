@@ -15,6 +15,6 @@ export const routes: Routes = [
 
 
     //paginas de error
-    { path: '401', component: ErrorPageComponent, data: { code: 401 } },
-    { path: '404', component: ErrorPageComponent, data: { code: 404 } }
+    { path: '401', title: 'Error 401', component: ErrorPageComponent, data: { code: 401 } },
+    { path: '404', title: 'Error 404', component: ErrorPageComponent, data: { code: 404 } }
 ];
