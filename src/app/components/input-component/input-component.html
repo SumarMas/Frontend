@@ -29,13 +29,14 @@
     <input class="grow" [type]="inputType" [formControl]="control" [placeholder]="placeholder" [disabled]="disabled" />
 
     @if (type === 'password') {
-    <button type="button" class="btn btn-ghost btn-xs" (click)="showPassword = !showPassword"
+    <button type="button" class="cursor-pointer" (click)="showPassword = !showPassword"
         [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
-        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-            <path stroke-linecap="round" stroke-linejoin="round"
-                d="M2.25 12s3.75-7.5 9.75-7.5S21.75 12 21.75 12s-3.75 7.5-9.75 7.5S2.25 12 2.25 12Z" />
-            <circle cx="12" cy="12" r="3.25" />
-        </svg>
+        @if(showPassword) {
+            <icon class="text-gray-300" name="visibility"/>
+        }
+        @else {
+            <icon class="text-gray-300" name="visibility-off"/>
+        }
     </button>
     }
 </label>
