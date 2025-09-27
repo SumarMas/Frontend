@@ -1,12 +1,13 @@
 import { Routes } from '@angular/router';
 import { ErrorPageComponent } from './components/error-page-component/error-page-component';
 import { Home } from './pages/home/home';
+import { Login } from './pages/login/login';
 
 export const routes: Routes = [
     { pathMatch: 'full', path: '', redirectTo: 'home' },
     { path: 'home', title: 'Sumar+', component: Home },
-    
-    // { path: 'login' },
+
+    { path: 'login', title: 'Iniciar sesión', component: Login },
     // { path: 'register' },
     // { path: 'campaigns' },
     // { path: 'organizations' },
