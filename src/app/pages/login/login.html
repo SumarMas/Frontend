@@ -1,0 +1,26 @@
+<section class="min-h-screen flex items-center justify-center bg-sumar">
+    <div class="cnt">
+        <div class="text-center">
+            <div class="logo">Sumar+</div>
+            <p class="text-lg">¡Bienvenido de vuelta!</p>
+            <p class="text-sm text-gray-400">Inicia sesión para continuar apoyando causas solidarias</p>
+        </div>
+        <form class="flex flex-col gap-4 w-75" [formGroup]="loginForm">
+            <div>
+                <label>Email</label>
+                <app-input-component [type]="'text'" [control]="email" [block]="true" name="email"></app-input-component>
+            </div>
+            <div>
+                <label>Contraseña</label>
+                <app-input-component [type]="'password'"
+                    [control]="password" [block]="true"></app-input-component>
+            </div>
+
+            <app-button-component class="w-full" label="Ingresar" variant="violet" [rounded]="true"
+                [block]="true"></app-button-component>
+
+            <hr class="border-t-1 border-gray-300">
+            <p class="text-sm text-center">¿No tienes una cuenta? <a routerLink="/register">Regístrate</a></p>
+        </form>
+    </div>
+</section>

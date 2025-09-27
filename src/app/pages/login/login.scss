@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+.cnt { @apply flex flex-col justify-center items-center py-10 px-2 gap-6 w-100 rounded-3xl shadow-2xl bg-white; }
+
+.logo { @apply text-3xl font-bold bg-gradient-to-bl from-violet-500 to-fuchsia-500 bg-clip-text text-transparent mb-3; }
+
+a{ @apply text-violet-600 cursor-pointer; }
