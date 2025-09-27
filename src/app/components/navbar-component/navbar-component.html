@@ -1,0 +1,23 @@
+<div class="navbar bg-white fixed z-50 shadow ">
+    @if (sidebarService.isLoggedIn()) {
+    <button class="btn btn-square btn-ghost mr-4" (click)="sidebarService.toggle()">
+        <!-- menu hamburguesa -->
+        <icon name="menu" class="text-gray-500" size="lg" />
+
+    </button>
+    }
+
+    <div class="flex justify-between w-full pl-4">
+        <a href="" class="logo">Sumar+</a>
+
+        <ul class="nav-links">
+            <li><a class="nav-a" routerLink="/home" routerLinkActive="active">Inicio</a></li>
+            <li><a class="nav-a" routerLink="/campanas" routerLinkActive="active">Campañas</a></li>
+            <li><a class="nav-a" routerLink="/organizaciones" routerLinkActive="active">Organizaciones</a></li>
+        </ul>
+
+        <div class="actions">
+            <app-button-component label="Iniciar Sesión" variant="violet" [rounded]="true" (click)="login()" />
+        </div>
+    </div>
+</div>

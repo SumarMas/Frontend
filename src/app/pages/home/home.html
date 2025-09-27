@@ -1,0 +1,61 @@
+<!-- hero -->
+<section class="hero h-170 flex flex-col items-center justify-center text-white">
+    <h1 class="text-6xl font-bold drop-shadow-xl">Bienvenido a Sumar+</h1>
+    <p class="text-2xl mt-4">Tu plataforma para la gestión de campañas y organizaciones.</p>
+    <app-button-component class="mt-8" label="Comenzar" variant="white" size="xl"
+        [rounded]="true"></app-button-component>
+</section>
+
+<!-- quienes somos -->
+<section class="bg-base-300">
+    <div class="max-w-6xl mx-auto px-4 md:px-8 py-16 md:py-20">
+        <div class="text-center">
+            <h2 class="text-3xl md:text-4xl font-bold">¿Quiénes somos?</h2>
+            <p class="text-base md:text-xl mt-6 mx-auto max-w-3xl leading-relaxed text-balance">
+                En Sumar+ creemos en el poder de la comunidad. Nuestra misión es brindar a las ONGs
+                un espacio digital seguro y accesible para crear campañas solidarias, y a los donantes una
+                experiencia simple y confiable para apoyar causas que cambian vidas.
+            </p>
+        </div>
+
+        <!-- cards -->
+        <div class="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 justify-items-center">
+            @for (card of cardInfo; track $index) {
+            <div class="card bg-base-100 w-full max-w-xs shadow-xl
+               transform transition duration-300 ease-out
+               hover:scale-105 hover:-translate-y-1 hover:shadow-2xl">
+                <div class="card-body items-center text-center">
+                    <p class="text-3xl mt-2">{{ card.icon }}</p>
+                    <h3 class="card-title text-lg">{{ card.title }}</h3>
+
+                </div>
+            </div>
+            }
+        </div>
+    </div>
+</section>
+
+<!-- preguntas frecuentes -->
+<section class="bg-base-100 py-16">
+    <div class="max-w-6xl mx-auto px-4 md:px-8 text-center">
+        <h2 class="text-3xl md:text-4xl font-bold">Preguntas frecuentes</h2>
+        <p class="text-base md:text-lg mt-4 text-gray-600">
+            Resolvemos las dudas más comunes sobre cómo funciona Sumar+.
+        </p>
+
+        <!-- collapse -->
+        <div class="mt-10">
+            <app-collapse-component [obj]="collapseInfo" bg="light" [activeBgColor]="'rgba(143, 128, 243)'"
+                [activeTextColor]="'#fff'">
+            </app-collapse-component>
+        </div>
+    </div>
+</section>
+
+<!-- como funciona -->
+<section class="bg-base-200 py-16">
+    <h2 class="text-3xl text-center md:text-4xl font-bold">¿Cómo funciona?</h2>
+    <app-steps-showcase-component [steps]="steps" title="Cómo funciona" accent="primary"></app-steps-showcase-component>
+</section>
+
+<app-footer-component></app-footer-component>

@@ -1,0 +1,7 @@
+<ul class="steps">
+    @for (step of steps(); track $index; let i = $index) {
+    <li class="step" [attr.data-content]="dataContent(i, step)" [ngClass]="stepClass(i, step)">
+        {{ step.title }}
+    </li>
+    }
+</ul>

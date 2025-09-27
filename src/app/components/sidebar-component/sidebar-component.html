@@ -1,0 +1,46 @@
+<aside class="sidebar fixed left-0 top-0 z-40 shadow-[4px_0_8px_-2px_rgba(0,0,0,0.1)] flex flex-col"
+    [ngClass]="sidebarService.isOpen() ? 'sidebar menu-toggle' : ''">
+    <ul class="space-y-2">
+        @for (item of getButtonsForRoles(); track $index) {
+        @if (item.children) {
+        <li>
+            <!-- padre, solo toggle-->
+            <button type="button" class="side-button violet-variant" (click)="item.open = !item.open"
+                [attr.aria-expanded]="item.open">
+                <icon [name]="item.icon ?? ''" class="text-white" />
+                <span class="truncate">{{ item.title }}</span>
+                <icon name="arrow-drop-down" class="caret text-white" [ngClass]="{ 'rotate-180': item.open }" />
+            </button>
+
+            <!-- childs -->
+            <ul class="collapse-box submenu" [class.is-open]="item.open">
+                @for (child of item.children; track $index) {
+                <li>
+                    <a class="side-button white-variant">
+                        <icon [name]="child.icon ?? ''" class="text-violet-500" />
+                        <span class="truncate">{{ child.title }}</span>
+                    </a>
+                </li>
+                }
+            </ul>
+        </li>
+        } @else {
+        <li>
+            <!-- botn padre sin childs -->
+            <a class="side-button violet-variant">
+                <icon [name]="item.icon ?? ''" class="text-white" />
+                <span class="truncate">{{ item.title }}</span>
+            </a>
+        </li>
+        }
+        }
+    </ul>
+
+    <div class="mt-auto">
+        <a class="side-button violet-variant">
+            <icon name="logout" class="text-white" />
+            <span>Cerrar sesión</span>
+        </a>
+
+    </div>
+</aside>
