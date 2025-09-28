@@ -1,7 +1,8 @@
 import { Component, inject } from '@angular/core';
 import { InputComponent } from "../../components/input-component/input-component";
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonComponent } from "../../components/button-component/button-component";
+import { FormValidatorService } from '../../services/form-validator-service';
 
 @Component({
   selector: 'app-login',
@@ -13,11 +14,12 @@ export class Login {
   loginForm : FormGroup;
 
   private fb = inject(FormBuilder);
+  formValidator = inject(FormValidatorService);
 
   constructor() {
     this.loginForm = this.fb.group({
-      email: new FormControl(''),
-      password: new FormControl('')
+      email: new FormControl('', [Validators.email, Validators.required]),
+      password: new FormControl('', [Validators.required])
     });
   }
 

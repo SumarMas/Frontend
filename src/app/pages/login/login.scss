@@ -5,3 +5,7 @@
 .logo { @apply text-3xl font-bold bg-gradient-to-bl from-violet-500 to-fuchsia-500 bg-clip-text text-transparent mb-3; }
 
 a{ @apply text-violet-600 cursor-pointer; }
+
+.error-label {
+    @apply text-red-600 text-sm;
+}

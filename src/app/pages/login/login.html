@@ -8,16 +8,23 @@
         <form class="flex flex-col gap-4 w-75" [formGroup]="loginForm">
             <div>
                 <label>Email</label>
-                <app-input-component [type]="'text'" [control]="email" [block]="true" name="email"></app-input-component>
+                <app-input-component [type]="'text'" [control]="email" [block]="true"
+                    name="email"></app-input-component>
+                @if(formValidator.showError(loginForm, 'email')){
+                <p class="error-label">{{formValidator.getValidationMessage(loginForm, 'email')}}</p>
+                }
             </div>
             <div>
                 <label>Contraseña</label>
-                <app-input-component [type]="'password'"
-                    [control]="password" [block]="true"></app-input-component>
+                <app-input-component [type]="'password'" [control]="password" [block]="true"
+                    name="password"></app-input-component>
+                @if(formValidator.showError(loginForm, 'password')){
+                <p class="error-label">{{formValidator.getValidationMessage(loginForm, 'password')}}</p>
+                }
             </div>
 
             <app-button-component class="w-full" label="Ingresar" variant="violet" [rounded]="true"
-                [block]="true"></app-button-component>
+                [block]="true" [disabled]="!loginForm.valid"></app-button-component>
 
             <hr class="border-t-1 border-gray-300">
             <p class="text-sm text-center">¿No tienes una cuenta? <a routerLink="/register">Regístrate</a></p>
