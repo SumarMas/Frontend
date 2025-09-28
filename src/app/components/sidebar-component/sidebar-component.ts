@@ -3,12 +3,13 @@ import { Sidebuttons } from '../../models/nav-item';
 import { NgClass } from '@angular/common';
 import { SidebarService } from '../../services/sidebar-service';
 import { IconComponent } from "../icon-component/icon-component";
+import { RouterLink } from '@angular/router';
 
 type Role = 'ADMIN' | 'DONOR' | 'ORGANIZATION';
 
 @Component({
   selector: 'app-sidebar-component',
-  imports: [NgClass, IconComponent],
+  imports: [NgClass, IconComponent, RouterLink],
   templateUrl: './sidebar-component.html',
   styleUrl: './sidebar-component.scss'
 })
