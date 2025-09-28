@@ -1,6 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { ButtonComponent } from "../button-component/button-component";
-import { RouterLinkActive, RouterLink } from '@angular/router';
+import { RouterLinkActive, RouterLink, Router } from '@angular/router';
 import { SidebarService } from '../../services/sidebar-service';
 import { IconComponent } from "../icon-component/icon-component";
 
@@ -12,8 +12,13 @@ import { IconComponent } from "../icon-component/icon-component";
 })
 export class NavbarComponent {
   sidebarService = inject(SidebarService);
+  private router = inject(Router);
 
   login(){
     this.sidebarService.isLoggedIn.set(!this.sidebarService.isLoggedIn());
+  }
+
+  navigate(url: string) {
+    this.router.navigate([url]);
   }
 }

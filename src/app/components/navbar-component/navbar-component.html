@@ -1,4 +1,4 @@
-<div class="navbar bg-white fixed z-50 shadow ">
+<div class="navbar bg-white fixed z-50 shadow">
     @if (sidebarService.isLoggedIn()) {
     <button class="btn btn-square btn-ghost mr-4" (click)="sidebarService.toggle()">
         <!-- menu hamburguesa -->
@@ -17,7 +17,7 @@
         </ul>
 
         <div class="actions">
-            <app-button-component label="Iniciar Sesión" variant="violet" [rounded]="true" (click)="login()" />
+            <app-button-component label="Iniciar Sesión" variant="violet" [rounded]="true" (click)="navigate('/login')" />
         </div>
     </div>
 </div>
