@@ -1,23 +1,27 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { ButtonComponent } from "../../components/button-component/button-component";
 import { CollapseComponent } from "../../components/collapse-component/collapse-component";
 import { StepsShowcaseComponent } from "../../components/steps-showcase-component/steps-showcase-component";
 import { FooterComponent } from "../../components/footer-component/footer-component";
+import { Router } from '@angular/router';
+import { IconComponent } from "../../components/icon-component/icon-component";
 
 type Step = { title: string; status: 'completed' | 'failed' | 'pending' };
 
 @Component({
   selector: 'app-home',
-  imports: [ButtonComponent, CollapseComponent, StepsShowcaseComponent, FooterComponent],
+  imports: [ButtonComponent, CollapseComponent, StepsShowcaseComponent, FooterComponent, IconComponent],
   templateUrl: './home.html',
   styleUrl: './home.scss'
 })
 export class Home {
 
+  private router = inject(Router);
+
   cardInfo: { title: string, icon: string }[] = [
-    { title: 'Seguridad', icon: '🔒' },
-    { title: 'Transparencia', icon: '🔍' },
-    { title: 'Impacto Social', icon: '🌍' }
+    { title: 'Seguridad', icon: 'lock' },
+    { title: 'Transparencia', icon: 'search-insights' },
+    { title: 'Impacto Social', icon: 'diversity-1' }
   ]
 
   collapseInfo = [

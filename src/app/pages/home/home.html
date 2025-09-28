@@ -25,7 +25,7 @@
                transform transition duration-300 ease-out
                hover:scale-105 hover:-translate-y-1 hover:shadow-2xl">
                 <div class="card-body items-center text-center">
-                    <p class="text-3xl mt-2">{{ card.icon }}</p>
+                    <icon [name]="card.icon" [size]="'lg'" class="text-purple-500"></icon>
                     <h3 class="card-title text-lg">{{ card.title }}</h3>
 
                 </div>
