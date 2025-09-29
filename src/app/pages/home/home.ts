@@ -66,4 +66,12 @@ export class Home {
       img: 'images/donations.jpeg'
     },
   ];
+
+  navigate(url: string, data?: any) {
+    if (data !== undefined) {
+      this.router.navigate([url], { state: data });
+    } else {
+      this.router.navigate([url]);
+    }
+  }
 }
