@@ -4,6 +4,7 @@ import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } 
 import { ButtonComponent } from "../../components/button-component/button-component";
 import { FormValidatorService } from '../../services/form-validator-service';
 import { AuthService } from '../../services/auth-service';
+import { ToastService } from '../../services/toast-service';
 
 @Component({
   selector: 'app-login',
@@ -17,6 +18,7 @@ export class Login {
   private fb = inject(FormBuilder);
   formValidator = inject(FormValidatorService);
   authService = inject(AuthService);
+  toastService = inject(ToastService);
 
   constructor() {
     this.loginForm = this.fb.group({
@@ -33,6 +35,7 @@ export class Login {
     if(this.loginForm.valid){
       this.authService.fakeLogin();
       this.loginForm.reset();
+      this.toastService.open('Has iniciado sesión con éxito', 'success', 3000, 'bottom-right');
     }
   }
 }
