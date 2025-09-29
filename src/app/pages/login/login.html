@@ -24,7 +24,7 @@
             </div>
 
             <app-button-component class="w-full" label="Ingresar" variant="violet" [rounded]="true"
-                [block]="true" [disabled]="!loginForm.valid"></app-button-component>
+                [block]="true" [disabled]="!loginForm.valid" (click)="onSubmit()"></app-button-component>
 
             <hr class="border-t-1 border-gray-300">
             <p class="text-sm text-center">¿No tienes una cuenta? <a routerLink="/register">Regístrate</a></p>
