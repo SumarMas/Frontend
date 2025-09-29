@@ -51,7 +51,7 @@ export class AuthService {
   }
 
   //busco el token en el localStorage
-  private _token = signal<string | null>(localStorage.getItem('token'));
+  _token = signal<string | null>(localStorage.getItem('token'));
 
   //se actualiza cuando cambia el token
   readonly isAuthenticated = computed(() => {
