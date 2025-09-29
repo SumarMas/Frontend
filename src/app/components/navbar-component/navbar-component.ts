@@ -14,10 +14,6 @@ export class NavbarComponent {
   sidebarService = inject(SidebarService);
   private router = inject(Router);
 
-  login(){
-    this.sidebarService.isLoggedIn.set(!this.sidebarService.isLoggedIn());
-  }
-
   navigate(url: string) {
     this.router.navigate([url]);
   }
