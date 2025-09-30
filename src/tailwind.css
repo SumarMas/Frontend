@@ -3,6 +3,7 @@
 
 /* esto esta aca como safe-list, sino tailwind lo purga */
 @source inline('btn-{sm,md,lg,xl}');
+@source inline('btn-{default,primary,secondary,accent,info,success,warning,error}');
 
 @source inline('alert-{info,success,warning,error}');
 
