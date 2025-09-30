@@ -1,0 +1,5 @@
+<div class="toast" [ngClass]="[positionClass, show ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-4', 'transition-all duration-300', hovered ? 'scale-105' : 'scale-100']">
+    <div [ngClass]="alertClass">
+        <icon [name]="iconName" [size]="'sm'"></icon> <span>{{ message }}</span>
+    </div>
+</div>

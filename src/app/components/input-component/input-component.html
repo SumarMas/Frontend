@@ -1,0 +1,43 @@
+@if (type === 'file') {
+<input #fileInput [disabled]="disabled" [ngClass]="classes" type="file" [multiple]="multiple"
+    [attr.accept]="accept || null" (change)="onFileChange($event)" class="max-w-full" />
+
+@if (fileCount) {
+<ul class="mt-2 w-full space-y-2">
+    @for (f of files; track f.name + '-' + f.lastModified) {
+    <li class="flex items-center justify-between gap-3 border rounded-box px-3 py-2">
+        <span class="truncate text-sm">{{ f.name }}</span>
+        <div class="flex items-center gap-2">
+            <span class="text-xs opacity-60">
+                {{ (f.size / 1024) | number:'1.0-0' }} KB
+            </span>
+            <button type="button" class="btn btn-ghost btn-xs" (click)="removeFile($index)"
+                aria-label="Quitar archivo">✕</button>
+        </div>
+    </li>
+    }
+</ul>
+<!-- limpiar todos los archivos seleccionados -->
+<div class="mt-2">
+    <button type="button" class="btn btn-outline btn-xs" (click)="clearFiles()">
+        Limpiar archivos
+    </button>
+</div>
+}
+} @else {
+<label class="flex items-center gap-2" [ngClass]="classes">
+    <input class="grow" [type]="inputType" [formControl]="control" [placeholder]="placeholder" [disabled]="disabled" />
+
+    @if (type === 'password') {
+    <button type="button" class="cursor-pointer" (click)="showPassword = !showPassword"
+        [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+        @if(showPassword) {
+            <icon class="text-gray-300" name="visibility"/>
+        }
+        @else {
+            <icon class="text-gray-300" name="visibility-off"/>
+        }
+    </button>
+    }
+</label>
+}

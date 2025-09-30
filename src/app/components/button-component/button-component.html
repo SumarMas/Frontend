@@ -1,0 +1,9 @@
+<button [disabled]="disabled || isLoading" [ngClass]="classes">
+    @if (isLoading) {
+        <span class="loading loading-spinner loading-xs"></span>
+    }
+    @if (icon){
+        <icon [name]="icon" class="inline-block" [ngClass]="colorIcon"/>
+    }
+    {{ label }}
+</button>

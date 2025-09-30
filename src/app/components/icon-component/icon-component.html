@@ -1,0 +1,7 @@
+<svg [attr.width]="svgSize()" [attr.height]="svgSize()" fill="currentColor" viewBox="0 -960 960 960">
+    @for (n of nodes(); track $index) {
+    <path 
+        [attr.d]="n"
+    ></path>
+    }
+</svg>
