@@ -16,7 +16,7 @@
             <ul class="collapse-box submenu" [class.is-open]="item.open">
                 @for (child of item.children; track $index) {
                 <li>
-                    <a class="side-button white-variant">
+                    <a class="side-button white-variant" [routerLink]="child.route">
                         <icon [name]="child.icon ?? ''" class="text-violet-500" />
                         <span class="truncate">{{ child.title }}</span>
                     </a>
@@ -27,7 +27,7 @@
         } @else {
         <li>
             <!-- botn padre sin childs -->
-            <a class="side-button violet-variant">
+            <a class="side-button violet-variant" [routerLink]="item.route">
                 <icon [name]="item.icon ?? ''" class="text-white" />
                 <span class="truncate">{{ item.title }}</span>
             </a>
@@ -37,10 +37,10 @@
     </ul>
 
     <div class="mt-auto">
-        <a class="side-button violet-variant">
+        <button class="side-button violet-variant" (click)="onLogout()">
             <icon name="logout" class="text-white" />
             <span>Cerrar sesión</span>
-        </a>
+        </button>
 
     </div>
 </aside>

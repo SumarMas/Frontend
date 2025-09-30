@@ -1,5 +1,5 @@
 <!-- hero -->
-<section class="hero h-170 flex flex-col items-center justify-center text-white">
+<section class="hero h-170 flex flex-col items-center justify-center text-white bg-sumar">
     <h1 class="text-6xl font-bold drop-shadow-xl">Bienvenido a Sumar+</h1>
     <p class="text-2xl mt-4">Tu plataforma para la gestión de campañas y organizaciones.</p>
     <app-button-component class="mt-8" label="Comenzar" variant="white" size="xl"
@@ -25,7 +25,7 @@
                transform transition duration-300 ease-out
                hover:scale-105 hover:-translate-y-1 hover:shadow-2xl">
                 <div class="card-body items-center text-center">
-                    <p class="text-3xl mt-2">{{ card.icon }}</p>
+                    <icon [name]="card.icon" [size]="'lg'" class="text-purple-500"></icon>
                     <h3 class="card-title text-lg">{{ card.title }}</h3>
 
                 </div>

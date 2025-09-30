@@ -29,7 +29,7 @@ export class ErrorPageComponent {
     403: {
       title: 'Acceso denegado',
       subtitle: 'No contás con permisos suficientes.',
-      image: '/error/403robot.png'
+      image: '/error/401robot.png'
     },
     404: {
       title: 'Página no encontrada',

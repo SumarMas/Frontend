@@ -12,12 +12,13 @@ type Size = 'sm' | 'md' | 'lg' | 'xl';
   styleUrl: './button-component.scss'
 })
 export class ButtonComponent {
-  @Input() label: string = 'Click me';
+  @Input() label: string = '';
   @Input() disabled: boolean = false;
   @Input() isLoading: boolean = false;
   @Input() variant: Variant = 'primary';
   @Input() outline: boolean = false;
   @Input() rounded: boolean = false;
+  @Input() block: boolean = false;
   @Input() size: Size = 'md';
   @Input() icon?: string;
   @Input() colorIcon?: string;
@@ -26,6 +27,7 @@ export class ButtonComponent {
     const classes = ['btn', `btn-${this.variant}`, `btn-${this.size}`];
     if (this.outline) classes.push('btn-outline');
     if (this.rounded) classes.push('btn-pill');
+    if (this.block) classes.push('w-full');
     return classes;
   }
 }

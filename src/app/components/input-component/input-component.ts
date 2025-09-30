@@ -1,13 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { Component, ElementRef, Input, ViewChild } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { IconComponent } from '../icon-component/icon-component';
 
 type Type = 'text' | 'search' | 'password' | 'file';
 type Variant = 'primary' | 'secondary' | 'accent' | 'success' | 'warning' | 'error';
 
 @Component({
   selector: 'app-input-component',
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, IconComponent],
   templateUrl: './input-component.html',
   styleUrl: './input-component.scss'
 })
