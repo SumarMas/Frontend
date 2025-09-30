@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
-import { catchError, map, mapTo, Observable, tap, throwError } from 'rxjs';
+import { catchError, delay, map, mapTo, Observable, of, tap, throwError } from 'rxjs';
 
 interface JwtPayload {
   subject: string; //usuario
@@ -46,8 +46,9 @@ export class AuthService {
   }
 
   //metodo para simular login
-  fakeLogin() {
+  fakeLogin() : Observable<void> {
     this.setToken(this.fakeToken);
+    return of(void 0).pipe(delay(2000)); //simular retardo de red
   }
 
   //busco el token en el localStorage
