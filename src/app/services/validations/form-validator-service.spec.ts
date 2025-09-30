@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { FormValidatorService } from './form-validator-service';
+import { FormValidatorService } from '../validations/form-validator-service';
 
 describe('FormValidatorService', () => {
   let service: FormValidatorService;

@@ -1,6 +1,6 @@
 import { ApplicationRef, ComponentRef, createComponent, EnvironmentInjector, Injectable } from '@angular/core';
-import { ToastComponent } from '../components/toast-component/toast-component';
-import { DEFAULT_DURATION_MS, Pos, POS_CLASSES, ToastType } from '../models/toast';
+import { ToastComponent } from '../../components/toast-component/toast-component';
+import { DEFAULT_DURATION_MS, Pos, POS_CLASSES, ToastType } from '../../models/toast';
 
 @Injectable({
   providedIn: 'root'
