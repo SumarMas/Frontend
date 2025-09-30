@@ -1,7 +1,7 @@
 import { Component, inject } from '@angular/core';
 import { ButtonComponent } from "../button-component/button-component";
 import { RouterLinkActive, RouterLink, Router } from '@angular/router';
-import { SidebarService } from '../../services/sidebar-service';
+import { SidebarService } from '../../services/ui/sidebar-service';
 import { IconComponent } from "../icon-component/icon-component";
 
 @Component({

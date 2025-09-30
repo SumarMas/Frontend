@@ -2,9 +2,9 @@ import { Component, inject, signal } from '@angular/core';
 import { InputComponent } from "../../components/input-component/input-component";
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonComponent } from "../../components/button-component/button-component";
-import { FormValidatorService } from '../../services/form-validator-service';
+import { FormValidatorService } from '../../services/validations/form-validator-service';
 import { AuthService } from '../../services/auth-service';
-import { ToastService } from '../../services/toast-service';
+import { ToastService } from '../../services/ui/toast-service';
 
 @Component({
   selector: 'app-login',
