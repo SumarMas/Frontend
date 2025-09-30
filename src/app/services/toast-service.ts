@@ -38,10 +38,8 @@ export class ToastService {
   const existing = this.containers.get(position);
   if (existing) return existing;
   const el = document.createElement('div');
-  //daisyUI position classes + fixed + pointer-events-none para evitar problemas de layout
-  el.className = `${POS_CLASSES[position]} fixed z-[9999] gap-2 p-2`;
+  el.className = `${POS_CLASSES[position]}`;
   //fondo transparente para evitar línea blanca
-  el.style.background = 'transparent';
   document.body.appendChild(el);
   this.containers.set(position, el);
   return el;
