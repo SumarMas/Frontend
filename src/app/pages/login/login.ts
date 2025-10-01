@@ -5,15 +5,16 @@ import { ButtonComponent } from "../../components/button-component/button-compon
 import { FormValidatorService } from '../../services/validations/form-validator-service';
 import { AuthService } from '../../services/auth-service';
 import { ToastService } from '../../services/ui/toast-service';
+import { RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-login',
-  imports: [InputComponent, ReactiveFormsModule, ButtonComponent],
+  imports: [InputComponent, ReactiveFormsModule, RouterLink, ButtonComponent],
   templateUrl: './login.html',
   styleUrl: './login.scss'
 })
 export class Login {
-  loginForm: FormGroup;
+  loginForm: FormGroup<{ email: FormControl<string | null>; password: FormControl<string | null> }>;
   isLoading = signal(false);
 
   private fb = inject(FormBuilder);
@@ -23,14 +24,10 @@ export class Login {
 
   constructor() {
     this.loginForm = this.fb.group({
-      email: new FormControl('', [Validators.email, Validators.required]),
-      password: new FormControl('', [Validators.required])
+      email: ['', [Validators.required, Validators.email]],
+      password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
-
-  get email() { return this.loginForm.get('email') as FormControl; }
-
-  get password() { return this.loginForm.get('password') as FormControl; }
 
   onSubmit() {
     if (this.loginForm.valid) {

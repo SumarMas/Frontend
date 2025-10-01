@@ -8,7 +8,7 @@
         <form class="flex flex-col gap-4 w-75" [formGroup]="loginForm">
             <div>
                 <label>Email</label>
-                <app-input-component [type]="'text'" [control]="email" [block]="true"
+                <app-input-component [type]="'text'" [control]="loginForm.controls.email" [block]="true"
                     name="email"></app-input-component>
                 @if(formValidator.showError(loginForm, 'email')){
                 <p class="error-label">{{formValidator.getValidationMessage(loginForm, 'email')}}</p>
@@ -16,7 +16,7 @@
             </div>
             <div>
                 <label>Contraseña</label>
-                <app-input-component [type]="'password'" [control]="password" [block]="true"
+                <app-input-component [type]="'password'" [control]="loginForm.controls.password" [block]="true"
                     name="password"></app-input-component>
                 @if(formValidator.showError(loginForm, 'password')){
                 <p class="error-label">{{formValidator.getValidationMessage(loginForm, 'password')}}</p>
