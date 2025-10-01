@@ -1,0 +1,61 @@
+<section class="min-h-screen flex items-center justify-center bg-base-200">
+    <div class="w-3/5">
+        <form class="grid grid-cols-2 grid-rows-2 gap-4 w-full">
+            <div>
+                <label>Nombre completo</label>
+                <app-input-component [type]="'text'" [control]="registerForm.controls.name"
+                    [block]="true"></app-input-component>
+                    @if(formValidator.showError(registerForm, 'email')){
+                <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'email')}}</p>
+                }
+            </div>
+            <div>
+                <label>Apellido</label>
+                <app-input-component [type]="'text'" [control]="registerForm.controls.lastname"
+                    [block]="true"></app-input-component>
+                    @if(formValidator.showError(registerForm, 'lastname')){
+                <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'lastname')}}</p>
+                }
+            </div>
+
+            <div>
+                <label>Email</label>
+                <app-input-component [type]="'text'" [control]="registerForm.controls.email"
+                    [block]="true"></app-input-component>
+                    @if(formValidator.showError(registerForm, 'email')){
+                <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'email')}}</p>
+                }
+            </div>
+            <div>
+                <label>Nombre de usuario</label>
+                <app-input-component [type]="'text'" [control]="registerForm.controls.username"
+                    [block]="true"></app-input-component>
+                    @if(formValidator.showError(registerForm, 'username')){
+                <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'username')}}</p>
+                }
+            </div>
+            <div>
+                <label>Contraseña</label>
+                <app-input-component [type]="'password'" [control]="registerForm.controls.password"
+                    [block]="true"></app-input-component>
+                @if(formValidator.showError(registerForm, 'password')){
+                    <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'password')}}</p>
+                }
+            </div>
+            
+            <div>
+                <label>Confirmar contraseña</label>
+                <app-input-component [type]="'password'" [control]="registerForm.controls.confirmPassword"
+                    [block]="true"></app-input-component>
+                @if(formValidator.showError(registerForm, 'confirmPassword')){
+                    <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'confirmPassword')}}</p>
+                }
+                <!-- Error de contraseñas no coinciden (error del FORMULARIO) -->
+                @if(formValidator.showFormError(registerForm, 'passwordMismatch', 'confirmPassword')){
+                    <p class="error-label">{{formValidator.getFormValidationMessage(registerForm, 'passwordMismatch')}}</p>
+                }
+            </div>
+            
+        </form>
+    </div>
+</section>
