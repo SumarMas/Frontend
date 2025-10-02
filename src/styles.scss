@@ -4,6 +4,12 @@
     background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9))
 }
 
+.logo { @apply font-bold bg-gradient-to-bl from-violet-500 to-fuchsia-500 bg-clip-text text-transparent; }
+
 .error-label {
     @apply text-red-600 text-sm;
 }
+
+.link-text { @apply text-violet-600 cursor-pointer hover:underline underline-offset-2; }
+
+hr{ @apply border-t-1 border-gray-300; }

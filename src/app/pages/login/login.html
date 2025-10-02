@@ -1,7 +1,7 @@
 <section class="min-h-screen flex items-center justify-center bg-sumar">
     <div class="cnt">
         <div class="text-center">
-            <h3 class="logo">Iniciar Sesión</h3>
+            <h3 class="logo text-3xl mb-3">Iniciar Sesión</h3>
             <p class="text-lg">¡Bienvenido de vuelta!</p>
             <p class="text-sm text-gray-400">Inicia sesión para continuar apoyando causas solidarias</p>
         </div>
@@ -26,8 +26,8 @@
             <app-button-component class="w-full" label="Ingresar" variant="violet" [rounded]="true"
                 [block]="true" [disabled]="!loginForm.valid" (click)="onSubmit()" [isLoading]="isLoading()"></app-button-component>
 
-            <hr class="border-t-1 border-gray-300">
-            <p class="text-sm text-center">¿No tienes una cuenta? <a routerLink="/register">Regístrate</a></p>
+            <hr>
+            <p class="text-sm text-center">¿No tienes una cuenta? <a class="link-text" routerLink="/register">Regístrate</a></p>
         </form>
     </div>
 </section>
