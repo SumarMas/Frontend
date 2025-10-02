@@ -20,5 +20,7 @@ export const routes: Routes = [
     { path: '401', title: 'No autorizado', component: ErrorPageComponent, data: { code: 401 } },
     { path: '403', title: 'Acceso denegado', component: ErrorPageComponent, data: { code: 403 } },
     { path: '404', title: 'No encontrado', component: ErrorPageComponent, data: { code: 404 } },
-    { path: '500', title: 'Error del servidor', component: ErrorPageComponent, data: { code: 500 } }
+    { path: '500', title: 'Error del servidor', component: ErrorPageComponent, data: { code: 500 } },
+
+    { path: '**', redirectTo: '404' }
 ];
