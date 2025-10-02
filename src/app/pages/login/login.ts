@@ -3,7 +3,7 @@ import { InputComponent } from "../../components/input-component/input-component
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonComponent } from "../../components/button-component/button-component";
 import { FormValidatorService } from '../../services/validations/form-validator-service';
-import { AuthService } from '../../services/auth-service';
+import { AuthService } from '../../services/api/auth-service';
 import { ToastService } from '../../services/ui/toast-service';
 import { RouterLink } from '@angular/router';
 

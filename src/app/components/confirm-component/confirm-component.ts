@@ -1,7 +1,7 @@
 import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import { IconComponent } from "../icon-component/icon-component";
 import { ButtonComponent } from "../button-component/button-component";
-import { ConfirmVariant } from '../../models/confirm';
+import { ConfirmVariant } from '../../models/ui/confirm';
 
 @Component({
   selector: 'app-confirm-component',

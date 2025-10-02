@@ -1,5 +1,5 @@
 import { ApplicationRef, ComponentRef, createComponent, EnvironmentInjector, Injectable, signal } from '@angular/core';
-import { ConfirmOptions } from '../../models/confirm';
+import { ConfirmOptions } from '../../models/ui/confirm';
 import { ConfirmComponent } from '../../components/confirm-component/confirm-component';
 
 interface Pending {

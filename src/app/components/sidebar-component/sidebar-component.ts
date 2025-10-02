@@ -1,10 +1,10 @@
 import { Component, inject, input } from '@angular/core';
-import { Sidebuttons } from '../../models/nav-item';
+import { Sidebuttons } from '../../models/ui/nav-item';
 import { NgClass } from '@angular/common';
 import { SidebarService } from '../../services/ui/sidebar-service';
 import { IconComponent } from "../icon-component/icon-component";
 import { RouterLink } from '@angular/router';
-import { AuthService } from '../../services/auth-service';
+import { AuthService } from '../../services/api/auth-service';
 import { ConfirmService } from '../../services/ui/confirm-service';
 
 type Role = 'ADMIN' | 'DONOR' | 'ORGANIZATION';

@@ -1,7 +1,7 @@
 import { NgClass } from '@angular/common';
 import { Component, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { IconComponent } from "../icon-component/icon-component";
-import { ICON_BY_TYPE, ALERT_CLASS_BY_TYPE, POS_CLASSES, ToastType } from '../../models/toast';
+import { ICON_BY_TYPE, ALERT_CLASS_BY_TYPE, POS_CLASSES, ToastType } from '../../models/ui/toast';
 
 @Component({
   selector: 'app-toast-component',
