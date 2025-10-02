@@ -1,61 +1,106 @@
-<section class="min-h-screen flex items-center justify-center bg-base-200">
-    <div class="w-3/5">
-        <form class="grid grid-cols-2 grid-rows-2 gap-4 w-full">
+<section class="min-h-screen flex items-center justify-center bg-sumar">
+    <div class="w-3/5 bg-white p-8 rounded-lg shadow-lg">
+
+        <div class="flex justify-between">
             <div>
-                <label>Nombre completo</label>
-                <app-input-component [type]="'text'" [control]="registerForm.controls.name"
-                    [block]="true"></app-input-component>
-                    @if(formValidator.showError(registerForm, 'email')){
-                <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'email')}}</p>
-                }
+                <h2 class="text-4xl font-bold logo">Crear cuenta</h2>
+                <p class="text-sm text-gray-600 mb-6">Regístrate para empezar a sumar</p>
             </div>
-            <div>
-                <label>Apellido</label>
-                <app-input-component [type]="'text'" [control]="registerForm.controls.lastname"
-                    [block]="true"></app-input-component>
+            <p class="text-sm text-center">¿Ya tienes una cuenta? <a class="link-text" routerLink="/login">Inicia
+                    sesión</a></p>
+        </div>
+
+        <form [formGroup]="registerForm">
+            <div class="grid grid-cols-2 grid-rows-2 gap-4 w-full mb-4">
+                <div>
+                    <label>Nombre completo</label>
+                    <app-input-component [type]="'text'" [control]="registerForm.controls.name"
+                        [block]="true"></app-input-component>
+                    @if(formValidator.showError(registerForm, 'name')){
+                    <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'name')}}</p>
+                    }
+                </div>
+                <div>
+                    <label>Apellido</label>
+                    <app-input-component [type]="'text'" [control]="registerForm.controls.lastname"
+                        [block]="true"></app-input-component>
                     @if(formValidator.showError(registerForm, 'lastname')){
-                <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'lastname')}}</p>
+                    <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'lastname')}}</p>
+                    }
+                </div>
+
+
+                <div>
+                    <label>Email</label>
+                    <app-input-component [type]="'text'" [control]="registerForm.controls.email"
+                        [block]="true"></app-input-component>
+                    @if(formValidator.showError(registerForm, 'email')){
+                    <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'email')}}</p>
+                    }
+                </div>
+                <div>
+                    <label>Nombre de usuario</label>
+                    <app-input-component [type]="'text'" [control]="registerForm.controls.username"
+                        [block]="true"></app-input-component>
+                    @if(formValidator.showError(registerForm, 'username')){
+                    <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'username')}}</p>
+                    }
+                </div>
+
+
+                <div>
+                    <label>Contraseña</label>
+                    <app-input-component [type]="'password'" [control]="registerForm.controls.password"
+                        [block]="true"></app-input-component>
+                    @if(formValidator.showError(registerForm, 'password')){
+                    <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'password')}}</p>
+                    }
+                    <!-- Error de contraseñas no coinciden (error del FORMULARIO) -->
+                    @if(formValidator.showFormError(registerForm, 'passwordMismatch', 'confirmPassword')){
+                    <p class="error-label">{{formValidator.getFormValidationMessage(registerForm, 'passwordMismatch')}}
+                    </p>
+                    }
+                </div>
+                <div>
+                    <label>Confirmar contraseña</label>
+                    <app-input-component [type]="'password'" [control]="registerForm.controls.confirmPassword"
+                        [block]="true"></app-input-component>
+                    @if(formValidator.showError(registerForm, 'confirmPassword')){
+
+                    <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'confirmPassword')}}</p>
+                    }
+
+                </div>
+                <div class="col-span-2">
+                    <input type="checkbox" class="checkbox checkbox-primary" [checked]="isOrganization()"
+                        (change)="toggleOrganization()">
+                    ¿Tiene una organización?
+                </div>
+
+                <!-- campos de la organizaicon -->
+                @if (isOrganization()) {
+
+                    <hr class="col-span-2">
+
+                
+
+                <div>
+                    <label>Teléfono de contacto</label>
+                    <app-input-component [type]="'text'" [control]="registerForm.controls.phone!"
+                        [block]="true"></app-input-component>
+                    @if(formValidator.showError(registerForm, 'phone')){
+                    <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'phone')}}</p>
+                    }
+                </div>
                 }
+
             </div>
 
-            <div>
-                <label>Email</label>
-                <app-input-component [type]="'text'" [control]="registerForm.controls.email"
-                    [block]="true"></app-input-component>
-                    @if(formValidator.showError(registerForm, 'email')){
-                <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'email')}}</p>
-                }
-            </div>
-            <div>
-                <label>Nombre de usuario</label>
-                <app-input-component [type]="'text'" [control]="registerForm.controls.username"
-                    [block]="true"></app-input-component>
-                    @if(formValidator.showError(registerForm, 'username')){
-                <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'username')}}</p>
-                }
-            </div>
-            <div>
-                <label>Contraseña</label>
-                <app-input-component [type]="'password'" [control]="registerForm.controls.password"
-                    [block]="true"></app-input-component>
-                @if(formValidator.showError(registerForm, 'password')){
-                    <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'password')}}</p>
-                }
-            </div>
-            
-            <div>
-                <label>Confirmar contraseña</label>
-                <app-input-component [type]="'password'" [control]="registerForm.controls.confirmPassword"
-                    [block]="true"></app-input-component>
-                @if(formValidator.showError(registerForm, 'confirmPassword')){
-                    <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'confirmPassword')}}</p>
-                }
-                <!-- Error de contraseñas no coinciden (error del FORMULARIO) -->
-                @if(formValidator.showFormError(registerForm, 'passwordMismatch', 'confirmPassword')){
-                    <p class="error-label">{{formValidator.getFormValidationMessage(registerForm, 'passwordMismatch')}}</p>
-                }
-            </div>
-            
+
+
+            <app-button-component [label]="'Crear cuenta'" [disabled]="registerForm.invalid" [block]="true"
+                variant="violet" [rounded]="true" [isLoading]="isLoading()" (click)="onSubmit()"></app-button-component>
         </form>
+
     </div>
 </section>
