@@ -17,7 +17,9 @@
         </ul>
 
         <div class="actions">
-            <app-button-component label="Iniciar Sesión" variant="violet" [rounded]="true" (click)="navigate('/login')" />
+            @if(!isLoggedIn()){
+                <app-button-component label="Iniciar Sesión" variant="violet" [rounded]="true" (click)="navigate('/login')" />
+            }
         </div>
     </div>
 </div>
