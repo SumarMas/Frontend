@@ -17,7 +17,7 @@ type Role = 'ADMIN' | 'DONOR' | 'ORGANIZATION';
 })
 export class SidebarComponent {
   buttons = Sidebuttons;
-  roles = input<Role[]>(['DONOR', 'ORGANIZATION']);
+  roles = input<Role[]>(['DONOR', 'ORGANIZATION', 'ADMIN']);
 
   sidebarService = inject(SidebarService);
   authService = inject(AuthService)
