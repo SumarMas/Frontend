@@ -71,33 +71,7 @@
                     }
 
                 </div>
-                <div class="col-span-2">
-                    <input type="checkbox" class="checkbox checkbox-primary" [checked]="isOrganization()"
-                        (change)="toggleOrganization()">
-                    ¿Tiene una organización?
-                </div>
-
-                <!-- campos de la organizaicon -->
-                @if (isOrganization()) {
-
-                    <hr class="col-span-2">
-
-                
-
-                <div>
-                    <label>Teléfono de contacto</label>
-                    <app-input-component [type]="'text'" [control]="registerForm.controls.phone!"
-                        [block]="true"></app-input-component>
-                    @if(formValidator.showError(registerForm, 'phone')){
-                    <p class="error-label">{{formValidator.getValidationMessage(registerForm, 'phone')}}</p>
-                    }
-                </div>
-                }
-
             </div>
-
-
-
             <app-button-component [label]="'Crear cuenta'" [disabled]="registerForm.invalid" [block]="true"
                 variant="violet" [rounded]="true" [isLoading]="isLoading()" (click)="onSubmit()"></app-button-component>
         </form>
