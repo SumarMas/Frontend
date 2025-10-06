@@ -3,6 +3,7 @@ import { ErrorPageComponent } from './components/error-page-component/error-page
 import { Home } from './pages/home/home';
 import { Login } from './pages/login/login';
 import { Register } from './pages/register/register';
+import { Profile } from './pages/profile/profile';
 
 export const routes: Routes = [
     { pathMatch: 'full', path: '', redirectTo: 'home' },
@@ -10,6 +11,7 @@ export const routes: Routes = [
 
     { path: 'login', title: 'Iniciar sesión', component: Login },
     { path: 'register', title: 'Registrarse', component: Register },
+    { path: 'profile', title: 'Mi perfil', component: Profile },
     // { path: 'campaigns' },
     // { path: 'organizations' },
     // { path: 'donations' },
