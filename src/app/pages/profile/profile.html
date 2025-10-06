@@ -1,0 +1,17 @@
+<section class="min-h-screen flex items-center justify-center bg-base-200">
+    <div class="cnt">
+        <div class="avatar -mt-30">
+            <div class="w-50 rounded-full">
+                <img src="/images/no-icon.png" />
+            </div>
+        </div>
+
+        <app-button-component [label]="buttonData.text" [variant]="buttonData.variant" [icon]="buttonData.icon" (click)="toggleView()"/>
+
+        <!-- datos del usuairo -->
+         <p class="text-sm"></p>
+        <h2 class="text-3xl">{{userData.controls.firstName.value + ' ' + userData.controls.lastName.value}}</h2>
+    </div>
+
+
+</section>

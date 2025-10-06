@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+//.cnt { @apply bg-white rounded-xl shadow-lg p-8 w-full max-w-sm text-center relative; }
+
+.cnt { @apply flex flex-col justify-center items-center py-10 px-2 gap-6 w-100 rounded-3xl shadow-2xl bg-white; }
