@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { PostUserDto } from '../../models/api/user';
-import { Observable } from 'rxjs';
+import { PostUserDto, GetUserDto } from '../../models/api/user';
+import { delay, Observable, of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
@@ -13,5 +13,20 @@ export class UserService {
 
   register(user: PostUserDto): Observable<any> {
     return this.http.post(this.url + '/register' , user);
+  }
+
+  getById(id: string): Observable<any> {
+    return this.http.get(this.url + '/' + id);
+  }
+
+  fakeGetById(){
+    const fakeUser: GetUserDto = {
+      id: '1234',
+      firstName: 'Pablo Alberto',
+      lastName: 'Diaz',
+      email: 'pabloo.alb@gmail.com',
+      username: 'pabloo.alb'
+    };
+    return of(fakeUser).pipe(delay(3000));
   }
 }
