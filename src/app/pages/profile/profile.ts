@@ -1,18 +1,24 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup } from '@angular/forms';
+import { Component, inject, OnInit, signal } from '@angular/core';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { UserService } from '../../services/api/user-service';
 import { ButtonComponent } from "../../components/button-component/button-component";
+import { ToastService } from '../../services/ui/toast-service';
+import { IconComponent } from '../../components/icon-component/icon-component';
+import { SkeletonComponent } from '../../components/skeleton-component/skeleton-component';
+import { finalize } from 'rxjs';
+import { InputComponent } from "../../components/input-component/input-component";
 
 type Variant = 'white' | 'error'
 
 @Component({
   selector: 'app-profile',
-  imports: [ButtonComponent],
+  imports: [ReactiveFormsModule, ButtonComponent, IconComponent, SkeletonComponent, InputComponent],
   templateUrl: './profile.html',
   styleUrl: './profile.scss'
 })
 export class Profile implements OnInit {
   view: 'profile' | 'edit' = 'profile';
+  isLoading = signal<boolean>(true);
 
   userData: FormGroup<{
     firstName: FormControl<string | null>,
@@ -32,6 +38,7 @@ export class Profile implements OnInit {
 
   private fb = inject(FormBuilder);
   private userService = inject(UserService);
+  private toastService = inject(ToastService);
 
   ngOnInit(): void {
     this.fetchUserData();
@@ -39,22 +46,37 @@ export class Profile implements OnInit {
 
   get buttonData() {
     return this.view === 'profile'
-      ? { text: 'Editar', icon: 'edit', variant: 'white' as Variant }
-      : { text: 'Cancelar', icon: 'close', variant: 'error' as Variant };
+      ? { text: '', icon: 'edit', variant: 'white' as Variant }
+      : { text: '', icon: 'close', variant: 'error' as Variant };
   }
 
   toggleView() {
     this.view = this.view === 'profile' ? 'edit' : 'profile';
+    this.userData.controls.firstName.disabled ? this.userData.controls.firstName.enable() : this.userData.controls.firstName.disable();
+    this.userData.controls.lastName.disabled ? this.userData.controls.lastName.enable() : this.userData.controls.lastName.disable();
   }
 
   fetchUserData() {
-    //llamar api
-
-    this.userData.patchValue({
-      firstName: 'Juan',
-      lastName: 'Pérez',
-      email: 'juan.perez@example.com',
-      username: 'juanp'
+    this.isLoading.set(true);
+    this.userService.fakeGetById().pipe(finalize(() => this.isLoading.set(false))).subscribe({
+      next: (user) => {
+        this.userData.patchValue({
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          username: user.username
+        });
+      },
+      error: (err) => {
+        this.toastService.open('Error al cargar los datos del usuario', 'error', 3000);
+      }
     });
+  }
+
+  saveChanges() {
+    console.log(this.userData.value);
+    this.toastService.open('Cambios guardados con éxito', 'success', 3000);
+    this.toggleView();
+    
   }
 }
