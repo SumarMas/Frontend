@@ -13,7 +13,7 @@
 
             @if(view == 'edit'){
             <app-button-component label="" variant="success" icon="check"
-                (click)="saveChanges()"></app-button-component>
+                (click)="saveChanges()" [disabled]="!userData.valid"></app-button-component>
             }
         </div>
 
@@ -36,11 +36,17 @@
                 <label>Nombre</label>
                 <app-input-component [type]="'text'" [control]="userData.controls.firstName"
                     [block]="true"></app-input-component>
+                    @if(formValidator.showError(userData, 'firstName')){
+                <p class="error-label">{{formValidator.getValidationMessage(userData, 'firstName')}}</p>
+                }
             </div>
             <div>
                 <label>Apellido</label>
                 <app-input-component [type]="'text'" [control]="userData.controls.lastName"
                     [block]="true"></app-input-component>
+                    @if(formValidator.showError(userData, 'lastName')){
+                <p class="error-label">{{formValidator.getValidationMessage(userData, 'lastName')}}</p>
+                }
             </div>
         </form>
         }

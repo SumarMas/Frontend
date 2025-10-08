@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UserService } from '../../services/api/user-service';
 import { ButtonComponent } from "../../components/button-component/button-component";
 import { ToastService } from '../../services/ui/toast-service';
@@ -7,6 +7,7 @@ import { IconComponent } from '../../components/icon-component/icon-component';
 import { SkeletonComponent } from '../../components/skeleton-component/skeleton-component';
 import { finalize } from 'rxjs';
 import { InputComponent } from "../../components/input-component/input-component";
+import { FormValidatorService } from '../../services/validations/form-validator-service';
 
 type Variant = 'white' | 'error'
 
@@ -29,8 +30,8 @@ export class Profile implements OnInit {
 
   constructor() {
     this.userData = this.fb.group({
-      firstName: [{ value: '', disabled: true }],
-      lastName: [{ value: '', disabled: true }],
+      firstName: [{ value: '', disabled: true }, [Validators.required, Validators.minLength(2)]],
+      lastName: [{ value: '', disabled: true }, [Validators.required, Validators.minLength(2)]],
       email: [{ value: '', disabled: true }],
       username: [{ value: '', disabled: true }]
     });
@@ -39,6 +40,7 @@ export class Profile implements OnInit {
   private fb = inject(FormBuilder);
   private userService = inject(UserService);
   private toastService = inject(ToastService);
+  formValidator = inject(FormValidatorService);
 
   ngOnInit(): void {
     this.fetchUserData();
@@ -74,9 +76,10 @@ export class Profile implements OnInit {
   }
 
   saveChanges() {
-    console.log(this.userData.value);
-    this.toastService.open('Cambios guardados con éxito', 'success', 3000);
-    this.toggleView();
-    
+    if (this.userData.valid) {
+      //llamar api
+      this.toastService.open('Cambios guardados con éxito', 'success', 3000);
+      this.toggleView();
+    }
   }
 }
