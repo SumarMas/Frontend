@@ -9,3 +9,5 @@
 
 @source inline('top-left,top-center,top-right,bottom-left,bottom-center,bottom-right');
 @source inline('toast');
+@source inline('skeleton');
+@source inline('skeleton-avatar,skeleton-button,skeleton-card,skeleton-input,skeleton-text');

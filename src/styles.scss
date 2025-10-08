@@ -13,3 +13,10 @@
 .link-text { @apply text-violet-600 cursor-pointer hover:underline underline-offset-2; }
 
 hr{ @apply border-t-1 border-gray-300; }
+
+//Skeleton styles
+.skeleton-input{ @apply rounded-sm; }
+.skeleton-avatar{ @apply rounded-full; }
+.skeleton-button{ @apply rounded-full; }
+.skeleton-card{ @apply rounded-sm; }
+.skeleton-text{ @apply rounded-full; }
