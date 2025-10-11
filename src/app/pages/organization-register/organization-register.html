@@ -1,0 +1,55 @@
+<section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar">
+    <div class="w-3/5 bg-white p-8 rounded-lg shadow-lg">
+        <h2 class="text-4xl font-bold logo pb-4">Registre su organización</h2>
+        <form [formGroup]="registerOrganizationForm">
+            <div class="grid grid-cols-2 gap-4 w-full mb-4">
+
+                <h4 class="col-span-2 text-2xl text-violet-400">Datos</h4>
+
+                <div class="col-span-2 mb-2">
+                    <label>Nombre de la organización</label>
+                    <app-input-component [type]="'text'" [control]="registerOrganizationForm.controls.name"
+                        [block]="true"></app-input-component>
+                </div>
+
+                <div class="col-span-2 flex flex-col">
+                    <label class="">Descripción</label>
+                    <textarea class="textarea w-full" placeholder="Detalle sobre su organización..." formControlName="description"></textarea>
+                </div>
+
+                <h4 class="col-span-2 text-2xl text-violet-400">Personalización</h4>
+                <div>
+                    <label>Foto de perfil</label>
+                    <app-input-component [type]="'file'" [multiple]="false" [control]="registerOrganizationForm.controls.profileFile"
+                        [block]="true"></app-input-component>
+                </div>
+
+                <div>
+                    <label>Foto de portada</label>
+                    <app-input-component [type]="'file'" [multiple]="false" [control]="registerOrganizationForm.controls.bannerFile"
+                        [block]="true"></app-input-component>
+                </div>
+
+                <div class="col-span-2">
+                    <label>Fotos para mostrar</label>
+                    <app-input-component [type]="'file'" [multiple]="true" [control]="registerOrganizationForm.controls.images"
+                        [block]="true"></app-input-component>
+                </div>
+
+                <h4 class="col-span-2 text-2xl text-violet-400">Documentación</h4>
+
+                <p class="text-red-500 col-span-2 text-sm">**Aclaración:** Debe enviar TODA la documentación pertinente para corroborar que usted es el propietario de la organización.
+                    En caso contrario, su solicitud será rechazada.
+                </p>
+
+                <div class="col-span-2">
+                    <label>Documentos legales</label>
+                    <app-input-component [type]="'file'" [multiple]="true" [control]="registerOrganizationForm.controls.documents"
+                        [block]="true"></app-input-component>
+                </div>
+                <app-button-component class="col-span-2 w-full" label="Registrar organización" variant="violet" [rounded]="true"
+                    [block]="true" [disabled]="!registerOrganizationForm.valid"></app-button-component>
+            </div>
+        </form>
+    </div>
+</section>
