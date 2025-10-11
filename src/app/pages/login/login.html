@@ -7,7 +7,7 @@
         </div>
         <form class="flex flex-col gap-4 w-75" [formGroup]="loginForm">
             <div>
-                <label>Email</label>
+                <label>Email o nombre de usuario</label>
                 <app-input-component [type]="'text'" [control]="loginForm.controls.email" [block]="true"
                     name="email"></app-input-component>
                 @if(formValidator.showError(loginForm, 'email')){

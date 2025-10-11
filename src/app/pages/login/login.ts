@@ -24,7 +24,7 @@ export class Login {
 
   constructor() {
     this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
+      email: ['', [Validators.required]],
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
   }
@@ -32,10 +32,15 @@ export class Login {
   onSubmit() {
     if (this.loginForm.valid) {
       this.isLoading.set(true);
-      this.authService.fakeLogin().subscribe({
+      const email = this.loginForm.value.email ?? '';
+      const password = this.loginForm.value.password ?? '';
+
+      this.authService.login(email, password).subscribe({
         next: () => {
           this.isLoading.set(false);
           this.toastService.open('Has iniciado sesión con éxito', 'success', 3000, 'bottom-right');
+          console.log(this.authService.roles());
+          
         },
         error: (err) => {
           this.isLoading.set(false);
