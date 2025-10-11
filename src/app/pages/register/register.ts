@@ -16,10 +16,10 @@ import { ToastService } from '../../services/ui/toast-service';
 })
 export class Register {
   registerForm: FormGroup<{
-    name: FormControl<string | null>,
-    lastname: FormControl<string | null>,
+    firstName: FormControl<string | null>,
+    lastName: FormControl<string | null>,
     email: FormControl<string | null>,
-    username: FormControl<string | null>,
+    userName: FormControl<string | null>,
     password: FormControl<string | null>,
     confirmPassword: FormControl<string | null>,
   }>;
@@ -34,10 +34,10 @@ export class Register {
 
   constructor() {
     this.registerForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
-      lastname: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      firstName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      lastName: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
       email: ['', [Validators.required, Validators.email]],
-      username: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(100)]],
+      userName: ['', [Validators.required, Validators.minLength(4), Validators.maxLength(100)]],
       password: ['', [Validators.required, Validators.minLength(8), Validators.maxLength(32),]],
       confirmPassword: ['', []]
     },
@@ -60,9 +60,9 @@ export class Register {
         this.userService.register(userData).subscribe({
           next: (response) => {
             this.isLoading.set(false);
-            this.toastService.open('Cuenta creada con éxito', 'success', 3000, 'bottom-right');
+            this.toastService.open('Cuenta creada con éxito, ¡Bienvenido/a!', 'success', 3000, 'bottom-right');
             this.registerForm.reset();
-            this.router.navigate(['/login']);
+            this.router.navigate(['/profile']);
           },
           error: (err) => {
             this.isLoading.set(false);
