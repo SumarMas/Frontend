@@ -1,10 +1,13 @@
 export interface GetUserDto {
-    id: string
+    userId: string
     firstName: string;
     lastName: string;
     email: string;
-    username: string;
-}
+    userName: string;
+    profileFileId?: string;
+    status?: string;
+    roles?: string[];
+}   
 
 export interface PutUserDto {
     firstName?: string;
@@ -16,7 +19,7 @@ export interface PostUserDto {
     firstName: string;
     lastName: string;
     email: string;
-    username: string;
+    userName: string;
     password: string;
-    profileFileId?: string;
+    //profileFileId?: string;
 }
