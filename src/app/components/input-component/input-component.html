@@ -2,10 +2,10 @@
 <input #fileInput [disabled]="disabled" [ngClass]="classes" type="file" [multiple]="multiple"
     [attr.accept]="accept || null" (change)="onFileChange($event)" class="max-w-full" />
 
-@if (fileCount) {
+@if (fileCount > 0 && multiple) {
 <ul class="mt-2 w-full space-y-2">
     @for (f of files; track f.name + '-' + f.lastModified) {
-    <li class="flex items-center justify-between gap-3 border rounded-box px-3 py-2">
+    <li class="flex items-center justify-between gap-3  border rounded-box px-3 py-2">
         <span class="truncate text-sm">{{ f.name }}</span>
         <div class="flex items-center gap-2">
             <span class="text-xs opacity-60">
@@ -19,8 +19,8 @@
 </ul>
 <!-- limpiar todos los archivos seleccionados -->
 <div class="mt-2">
-    <button type="button" class="btn btn-outline btn-xs" (click)="clearFiles()">
-        Limpiar archivos
+    <button type="button" class="btn btn-error btn-xs" (click)="clearFiles()">
+        {{ files.length > 1 ? 'Limpiar archivos' : 'Limpiar archivo' }}
     </button>
 </div>
 }
