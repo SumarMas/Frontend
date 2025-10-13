@@ -1,3 +1,5 @@
 @import 'tailwindcss';
 
 .cont { @apply flex flex-col justify-center items-center py-10 px-2 gap-6 w-100 rounded-3xl shadow-2xl bg-white; }
+
+.subtitle { @apply col-span-2 text-2xl text-violet-400; }
