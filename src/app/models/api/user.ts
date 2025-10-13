@@ -3,7 +3,7 @@ export interface GetUserDto {
     firstName: string;
     lastName: string;
     email: string;
-    userName: string;
+    //userName: string;
     profileFileId?: string;
     status?: string;
     roles?: string[];
