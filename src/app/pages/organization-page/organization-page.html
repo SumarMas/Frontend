@@ -1,0 +1,92 @@
+<section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar">
+
+    <div class="w-full md:w-3/5 bg-white rounded-xl shadow-2xl overflow-hidden">
+
+        <header class="h-40 bg-gray-800 relative overflow-hidden"
+            style="background-image: url('https://marketplace.canva.com/EAGWjBIzP8s/1/0/1600w/canva-yellow-colorful-creative-abstract-welcome-banner-LWAWaFXnjMA.jpg'); background-size: cover; background-position: center;">
+        </header>
+
+        <div>
+
+            <div class="flex flex-col md:flex-row items-start px-6 pt-0 relative">
+                <div class="avatar relative -mt-16 border-4 border-white shadow-md rounded-full bg-white">
+                    <div class="w-32 rounded-full">
+                        <img src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp"
+                            alt="Avatar de la organización" />
+                    </div>
+                </div>
+
+                <div class="ml-0 md:ml-6 mt-4 md:mt-8 flex flex-col w-full">
+
+                    <div class="flex items-center space-x-2">
+                        <h1 class="text-3xl md:text-3xl font-bold text-gray-800">
+                            {{ organization?.name || 'Nombre de la Organización' }}
+                        </h1>
+                        <icon [name]="'verified'" class="text-blue-500"></icon>
+
+                        @if (true) { <div class="ml-auto flex space-x-2">
+
+                            <app-button-component icon="edit" variant="white"></app-button-component>
+
+                            <app-button-component icon="info" variant="white"></app-button-component>
+
+                        </div>
+                        }
+                    </div>
+
+                    <p class="text-sm text-gray-500 mt-1">Organización sin fines de lucro | Desde 2015</p>
+                </div>
+            </div>
+
+            <div class="p-6 pt-4">
+                <div class="border border-purple-300 rounded-lg p-4 bg-purple-50">
+                    <p class="text-gray-600 mt-1">
+                        {{organization?.description || 'Esta es una breve descripción de la organización.'}}
+                    </p>
+                </div>
+            </div>
+
+            <div class="px-6 mt-6 pb-8">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Carrusel de imágenes</h3>
+
+                <div class="carousel w-full rounded-lg overflow-hidden">
+                    @for (image of images; track $index) {
+                    <div [id]="'slide' + ($index + 1)" class="carousel-item relative w-full">
+                        <img [src]="image.url" [alt]="image.alt || ('Imagen ' + ($index + 1))"
+                            class="w-full object-cover h-96" />
+
+                        <div class="absolute left-5 right-5 top-1/2 flex -translate-y-1/2 transform justify-between">
+                            <button (click)="goToSlide(getPreviousIndex($index, images.length) + 1)"
+                                class="btn btn-circle">
+                                ❮
+                            </button>
+                            <button (click)="goToSlide(getNextIndex($index, images.length) + 1)" class="btn btn-circle">
+                                ❯
+                            </button>
+                        </div>
+                    </div>
+                    } @empty {
+                    <div class="w-full text-center py-10 text-gray-500 bg-gray-100">
+                        No hay imágenes disponibles para esta organización.
+                    </div>
+                    }
+                </div>
+
+                <div class="flex justify-center w-full py-2 gap-2">
+                    @for (image of images; track $index) {
+                    <button (click)="goToSlide($index + 1)" class="btn btn-xs">
+                        {{ $index + 1 }}
+                    </button>
+                    }
+                </div>
+            </div>
+
+            <div class="px-6 mt-6 pb-8">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Comentarios</h3>
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
