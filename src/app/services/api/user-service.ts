@@ -1,32 +1,26 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { PostUserDto, GetUserDto } from '../../models/api/user';
-import { delay, Observable, of } from 'rxjs';
+import { catchError, delay, map, Observable, of, tap } from 'rxjs';
+import { AuthService } from './auth-service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
-  private url = 'https://api.example.com/api/v1/users';
+  private apiUrl = 'http://sumar-mas.dynns.com:9080/users/api/v1/users';
 
   private http = inject(HttpClient);
+  private authService = inject(AuthService);
 
-  register(user: PostUserDto): Observable<any> {
-    return this.http.post(this.url + '/register' , user);
+  register(userData: PostUserDto) {
+    return this.http.post<{ token: string; expiresIn?: number }>(`${this.apiUrl}/register`, userData).pipe(
+      tap(res => this.authService.setToken(res.token, res.expiresIn)),
+      map(() => void 0)
+    );
   }
 
-  getById(id: string): Observable<any> {
-    return this.http.get(this.url + '/' + id);
-  }
-
-  fakeGetById(){
-    const fakeUser: GetUserDto = {
-      id: '1234',
-      firstName: 'Pablo Alberto',
-      lastName: 'Diaz',
-      email: 'pabloo.alb@gmail.com',
-      username: 'pabloo.alb'
-    };
-    return of(fakeUser).pipe(delay(3000));
+  getById(): Observable<GetUserDto> {
+    return this.http.get<GetUserDto>(this.apiUrl + '/my-profile');
   }
 }
