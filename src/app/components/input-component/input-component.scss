@@ -1,0 +1,33 @@
+@import "tailwindcss";
+
+input.file-input-violet {
+    border-radius: 0.375rem;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 0;
+}
+
+/* Chrome, Edge, Safari (WebKit) y navegadores que soportan el estándar moderno */
+input.file-input-violet::file-selector-button,
+input.file-input-violet::-webkit-file-upload-button {
+    background-color: #8b5cf6;
+    color: white;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    border: 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    border-top-left-radius: 0.375rem;
+    border-bottom-left-radius: 0.375rem;
+    cursor: pointer;
+}
+
+/* Hover */
+input.file-input-violet::file-selector-button:hover,
+input.file-input-violet::-webkit-file-upload-button:hover {
+    background-color: #7c3aed;
+}
+
+/* Firefox (usa ::file-selector-button también, pero por compatibilidad no está de más) */
+input.file-input-violet::file-selector-button {
+    -moz-appearance: none;
+    appearance: none;
+}
