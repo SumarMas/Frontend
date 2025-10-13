@@ -7,7 +7,14 @@
 
 @source inline('alert-{info,success,warning,error}');
 
+/*toast*/
 @source inline('top-left,top-center,top-right,bottom-left,bottom-center,bottom-right');
 @source inline('toast');
+
+/*skeleton*/
 @source inline('skeleton');
 @source inline('skeleton-avatar,skeleton-button,skeleton-card,skeleton-input,skeleton-text');
+
+/*inputs*/
+@source inline('file-input-{primary,secondary,accent,info,success,warning,error}');
+@source inline('input-{primary,secondary,accent,info,success,warning,error}');

@@ -4,6 +4,7 @@ import { Home } from './pages/home/home';
 import { Login } from './pages/login/login';
 import { Register } from './pages/register/register';
 import { Profile } from './pages/profile/profile';
+import { OrganizationRegister } from './pages/organization-register/organization-register';
 
 export const routes: Routes = [
     { pathMatch: 'full', path: '', redirectTo: 'home' },
@@ -12,6 +13,9 @@ export const routes: Routes = [
     { path: 'login', title: 'Iniciar sesión', component: Login },
     { path: 'register', title: 'Registrarse', component: Register },
     { path: 'profile', title: 'Mi perfil', component: Profile },
+    { path: 'organizations', children:[
+        { path: 'register', title: 'Registrar organización', component: OrganizationRegister}
+    ]},
     // { path: 'campaigns' },
     // { path: 'organizations' },
     // { path: 'donations' },

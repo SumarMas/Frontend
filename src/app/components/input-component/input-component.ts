@@ -4,7 +4,7 @@ import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { IconComponent } from '../icon-component/icon-component';
 
 type Type = 'text' | 'search' | 'password' | 'file';
-type Variant = 'primary' | 'secondary' | 'accent' | 'success' | 'warning' | 'error';
+type Variant = 'primary' | 'secondary' | 'accent' | 'success' | 'warning' | 'error' | 'violet'| 'neutral';
 
 @Component({
   selector: 'app-input-component',
@@ -18,7 +18,7 @@ export class InputComponent {
   @Input() disabled = false;
 
   @Input() type: Type = 'text';
-  @Input() variant: Variant = 'primary';
+  @Input() variant: Variant = 'neutral';
   @Input() block = false;
 
   //solo par file

@@ -24,16 +24,16 @@ export class Profile implements OnInit {
   userData: FormGroup<{
     firstName: FormControl<string | null>,
     lastName: FormControl<string | null>,
-    email: FormControl<string | null>,
-    username: FormControl<string | null>
+    email: FormControl<string | null>
+    //userName: FormControl<string | null>
   }>;
 
   constructor() {
     this.userData = this.fb.group({
       firstName: [{ value: '', disabled: true }, [Validators.required, Validators.minLength(2)]],
       lastName: [{ value: '', disabled: true }, [Validators.required, Validators.minLength(2)]],
-      email: [{ value: '', disabled: true }],
-      username: [{ value: '', disabled: true }]
+      email: [{ value: '', disabled: true }]
+      //userName: [{ value: '', disabled: true }]
     });
   }
 
@@ -60,13 +60,13 @@ export class Profile implements OnInit {
 
   fetchUserData() {
     this.isLoading.set(true);
-    this.userService.fakeGetById().pipe(finalize(() => this.isLoading.set(false))).subscribe({
+    this.userService.getById().pipe(finalize(() => this.isLoading.set(false))).subscribe({
       next: (user) => {
         this.userData.patchValue({
           firstName: user.firstName,
           lastName: user.lastName,
-          email: user.email,
-          username: user.username
+          email: user.email
+          //userName: user.userName
         });
       },
       error: (err) => {
