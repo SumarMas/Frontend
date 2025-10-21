@@ -5,7 +5,7 @@ import { jwtDecode } from 'jwt-decode';
 import { catchError, delay, map, mapTo, Observable, of, tap, throwError } from 'rxjs';
 
 interface JwtPayload {
-  subject?: string; //usuario
+  user_id?: string; //usuario
   roles?: string[] | string;  //roles del usuario
   exp?: number; //expiracion
 }
@@ -43,6 +43,7 @@ export class AuthService {
 
     if (typeof value === 'string') {
       return value
+        .replace(/[\[\]]/g, '')
         .split(',')            //separa por coma
         .map(r => r.trim())    //quita espacios
         .filter(Boolean);      //elimina vacíos
@@ -102,9 +103,9 @@ export class AuthService {
   });
 
 
-  //obtener los roles y el username
+  //obtener los roles y el userId
   readonly roles = computed(() => this.parseRoles(this.payload()?.roles ?? []));
-  readonly userName = computed(() => this.payload()?.subject ?? '');
+  readonly userId = computed(() => this.payload()?.user_id ?? '');
 
   setToken(token: string, expiresInSeconds?: number) {
     this._token.set(token);
