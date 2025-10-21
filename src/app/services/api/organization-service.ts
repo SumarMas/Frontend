@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { GetOrganizationDto, PostOrganizationDto } from '../../models/api/organization';
+import { GetOrganizationDto, PostOrganizationDto, ValidateOrganizationDto } from '../../models/api/organization';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -17,5 +17,9 @@ export class OrganizationService {
 
   getMyOrganizations() : Observable<GetOrganizationDto[]> {
     return this.http.get<GetOrganizationDto[]>(this.apiUrl + '/my-ngo');
+  }
+
+  approveOrganization(ngoId: string, data: ValidateOrganizationDto): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${ngoId}/validate`, data);
   }
 }
