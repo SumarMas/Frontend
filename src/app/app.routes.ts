@@ -18,7 +18,7 @@ export const routes: Routes = [
     { path: 'organizations', children:[
         { path: 'register', title: 'Registrar organización', component: OrganizationRegister},
         { path: 'my-organizations', title: 'Mis organizaciones', component: MyOrganizations},
-        { path: ':id', title: 'Organización', component: OrganizationPage},
+        { path: ':ngoId', title: 'Organización', component: OrganizationPage},
     ]},
     // { path: 'campaigns' },
     // { path: 'donations' },
