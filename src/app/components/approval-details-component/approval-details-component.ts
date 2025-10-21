@@ -31,10 +31,7 @@ export class ApprovalDetailsComponent {
   }
 
   close(){
-    console.log(this.comment.value);
-    
     this.resetForm();
-    console.log(this.comment.value);
     this.closeModal.emit();
   }
 
@@ -48,7 +45,7 @@ export class ApprovalDetailsComponent {
         approved: true
       };
 
-      this.organizationService.approveOrganization(this.ngoId, approveData).pipe(finalize(() => this.isLoading.set(false))).subscribe({
+      this.organizationService.changeStatusOrganization(this.ngoId, approveData).pipe(finalize(() => this.isLoading.set(false))).subscribe({
         next: () => {
           //emitir exito y cerrar modal
           this.actionSuccess.emit();
@@ -71,15 +68,15 @@ export class ApprovalDetailsComponent {
         approved: false
       };
 
-      this.organizationService.approveOrganization(this.ngoId, rejectData).pipe(finalize(() => this.isLoading.set(false))).subscribe({
+      this.organizationService.changeStatusOrganization(this.ngoId, rejectData).pipe(finalize(() => this.isLoading.set(false))).subscribe({
         next: () => {
           //emitir exito y cerrar modal
           this.actionSuccess.emit();
           this.closeModal.emit();
-          this.toastService.open('Organización aprobada con éxito', 'success', 3000);
+          this.toastService.open('Organización rechazada con éxito', 'success', 3000);
         },
         error: (error) => {
-          this.toastService.open('Ha ocurrido un error al intentar aprobar la organización, intente de nuevo más tarde', 'error', 3000);
+          this.toastService.open('Ha ocurrido un error al intentar rechazar la organización, intente de nuevo más tarde', 'error', 3000);
         }
       });
     }
