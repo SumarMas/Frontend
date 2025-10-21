@@ -6,6 +6,8 @@ import { ButtonComponent } from "../../components/button-component/button-compon
 import { AuthService } from '../../services/api/auth-service';
 import { ApprovalDetailsComponent } from "../../components/approval-details-component/approval-details-component";
 import { ReusableModalComponent } from '../../components/reusable-modal-component/reusable-modal-component';
+import { ActivatedRoute } from '@angular/router';
+import { Title } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-organization-page',
@@ -13,7 +15,9 @@ import { ReusableModalComponent } from '../../components/reusable-modal-componen
   templateUrl: './organization-page.html',
   styleUrl: './organization-page.scss'
 })
-export class OrganizationPage implements OnInit{
+export class OrganizationPage implements OnInit {
+  ngoId: string | null = null;
+
   organization: GetOrganizationDto = {
     ngoId: '4dbb8d30-5483-499c-a498-b0883b46dc87',
     name: 'Manos abiertas',
@@ -24,21 +28,41 @@ export class OrganizationPage implements OnInit{
     createdDateTime: ''
   };
 
+  view: string = ''
+
   @ViewChild('approvalModal') approvalModalRef!: ReusableModalComponent;
-  @ViewChild(ApprovalDetailsComponent) approvalDetails!: ApprovalDetailsComponent;
+  @ViewChild('approvalDetails') approvalDetailsRef!: ApprovalDetailsComponent;
 
   authService = inject(AuthService);
+  private route = inject(ActivatedRoute);
+  private titleService = inject(Title);
 
   ngOnInit(): void {
-    console.log('Organization Page - User ID:', this.authService.userId());
-    console.log('User roles:', this.authService.roles());
-    
+    //obtener el ngoId de la ruta
+    this.ngoId = this.route.snapshot.paramMap.get('ngoId')?.toString() || null;
+
+    //configurar el título de la página
+    const baseTitle = this.route.snapshot.data['title'] || 'Organización';
+
+    if (this.organization.name) {
+      const newTitle = `${baseTitle} - ${this.organization.name}`;
+      this.titleService.setTitle(newTitle);
+    } else {
+      //si no hay nombre, usar el título base
+      this.titleService.setTitle(baseTitle);
+    }
   }
 
   images: { url: string, alt: string }[] = [
-    { url: 'https://img.daisyui.com/images/stock/photo-1625726411847-8cbb60cc71e6.webp', alt: 'Actividad 1' },
+    { url: 'https://www.shutterstock.com/image-photo/bali-indonesia-april-24th-2020-600nw-1737786149.jpg', alt: 'Actividad 1' },
     { url: 'https://img.daisyui.com/images/stock/photo-1609621838510-5ad474b7d25d.webp', alt: 'Actividad 2' },
     { url: 'https://img.daisyui.com/images/stock/photo-1414694762283-acccc27bca85.webp', alt: 'Actividad 3' }
+  ];
+
+  documents: { name: string, url: string }[] = [
+    { name: 'Documento Legal 1', url: '/example/documentoPrueba.txt' },
+    { name: 'Informe Anual 2023', url: '/example/documentoPrueba.txt' },
+    { name: 'Certificado de Registro', url: '/example/documentoPrueba.txt' }
   ];
 
   //------------------------------------Métodos para el carrusel------------------------------------
@@ -52,7 +76,7 @@ export class OrganizationPage implements OnInit{
   getPreviousIndex(currentIndex: number, totalLength: number): number {
     return (currentIndex - 1 + totalLength) % totalLength;
   }
-  
+
   goToSlide(index: number) {
     const slideId = `slide${index}`;
     document.getElementById(slideId)?.scrollIntoView({ behavior: 'smooth' });
@@ -61,13 +85,29 @@ export class OrganizationPage implements OnInit{
   //------------------------------------Métodos para los modales------------------------------------
 
   //abrir modal de aprobacion
-  openApprovalModal(){
+  openApprovalModal() {
     this.approvalModalRef.open();
-    this.approvalDetails.resetForm();
+    this.approvalDetailsRef.resetForm();
   }
 
-  onApprovalSuccess(){
+  onApprovalSuccess() {
     this.approvalModalRef.close();
-    this.approvalDetails.resetForm();
+    this.approvalDetailsRef.resetForm();
+  }
+
+  //------------------------------------Files para descargar------------------------------------
+
+  downloadFile(file: { name: string; url: string }) {
+    fetch(file.url)
+      .then(response => response.blob())
+      .then(blob => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = file.name; // nombre del archivo
+        a.click();
+        window.URL.revokeObjectURL(url);
+      })
+      .catch(err => console.error('Error al descargar', err));
   }
 }

@@ -3,7 +3,7 @@
     <div class="w-full md:w-3/5 bg-white rounded-xl shadow-2xl overflow-hidden">
 
         <header class="h-50 bg-gray-800 relative overflow-hidden"
-            style="background-image: url('https://marketplace.canva.com/EAGWjBIzP8s/1/0/1600w/canva-yellow-colorful-creative-abstract-welcome-banner-LWAWaFXnjMA.jpg'); background-size: cover; background-position: center;">
+            style="background-image: url('https://img.freepik.com/vector-gratis/fondo-follaje-tropical_23-2148530664.jpg'); background-size: cover; background-position: center;">
         </header>
 
         <div>
@@ -11,7 +11,7 @@
             <div class="flex flex-col md:flex-row items-start px-6 pt-0 relative">
                 <div class="avatar relative -mt-16 border-4 border-white shadow-md rounded-full bg-white">
                     <div class="w-32 rounded-full">
-                        <img src="https://img.daisyui.com/images/profile/demo/yellingcat@192.webp"
+                        <img src="https://www.shutterstock.com/image-vector/world-ngo-day-february-27-260nw-2534536471.jpg"
                             alt="Avatar de la organización" />
                     </div>
                 </div>
@@ -35,31 +35,29 @@
                         }
 
 
-                        @if(authService.roles().includes('ORGANIZATION') && authService.userId() ==
-                        this.organization.userCreator.userId){
                         <div class="ml-auto flex space-x-2">
+                            @if(authService.roles().includes('ORGANIZATION') && authService.userId() ==
+                            this.organization.userCreator.userId){
                             <!-- acciones para dueño de la organizacion -->
                             <app-button-component icon="edit" variant="white" tooltip="Editar"></app-button-component>
 
                             <app-button-component icon="add" variant="white"
                                 tooltip="Crear campaña"></app-button-component>
 
-                            <app-button-component icon="info" variant="white" tooltip="Estado"></app-button-component>
-                        </div>
-                        }
-                        @if (authService.roles().includes('ADMIN')) {
-                        <div class="ml-auto flex space-x-2">
+                            <!-- <app-button-component icon="info" variant="white" tooltip="Estado"></app-button-component> -->
+
+                            }
+                            @if (authService.roles().includes('ADMIN')) {
                             <!-- acciones para admin -->
                             @if(organization.status === 'PENDING' || organization.status === 'REJECTED'){
-                            <app-button-component icon="close" variant="error" label="Rechazar"></app-button-component>
 
-                            <app-button-component icon="check" variant="success" label="Aprobar"
+                            <app-button-component icon="warning" variant="warning" label="Administrar estado"
                                 (click)="approvalModal.open()"></app-button-component>
 
                             }
 
+                            }
                         </div>
-                        }
                     </div>
 
                     <p class="text-sm text-gray-500 mt-1">Organización sin fines de lucro | Desde 2015</p>
@@ -109,13 +107,25 @@
             </div>
 
             <!-- mostrar documentacion para descargar, solo si es el admin -->
-            <!-- @if(authService.roles().includes('ADMIN') && authService.userId() ==
+            @if(authService.roles().includes('ADMIN') && authService.userId() ==
             this.organization.userCreator.userId){
-            <div class="px-6 mt-4 pb-8">
+            <div class="px-6 mt-4 pb-4">
                 <h3 class="text-xl font-semibold text-gray-800 mb-4">Documentación</h3>
+
+                <h4 class="text-xl">Archivos disponibles ({{documents.length}})</h4>
+                @for (file of documents; track file.name) {
+                <div class="flex gap-2 mb-2 items-center">
+                    <div class="flex border p-2 gap-3 rounded-2xl">
+                        <span>{{ file.name }}</span>
+                        <app-button-component icon="download" label="Descargar" variant="primary" size="sm" (click)="downloadFile(file)"></app-button-component>
+                    </div>
+                </div>
+                }
+
             </div>
             }
-            <div class="px-6 mt-4 pb-8">
+
+            <!-- <div class="px-6 mt-4 pb-8">
                 <h3 class="text-xl font-semibold text-gray-800 mb-4">Nuestras Campañas</h3>
             </div> -->
 
@@ -125,7 +135,8 @@
 
 </section>
 
-<app-reusable-modal-component #approvalModal>
-    <app-approval-details-component [ngoId]="organization.ngoId" (closeModal)="approvalModal.close()" (actionSuccess)="onApprovalSuccess()">
+<app-reusable-modal-component #approvalModal (closeModalEvent)="approvalDetailsRef.resetForm()">
+    <app-approval-details-component #approvalDetails [ngoId]="organization.ngoId"
+        (closeModal)="this.approvalDetailsRef.resetForm()" (actionSuccess)="onApprovalSuccess()">
     </app-approval-details-component>
 </app-reusable-modal-component>
