@@ -1,0 +1,8 @@
+<dialog #modalRef class="modal">
+    <div class="modal-box">
+        <!-- contenido que viene de afuera -->
+        <ng-content></ng-content>
+
+        <button class="btn btn-sm btn-circle btn-ghost absolute right-2 top-2" (click)="close()">✕</button>
+    </div>
+</dialog>

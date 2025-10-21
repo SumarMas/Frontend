@@ -1,0 +1,15 @@
+<h3 class="text-2xl mb-2">¿Está seguro que desea cambiar el estado de la organización?</h3>
+
+<div>
+    <label>Comentario (opcional)</label>
+    <textarea class="textarea w-full" placeholder="Deje aqui su comentario..." rows="3" [formControl]="comment"
+        [disabled]="isLoading()"></textarea>
+</div>
+
+<div class="flex justify-end gap-2 mt-4">
+    <app-button-component label="Rechazar" variant="error" [rounded]="true" (click)="rejectOrganization()"
+        [disabled]="isLoading()"></app-button-component>
+
+    <app-button-component label="Aprobar" variant="success" [rounded]="true" (click)="approveOrganization()"
+        [isLoading]="isLoading()"></app-button-component>
+</div>
