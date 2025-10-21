@@ -17,12 +17,7 @@ export class ReusableModalComponent {
   }
 
   public close(): void {
+    this.closeModalEvent.emit();
     this.modalRef.nativeElement.close();
-    this.closeModalEvent.emit();
-  }
-  
-  //manejo del cierre
-  onClose() {
-    this.closeModalEvent.emit();
   }
 }
