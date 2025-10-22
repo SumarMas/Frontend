@@ -1,0 +1,71 @@
+<section class="min-h-screen flex items-center justify-center bg-sumar">
+    <div class="flex flex-col justify-center items-center py-4 px-4 gap-6 w-100 rounded-3xl shadow-2xl bg-white relative">
+    @defer (when !isLoading()) {
+        <div class="avatar absolute top-10 left-5 -mt-30">
+            <div class="w-40 rounded-full">
+                <img src="/images/no-icon.png" />
+            </div>
+        </div>
+
+        <div class="flex justify-end gap-2 w-full">
+            <app-button-component class="right-4" [label]="buttonData.text" [variant]="buttonData.variant"
+                [icon]="buttonData.icon" (click)="toggleView()" />
+
+            @if(view == 'edit'){
+            <app-button-component label="" variant="success" icon="check"
+                (click)="saveChanges()" [disabled]="!userData.valid"></app-button-component>
+            }
+        </div>
+
+        <!-- datos del usuairo -->
+        @if(view == 'profile'){
+
+        <div>
+            <h2 class="text-3xl mb-0">{{userData.controls.firstName.value + ' ' + userData.controls.lastName.value}}</h2>
+        <!-- <p class="text-sm text-gray-400">{{userData.controls.userName.value}}</p> -->
+        </div>
+        <div class="flex items-center">
+            <icon name="mail" class="text-violet-400"></icon>
+            <h4 class="text-lg">{{userData.controls.email.value}}</h4>
+        </div>
+        <p class="text-sm text-gray-400 self-end">Miembro hace 4 meses</p>
+        }
+        @else {
+        <form class="w-80" [formGroup]="userData">
+            <div class="mb-2">
+                <label>Nombre</label>
+                <app-input-component [type]="'text'" [control]="userData.controls.firstName"
+                    [block]="true"></app-input-component>
+                    @if(formValidator.showError(userData, 'firstName')){
+                <p class="error-label">{{formValidator.getValidationMessage(userData, 'firstName')}}</p>
+                }
+            </div>
+            <div>
+                <label>Apellido</label>
+                <app-input-component [type]="'text'" [control]="userData.controls.lastName"
+                    [block]="true"></app-input-component>
+                    @if(formValidator.showError(userData, 'lastName')){
+                <p class="error-label">{{formValidator.getValidationMessage(userData, 'lastName')}}</p>
+                }
+            </div>
+        </form>
+        }
+    }
+    @placeholder {
+        <div class="avatar absolute top-10 left-5 -mt-30">
+            <app-skeleton-component [skeletons]="[{ object: 'avatar', classes: 'w-30 h-30' }]"></app-skeleton-component>
+        </div>
+
+        <div class="flex justify-end gap-2 w-full">
+            <app-skeleton-component [skeletons]="[{ object: 'button', classes: 'w-15 h-10' }]"></app-skeleton-component>
+        </div>
+
+        <div class="flex">
+            <app-skeleton-component [skeletons]="[{ object: 'text', classes: 'w-80 h-10 mb-1' }, 
+        { object: 'text', classes: 'w-25 h-2 mb-4 ml-2' }, 
+        { object: 'text', classes: 'w-60 h-6 self-center mb-6' },
+        { object: 'text', classes: 'w-30 h-5 mb-1 self-end' }]"></app-skeleton-component>
+        </div>
+    }
+    </div>
+</section>

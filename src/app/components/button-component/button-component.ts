@@ -22,12 +22,21 @@ export class ButtonComponent {
   @Input() size: Size = 'md';
   @Input() icon?: string;
   @Input() colorIcon?: string;
+  @Input() tooltip?: string | null = null;
+  @Input() tooltipPosition: 'top' | 'right' | 'bottom' | 'left' = 'top';
 
   get classes(): string[] {
     const classes = ['btn', `btn-${this.variant}`, `btn-${this.size}`];
     if (this.outline) classes.push('btn-outline');
     if (this.rounded) classes.push('btn-pill');
     if (this.block) classes.push('w-full');
+    return classes;
+  }
+
+  get tooltipClasses(): string[] {
+    if (!this.tooltip) return [];
+    const classes = [`tooltip`, `tooltip-${this.tooltipPosition}`];
+    if(this.block) classes.push('w-full');
     return classes;
   }
 }

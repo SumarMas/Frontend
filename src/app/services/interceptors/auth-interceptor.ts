@@ -1,6 +1,6 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { AuthService } from '../auth-service';
+import { AuthService } from '../api/auth-service';
 import { Router } from '@angular/router';
 import { catchError, throwError } from 'rxjs';
 
@@ -15,12 +15,20 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(authReq).pipe(
     catchError(err => {
-      if (err.status === 401) {
-        //limpiar sision
-        auth.clearToken();
-        //redirigir 
-        router.navigate(['/401']);
+      const status = err?.status ?? null;
+
+      //detectar si es la petición de login
+      const isLoginRequest = req.url.includes('/login');
+
+      if (status === 401) {
+        //no navego si es de login
+        if (!isLoginRequest) {
+          //para otras peticiones
+          auth.clearToken();
+          router.navigate(['/401']);
+        }
       }
+
       return throwError(() => err);
     })
   );
