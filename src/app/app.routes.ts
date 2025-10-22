@@ -7,6 +7,7 @@ import { Profile } from './pages/profile/profile';
 import { OrganizationRegister } from './pages/organization-register/organization-register';
 import { MyOrganizations } from './pages/my-organizations/my-organizations';
 import { OrganizationPage } from './pages/organization-page/organization-page';
+import { CampaignList } from './pages/campaign-list/campaign-list';
 
 export const routes: Routes = [
     { pathMatch: 'full', path: '', redirectTo: 'home' },
@@ -20,7 +21,10 @@ export const routes: Routes = [
         { path: 'my-organizations', title: 'Mis organizaciones', component: MyOrganizations},
         { path: ':ngoId', title: 'Organización', component: OrganizationPage},
     ]},
-    // { path: 'campaigns' },
+    { path: 'campaigns', children:[
+        { path: 'all', title: 'Descubrir campañas', component: CampaignList },
+        { path: 'create', title: 'Crear campaña', component: Home },
+    ] },
     // { path: 'donations' },
     // { path: 'dashboards' },
 
