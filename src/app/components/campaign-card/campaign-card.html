@@ -5,12 +5,17 @@
     <p class="italic mb-auto text-gray-600">{{(campaign?.description || '') | truncate: 120 }}</p>
 
 
-    <div>
+    <div class="mb-2">
         <span class="font-bold text-2xl">${{campaign?.currentAmount}}</span> <span class="text-gray-400 text-xs"> recaudados de {{campaign?.goalAmount | currency}}</span>
         <progress class="progress progress-primary w-full" [value]="campaign?.currentAmount"
             [max]="campaign?.goalAmount"></progress>
     </div>
 
-    <app-button-component class="flex justify-end" label="Ver más" variant="violet"
+    <div class="flex justify-between">
+        <span class="text-sm text-gray-500" [ngClass]="(+daysLeft(campaign?.endDateTime) > 10 ? 'text-green-500' : 'text-red-500')">{{ +daysLeft(campaign?.endDateTime) }} días restantes</span>
+        <app-button-component class="" label="Ver más" variant="violet"
         [rounded]="true"></app-button-component>
+    </div>
+
+    
 </div>
