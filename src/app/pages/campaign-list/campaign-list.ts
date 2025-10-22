@@ -4,15 +4,21 @@ import { ButtonComponent } from "../../components/button-component/button-compon
 import { CampaignCard } from "../../components/campaign-card/campaign-card";
 import { CampaignState, GetCampaignDto } from '../../models/api/campaign';
 import { GetOrganizationDto } from '../../models/api/organization';
+import { CategoryDto } from '../../models/api/category';
+import { FormsModule, ɵInternalFormsSharedModule } from "@angular/forms";
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-campaign-list',
-  imports: [IconComponent, ButtonComponent, CampaignCard],
+  imports: [IconComponent, ButtonComponent, CampaignCard, ɵInternalFormsSharedModule, CommonModule, FormsModule],
   templateUrl: './campaign-list.html',
   styleUrl: './campaign-list.scss'
 })
 export class CampaignList implements OnInit{
+  campaignsCopy : GetCampaignDto[] = []
   campaigns : GetCampaignDto[] = []
+
+  _searchInput: string = '';
 
   organization: GetOrganizationDto = {
       ngoId: '4dbb8d30-5483-499c-a498-b0883b46dc87',
@@ -26,18 +32,25 @@ export class CampaignList implements OnInit{
 
   mockCampaigns : GetCampaignDto[] = [
     {
-      id: 'kfkadjk',
+      id: '11111',
       ngo: this.organization,
       title: 'Campaña de Invierno',
       description: 'Recaudación de fondos para proveer ropa y refugio a personas en situación de calle durante el invierno.',
       goalAmount: 5000,
       currentAmount: 3200,
-      endDateTime: new Date('2024-12-31T23:59:59Z'),
+      endDateTime: new Date('2025-10-20T16:52:10'),
       createDateTime: new Date('2024-10-01T10:00:00Z'),
       categories: [{id: '1', name: 'Ropa', description: 'Campañas relacionadas con la recolección y distribución de ropa.'}],
       tags: ['invierno', 'refugio', 'ropa'],
       campaignState: CampaignState.ACTIVE,
     },
+  ]
+
+  categories : CategoryDto[] = [
+    {id: '1', name: 'Ropa', description: 'Campañas relacionadas con la recolección y distribución de ropa.'},
+    {id: '2', name: 'Alimentos', description: 'Campañas enfocadas en la provisión de alimentos a comunidades necesitadas.'},
+    {id: '3', name: 'Educación', description: 'Iniciativas para apoyar la educación y el acceso a recursos educativos.'},
+    {id: '4', name: 'Salud', description: 'Proyectos destinados a mejorar la salud y el bienestar de las personas.'}
   ]
 
   ngOnInit(): void {
@@ -47,5 +60,28 @@ export class CampaignList implements OnInit{
   fetchCampaigns(){
     //llamar al servicio para obtener las campañas
     this.campaigns = this.mockCampaigns;
+    this.campaignsCopy = this.campaigns;
+  }
+
+  get searchInput(): string {
+    return this._searchInput;
+  }
+
+  set searchInput(newValue: string) {
+    //almacenar valor
+    this._searchInput = newValue;
+    
+    //ejecutar filtro
+    this.search();
+  }
+
+  search(){
+    this.campaigns = this.campaignsCopy;
+    
+    const term = this.searchInput.toLowerCase();
+
+    if(term){
+      this.campaigns = this.campaigns.filter(c => c.title.toLowerCase().includes(term) || c.tags.some(tag => tag.toLowerCase().includes(term)));
+    }
   }
 }

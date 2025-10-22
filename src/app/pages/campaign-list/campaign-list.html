@@ -6,13 +6,22 @@
             <div class="flex gap-1">
                 <label class="input">
                     <icon name="search"></icon>
-                    <input type="search" required placeholder="Buscar" />
+                    <input type="search" required placeholder="Buscar" [(ngModel)]="searchInput" />
                 </label>
-                <app-button-component label="Buscar" variant="violet" class="ml-2"></app-button-component>
+
             </div>
         </div>
 
+
         <!-- listado de campañas -->
+        @if(campaigns?.length === 0) {
+            <div class="flex justify-center">
+                <div role="alert" class="alert alert-error alert-outline w-1/2">
+            <span>No se ha encontrado ningún criterio que coincida con la búsqueda</span>
+        </div>
+            </div>
+        
+        }
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             @for (campaign of campaigns; track $index) {
             <app-campaign-card [campaign]="campaign"></app-campaign-card>
