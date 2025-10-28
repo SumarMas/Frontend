@@ -1,0 +1,15 @@
+<div class="flex gap-4 p-4 rounded-lg hover:bg-base-200 transition-colors">
+    <div class="avatar">
+        <div class="w-12 h-12 rounded-full">
+            <img [src]="comment?.userAvatar || '/images/no-icon.png'" [alt]="comment?.userName">
+        </div>
+    </div>
+    <div class="flex-1">
+        <div class="flex items-center gap-2 mb-1">
+            <p class="font-semibold">{{ comment?.userName + ' ' + comment?.lastName }}</p>
+            <span class="text-xs text-base-content/60">{{ comment?.createDateTime | date: 'fullDate' }}</span>
+            @if(authService.roles().includes('ADMIN')) {<app-button-component icon="delete" size="sm" variant="error" (click)="ask()"></app-button-component>}
+        </div>
+        <p class="text-base-content/80">{{ comment?.comment }}</p>
+    </div>
+</div>
