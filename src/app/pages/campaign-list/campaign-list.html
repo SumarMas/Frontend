@@ -1,7 +1,7 @@
 <section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar">
     <div class="w-3/5 bg-white p-8 rounded-lg shadow-lg">
-        <div class="flex justify-between">
-            <h1 class="text-3xl font-bold mb-4 logo">Descubra las campañas</h1>
+        <div class="flex justify-between mb-4">
+            <h1 class="text-4xl font-bold mb-4 logo">Descubra las campañas</h1>
 
             <div class="flex gap-1">
                 <label class="input">
@@ -12,15 +12,21 @@
             </div>
         </div>
 
+        
+        <h3 class="text-2xl text-center mb-8">Seleccione una o más categorías disponibles</h3>
+            <app-category-filter-display (selectedIdsChange)="filterByCategories($event)"></app-category-filter-display>
+        
+
+        <hr class="my-8">
 
         <!-- listado de campañas -->
         @if(campaigns?.length === 0) {
-            <div class="flex justify-center">
-                <div role="alert" class="alert alert-error alert-outline w-1/2">
-            <span>No se ha encontrado ningún criterio que coincida con la búsqueda</span>
-        </div>
+        <div class="flex justify-center">
+            <div role="alert" class="alert alert-error alert-outline">
+                <span>No se ha encontrado ningún criterio que coincida con la búsqueda</span>
             </div>
-        
+        </div>
+
         }
         <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
             @for (campaign of campaigns; track $index) {
