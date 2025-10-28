@@ -1,0 +1,51 @@
+<section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar">
+    <div class="w-3/5 bg-white p-8 rounded-lg shadow-lg">
+        <h2 class="text-4xl font-bold logo pb-4">Crea tu campaña</h2>
+        <form [formGroup]="campaignRegisterForm">
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label>Nombre de la campaña</label>
+                    <app-input-component type="text" [control]="campaignRegisterForm.controls.name"
+                        [block]="true"></app-input-component>
+                </div>
+                <div>
+                    <label>Meta de la campaña</label>
+                    <app-input-component type="text" [control]="campaignRegisterForm.controls.goalAmount"
+                        [block]="true"></app-input-component>
+                </div>
+
+                <div class="col-span-2">
+                    <label>Descripción</label>
+                    <textarea class="textarea w-full" placeholder="Detalle sobre su campaña..." rows="4"
+                        formControlName="description"></textarea>
+                </div>
+
+                <div>
+                    <label>Fecha de finalización</label>
+                    <input class="input w-full" type="date" formControlName="endDateTime">
+                </div>
+
+                <div>
+                    <label>Categorías</label>
+                    <select class="select w-full">
+                        <option disabled selected>Seleccione las categorias...</option>
+                        <option>Ropa</option>
+                        <option>Animales</option>
+                        <option>Ambiental</option>
+                    </select>
+                </div>
+
+                <div class="col-span-2">
+                    <label>Imagenes</label>
+                    <app-input-component type="file" variant="violet" [multiple]="true"
+                        [control]="campaignRegisterForm.controls.imagesId" [block]="true"></app-input-component>
+                </div>
+
+                <div class="col-span-2 mt-2">
+                    <app-button-component label="Crear campaña" variant="violet" [isLoading]="isLoading()"
+                    [rounded]="true" [block]="true"></app-button-component>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
