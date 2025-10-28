@@ -1,0 +1,12 @@
+@if(isLoading()) {
+<app-skeleton-component [container]="'grid grid-cols-5'" [skeletons]="skeletonArray"></app-skeleton-component>
+}
+@else {
+<div class="grid grid-cols-5">
+    @for (c of categories; track $index) {
+    <app-category-filter-chip [category]="c" (selectionChange)="changeList($event)"></app-category-filter-chip>
+    }
+</div>
+
+
+}
