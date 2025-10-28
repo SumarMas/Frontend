@@ -1,0 +1,136 @@
+<section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar">
+    <div class="container mx-auto px-4 max-w-6xl">
+        @if (campaign) {
+            <!-- Imagen principal -->
+            <div class="card bg-base-100 shadow-xl mb-6">
+                @if (campaign.images && campaign.images.length > 0) {
+                    <figure class="h-96">
+                        <img [src]="campaign.images[0]" [alt]="campaign.title" class="w-full h-full object-cover">
+                    </figure>
+                }
+
+                <div class="card-body">
+                    <!-- Título y estado -->
+                    <div class="flex justify-between items-start mb-4">
+                        <h1 class="card-title text-3xl font-bold">{{ campaign.title }}</h1>
+                        <div class="badge badge-success badge-lg">{{ campaign.campaignState === 0 ? 'ACTIVA' : 'CERRADA' }}</div>
+                    </div>
+
+                    <!-- Información de la ONG -->
+                    <div class="flex items-center gap-3 mb-4">
+                        <div class="avatar placeholder">
+                            <div class="bg-primary text-primary-content rounded-full w-12">
+                                <span class="text-xl">{{ campaign.ngo.name.charAt(0) }}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="font-semibold">{{ campaign.ngo.name }}</p>
+                            <p class="text-sm text-base-content/70">{{ campaign.ngo.description }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Progreso -->
+                    <div class="mb-6">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-2xl font-bold text-primary">{{ formatCurrency(campaign.currentAmount) }}</span>
+                            <span class="text-base-content/70">de {{ formatCurrency(campaign.goalAmount) }}</span>
+                        </div>
+                        <progress class="progress progress-primary w-full h-4" [value]="getProgressPercentage()" max="100"></progress>
+                        <div class="flex justify-between mt-2 text-sm">
+                            <span class="font-semibold">{{ getProgressPercentage().toFixed(1) }}% alcanzado</span>
+                            <span>{{ getRemainingDays() }} días restantes</span>
+                        </div>
+                    </div>
+
+                    <!-- Botón de donación -->
+                    <div class="card-actions justify-end">
+                        <app-button-component 
+                            label="Donar Ahora" 
+                            variant="violet" 
+                            size="lg" 
+                            icon="volunteer-activism"
+                            [block]="false">
+                        </app-button-component>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid de detalles -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <!-- Descripción -->
+                <div class="lg:col-span-2 card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title text-2xl mb-4">Descripción</h2>
+                        <p class="text-base leading-relaxed">{{ campaign.description }}</p>
+
+                        <!-- Categorías y tags -->
+                        <div class="divider"></div>
+                        <div class="space-y-3">
+                            <div>
+                                <h3 class="font-semibold mb-2">Categorías:</h3>
+                                <div class="flex flex-wrap gap-2">
+                                    @for (category of campaign.categories; track category.id) {
+                                        <div class="badge badge-primary badge-lg">{{ category.name }}</div>
+                                    }
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold mb-2">Etiquetas:</h3>
+                                <div class="flex flex-wrap gap-2">
+                                    @for (tag of campaign.tags; track tag) {
+                                        <div class="badge badge-outline">{{ tag }}</div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información adicional -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h2 class="card-title mb-4">Información</h2>
+                        <div class="space-y-4">
+                            <div class="flex items-start gap-3">
+                                <icon name="calendar-today" class="text-blue-500"></icon>
+                                <div>
+                                    <p class="text-sm text-base-content/70">Fecha de inicio</p>
+                                    <p class="font-semibold">{{ formatDate(campaign.createDateTime) }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <icon name="schedule" class="text-red-500"></icon>
+                                <div>
+                                    <p class="text-sm text-base-content/70">Fecha de cierre</p>
+                                    <p class="font-semibold">{{ formatDate(campaign.endDateTime) }}</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3">
+                                <icon name="group-multiple" class="text-green-500"></icon>
+                                <div>
+                                    <p class="text-sm text-base-content/70">Organización</p>
+                                    <p class="font-semibold">{{ campaign.ngo.name }}</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+                        
+                        <app-button-component 
+                            label="Ver más sobre la ONG" 
+                            variant="violet" 
+                            size="sm" 
+                            [outline]="true"
+                            [block]="true">
+                        </app-button-component>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sección de comentarios -->
+            <div class="card bg-base-100 shadow-xl">
+                <app-commentary-display-component [campaignId]="campaign.id"></app-commentary-display-component>
+            </div>
+        }
+    </div>
+</section>
