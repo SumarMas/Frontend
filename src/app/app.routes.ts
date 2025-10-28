@@ -8,6 +8,8 @@ import { OrganizationRegister } from './pages/organization-register/organization
 import { MyOrganizations } from './pages/my-organizations/my-organizations';
 import { OrganizationPage } from './pages/organization-page/organization-page';
 import { CampaignList } from './pages/campaign-list/campaign-list';
+import { CampaignRegister } from './pages/campaign-register/campaign-register';
+import { CampaignPage } from './pages/campaign-page/campaign-page';
 
 export const routes: Routes = [
     { pathMatch: 'full', path: '', redirectTo: 'home' },
@@ -19,11 +21,14 @@ export const routes: Routes = [
     { path: 'organizations', children:[
         { path: 'register', title: 'Registrar organización', component: OrganizationRegister},
         { path: 'my-organizations', title: 'Mis organizaciones', component: MyOrganizations},
-        { path: ':ngoId', title: 'Organización', component: OrganizationPage},
+        { path: ':ngoId', title: 'Organización', children: [
+            { path: '', title: 'Organización', component: OrganizationPage },
+            { path: 'campaign/:campaignId', title: 'Campaña', component: CampaignPage}
+        ]},
     ]},
     { path: 'campaigns', children:[
         { path: 'all', title: 'Descubrir campañas', component: CampaignList },
-        { path: 'create', title: 'Crear campaña', component: Home },
+        { path: 'create', title: 'Crear campaña', component:  CampaignRegister},
     ] },
     // { path: 'donations' },
     // { path: 'dashboards' },
