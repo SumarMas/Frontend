@@ -1,0 +1,51 @@
+<div class="card-body">
+                    <div class="flex justify-between items-center mb-4">
+                        <h2 class="card-title text-2xl">Comentarios ({{ comments.length }})</h2>
+                        <app-button-component 
+                            [label]="showCommentInput ? 'Cancelar' : 'Agregar comentario'" 
+                            variant="violet" 
+                            size="sm"
+                            (click)="toggleCommentInput()">
+                        </app-button-component>
+                    </div>
+
+                    <!-- Input de comentario -->
+                    @if (showCommentInput) {
+                        <div class="mb-6 p-4 bg-base-200 rounded-lg">
+                            <textarea 
+                                class="textarea textarea-bordered w-full" 
+                                placeholder="Escribe tu comentario aquí..." 
+                                rows="3"
+                                [(ngModel)]="newComment">
+                            </textarea>
+                            <div class="flex justify-end gap-2 mt-3">
+                                <app-button-component 
+                                    label="Cancelar" 
+                                    variant="violet" 
+                                    size="sm"
+                                    [outline]="true"
+                                    (click)="toggleCommentInput()">
+                                </app-button-component>
+                                <app-button-component 
+                                    label="Publicar comentario" 
+                                    variant="violet" 
+                                    size="sm"
+                                    [disabled]="!newComment.trim()"
+                                    (click)="submitComment()">
+                                </app-button-component>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Lista de comentarios -->
+                    <div class="space-y-4">
+                        @if (comments.length === 0) {
+                            <div class="text-center py-8 text-base-content/70">
+                                <p>No hay comentarios aún. ¡Sé el primero en comentar!</p>
+                            </div>
+                        }
+                        @for (comment of comments; track $index) {
+                            <app-commentary-component [comment]="comment"></app-commentary-component>
+                        }
+                    </div>
+                </div>
