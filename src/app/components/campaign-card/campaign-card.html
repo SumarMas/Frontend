@@ -13,7 +13,7 @@
 
     <div class="flex justify-between">
         <span class="text-sm text-gray-500" [ngClass]="(+daysLeft(campaign?.endDateTime) > 10 ? 'text-green-500' : 'text-red-500')">{{ +daysLeft(campaign?.endDateTime) }} días restantes</span>
-        <app-button-component class="" label="Ver más" variant="violet"
+        <app-button-component class="" label="Ver más" variant="violet" (click)="navigate()"
         [rounded]="true"></app-button-component>
     </div>
 
