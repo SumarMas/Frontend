@@ -1,0 +1,4 @@
+<div class="chip-container" [ngClass]="{ selected: isSelected() }" (click)="toggleSelection()">
+    <icon [name]="iconName" size="xl" class="text-violet-400"></icon>
+    <p class="mt-1 text-center w-full break-words overflow-hidden">{{category?.name}}</p>
+</div>

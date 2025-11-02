@@ -15,7 +15,10 @@ export const Sidebuttons: NavItem[] = [
         { title: 'Registrar organización', route: '/organizations/register', roles: ['DONOR', 'ORGANIZATION'], icon: 'add' },
         { title: 'Mis organizaciones', route: '/organizations/my-organizations', roles: ['DONOR', 'ORGANIZATION'], icon: 'diversity-1' },
     ] },
-    { title: 'Campañas', route: '/admin', roles: ['ADMIN'], icon: 'volunteer-activism' },
+    { title: 'Campañas', roles: ['ADMIN'], icon: 'volunteer-activism', children: [
+        { title: 'Crear campaña', route: '/campaigns/create', roles: ['ADMIN'], icon: 'add' },
+        { title: 'Descubrir campañas', route: '/campaigns/all', roles: ['ADMIN'], icon: 'search' },
+    ] },
     { title: 'Donaciones', roles: ['DONOR'], icon: 'volunteer-activism', open: false, children: [
         { title: 'Mis donaciones', route: '/donations', roles: ['DONOR'], icon: 'chat' },
         { title: 'Realizar donación', route: '/donate', roles: ['DONOR'], icon: 'check' },

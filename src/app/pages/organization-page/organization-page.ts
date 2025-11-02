@@ -6,12 +6,12 @@ import { ButtonComponent } from "../../components/button-component/button-compon
 import { AuthService } from '../../services/api/auth-service';
 import { ApprovalDetailsComponent } from "../../components/approval-details-component/approval-details-component";
 import { ReusableModalComponent } from '../../components/reusable-modal-component/reusable-modal-component';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterOutlet } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-organization-page',
-  imports: [IconComponent, CommonModule, ButtonComponent, ReusableModalComponent, ApprovalDetailsComponent],
+  imports: [IconComponent, CommonModule, ButtonComponent, ReusableModalComponent, ApprovalDetailsComponent, RouterOutlet],
   templateUrl: './organization-page.html',
   styleUrl: './organization-page.scss'
 })

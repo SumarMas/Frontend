@@ -1,0 +1,23 @@
+<div class="space-y-0">
+
+    @if (isOpen()) {
+    @for (message of messages; track message.messageCampaignId; let i = $index; let last = $last) {
+
+    <app-message-component [message]="message"></app-message-component>
+
+    <!-- @if (!last) {
+    <div class="h-12 flex justify-center w-full relative">
+        
+        <div class="absolute left-1/2 top-0 bottom-0 -translate-x-1/2 flex items-center">
+            <div class="w-px h-full bg-blue-100/80 border-l border-blue-100"></div>
+        </div>
+    </div>
+    } -->
+
+    }
+    @empty {
+    <p class="text-gray-500 p-4 text-center">No hay actualizaciones disponibles para mostrar.</p>
+    }
+    }
+
+</div>

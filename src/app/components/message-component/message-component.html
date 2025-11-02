@@ -1,0 +1,20 @@
+<div class="p-4 mb-4 w-full bg-white rounded-lg shadow-md shadow-violet-300">
+    <div class="flex justify-between items-start w-full">
+
+        <h2 class="text-xl font-semibold mb-2">{{ message?.title }}</h2>
+        <span class="text-xs text-base-content/60">{{ message?.creationDateTime | date: 'fullDate' }}</span>
+    </div>
+
+    <p class="text-gray-700 mb-4">{{ message?.description }}</p>
+
+    @if(message?.fileId){
+    <div class="file-attachment mt-4 flex justify-center">
+        <img class="w-2/3 h-auto rounded" src="" alt="">
+    </div>
+    }
+    @if(authService.roles().includes('ADMIN') || authService.roles().includes('ORGANIZATION')) {
+    <div class="flex justify-end">
+        <app-button-component icon="delete" variant="error" size="sm" (click)="ask()"></app-button-component>
+    </div>
+    }
+</div>

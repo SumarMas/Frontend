@@ -1,0 +1,10 @@
+@import 'tailwindcss';
+
+.chip-container {
+    @apply border border-violet-100 bg-gray-50 rounded-2xl p-4 flex flex-col items-center justify-center shadow-md hover:cursor-pointer
+    w-32 h-32;
+}
+
+.selected{
+    @apply inset-shadow-sm inset-shadow-violet-500 shadow-none;
+}

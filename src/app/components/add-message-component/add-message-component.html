@@ -1,0 +1,46 @@
+@if (show()) {
+<div class="mb-6 p-4 bg-base-200 rounded-lg animate-in">
+    <form [formGroup]="messageForm">
+        <!-- Título -->
+        <div class="mb-3">
+            <app-input-component [control]="messageForm.controls.title" placeholder="Título de la actualización..."
+                type="text" [block]="true"></app-input-component>
+
+            @if (validatorService.showError(messageForm, 'title')) {
+            <div class="text-xs text-error">
+                {{ validatorService.getValidationMessage(messageForm, 'title') }}
+            </div>
+            }
+        </div>
+
+
+        <!-- Descripción -->
+        <div class="mb-3">
+            <textarea class="textarea textarea-bordered w-full"
+                placeholder="Describe los avances, novedades o actualizaciones relevantes..." rows="3"
+                formControlName="description">
+                            </textarea>
+            @if (validatorService.showError(messageForm, 'description')) {
+            <div class="text-xs text-error">
+                {{ validatorService.getValidationMessage(messageForm, 'description') }}
+            </div>
+            }
+        </div>
+
+        <!-- File (opcional) -->
+        <div class="mb-3">
+            <app-input-component [control]="messageForm.controls.fileId" [multiple]="false" [block]="true"
+                variant="violet" type="file"></app-input-component>
+        </div>
+
+        <!-- Botones -->
+        <div class="flex justify-end gap-2 mt-3">
+            <app-button-component label="Cancelar" variant="violet" size="sm" [outline]="true" (click)="onCancel()">
+            </app-button-component>
+            <app-button-component label="Publicar actualización" variant="violet" size="sm"
+                [disabled]="messageForm.invalid" (click)="onSubmit()" [isLoading]="isLoading()">
+            </app-button-component>
+        </div>
+    </form>
+</div>
+}
