@@ -1,10 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GetCampaignDto, CampaignState } from '../../models/api/campaign';
 import { ButtonComponent } from '../../components/button-component/button-component';
 import { IconComponent } from "../../components/icon-component/icon-component";
 import { CommentaryDisplayComponent } from "../../components/commentary-display-component/commentary-display-component";
+import { MessageComponent } from "../../components/message-component/message-component";
+import { MessageDisplayComponent } from "../../components/message-display-component/message-display-component";
+import { AuthService } from '../../services/api/auth-service';
+import { PostMessageDto } from '../../models/api/message';
+import { AddMessageComponent } from "../../components/add-message-component/add-message-component";
 
 interface Comment {
   id: string;
@@ -16,12 +21,31 @@ interface Comment {
 
 @Component({
   selector: 'app-campaign-page',
-  imports: [CommonModule, FormsModule, ButtonComponent, IconComponent, CommentaryDisplayComponent],
+  imports: [CommonModule, FormsModule, ButtonComponent, IconComponent, CommentaryDisplayComponent, MessageComponent, MessageDisplayComponent, AddMessageComponent],
   templateUrl: './campaign-page.html',
   styleUrl: './campaign-page.scss'
 })
 export class CampaignPage implements OnInit {
   campaign: GetCampaignDto | null = null;
+  isOpen = signal(false);
+
+  authService = inject(AuthService);
+
+  showAddMessage = signal(false);
+
+toggleAddMessage() {
+  this.showAddMessage.set(!this.showAddMessage());
+}
+
+handleCancel() {
+  this.showAddMessage.set(false);
+}
+
+handleMessageSubmitted(dto: PostMessageDto) {
+  // Guardar el mensaje vía servicio
+  console.log('Nuevo mensaje:', dto);
+  this.showAddMessage.set(false);
+}
 
   ngOnInit(): void {
     this.loadMockedCampaign();
@@ -85,5 +109,10 @@ export class CampaignPage implements OnInit {
       style: 'currency',
       currency: 'ARS'
     }).format(amount);
+  }
+
+  // Para cambiar el valor:
+  toggle(): void {
+    this.isOpen.set(!this.isOpen()); // Actualiza el valor
   }
 }
