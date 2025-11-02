@@ -10,6 +10,7 @@ import { MessageDisplayComponent } from "../../components/message-display-compon
 import { AuthService } from '../../services/api/auth-service';
 import { PostMessageDto } from '../../models/api/message';
 import { AddMessageComponent } from "../../components/add-message-component/add-message-component";
+import { Router } from '@angular/router';
 
 interface Comment {
   id: string;
@@ -30,22 +31,23 @@ export class CampaignPage implements OnInit {
   isOpen = signal(false);
 
   authService = inject(AuthService);
+  router = inject(Router);
 
   showAddMessage = signal(false);
 
-toggleAddMessage() {
-  this.showAddMessage.set(!this.showAddMessage());
-}
+  toggleAddMessage() {
+    this.showAddMessage.set(!this.showAddMessage());
+  }
 
-handleCancel() {
-  this.showAddMessage.set(false);
-}
+  handleCancel() {
+    this.showAddMessage.set(false);
+  }
 
-handleMessageSubmitted(dto: PostMessageDto) {
-  // Guardar el mensaje vía servicio
-  console.log('Nuevo mensaje:', dto);
-  this.showAddMessage.set(false);
-}
+  handleMessageSubmitted(dto: PostMessageDto) {
+    // Guardar el mensaje vía servicio
+    console.log('Nuevo mensaje:', dto);
+    this.showAddMessage.set(false);
+  }
 
   ngOnInit(): void {
     this.loadMockedCampaign();
@@ -55,7 +57,7 @@ handleMessageSubmitted(dto: PostMessageDto) {
     this.campaign = {
       id: '1',
       ngo: {
-        ngoId: 'org-1',
+        ngoId: 'qewrqwerqer',
         name: 'Fundación Ayuda Solidaria',
         description: 'Organización dedicada a ayudar a los más necesitados',
         createdDateTime: '2020-01-15',
@@ -83,11 +85,19 @@ handleMessageSubmitted(dto: PostMessageDto) {
     };
   }
 
+  /**
+   * Obtiene el porcentaje de progreso de la campaña.
+   * @returns number
+   */
   getProgressPercentage(): number {
     if (!this.campaign) return 0;
     return (this.campaign.currentAmount / this.campaign.goalAmount) * 100;
   }
 
+  /**
+   * Obtiene los días restantes para la campaña.
+   * @returns number
+   */
   getRemainingDays(): number {
     if (!this.campaign) return 0;
     const now = new Date();
@@ -96,6 +106,7 @@ handleMessageSubmitted(dto: PostMessageDto) {
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
   }
 
+  /** Formatea una fecha al formato local. */
   formatDate(date: Date): string {
     return new Date(date).toLocaleDateString('es-AR', {
       year: 'numeric',
@@ -104,6 +115,7 @@ handleMessageSubmitted(dto: PostMessageDto) {
     });
   }
 
+  /** Formatea un monto al formato de moneda local. */
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
@@ -111,8 +123,29 @@ handleMessageSubmitted(dto: PostMessageDto) {
     }).format(amount);
   }
 
-  // Para cambiar el valor:
+  //Cambia la visibilidad del panel de comentarios
   toggle(): void {
-    this.isOpen.set(!this.isOpen()); // Actualiza el valor
+    this.isOpen.set(!this.isOpen());
+  }
+
+  /**
+   * Navega a una URL con parámetros opcionales.
+   * @param url - dirección a la que se quiere navegar
+   * @param params {[key: string]: string} - parámetros adicionales para la navegación
+   * @examples
+   * this.navigate('/my-profile');
+   * this.navigate('/campaigns/:id', { id: '123' });
+   * this.navigate('/campaigns/:id/donations/:donationId', { id: '123', donationId: '456' });
+   */
+  navigate(url: string, params?: { [key: string]: string }): void {
+    if (params) {
+      Object.keys(params).forEach(key => {
+        //reemplaza solo coincidencias exactas de :key seguidas por / o fin de string
+        url = url.replace(new RegExp(`:${key}(?=/|$)`, 'g'), params[key]);
+      });
+    }
+
+    this.router.navigate([url]);
+    console.log('Navegando a:', url);
   }
 }

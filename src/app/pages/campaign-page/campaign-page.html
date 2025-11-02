@@ -56,8 +56,8 @@
                         @if(campaign.ngo.userCreator.userId === authService.userId()){
 
                         }
-                        <app-button-component icon="add" variant="white" tooltip="Agregar actualización"
-                            (click)="toggleAddMessage()"></app-button-component>
+                        <app-button-component [icon]="showAddMessage() ? 'close' : 'add'" [variant]="showAddMessage() ? 'error' : 'white'" [tooltip]="showAddMessage() ? 'Cancelar' : 'Agregar actualización'"
+                            tooltipPosition="right" (click)="toggleAddMessage()"></app-button-component>
                     </div>
 
 
@@ -69,7 +69,7 @@
                     </div>
                 </div>
 
-                <app-add-message-component [show]="showAddMessage"
+                <app-add-message-component [show]="showAddMessage" [campaignId]="campaign.id"
                             (messageSubmitted)="handleMessageSubmitted($event)" (cancel)="handleCancel()">
                         </app-add-message-component>
 
@@ -144,7 +144,7 @@
                     <div class="divider"></div>
 
                     <app-button-component label="Ver más sobre la ONG" variant="violet" size="sm" [outline]="true"
-                        [block]="true">
+                        [block]="true" (click)="navigate('/organizations/:ngoId', { ngoId: campaign.ngo.ngoId})">
                     </app-button-component>
                 </div>
             </div>
