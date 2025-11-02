@@ -27,7 +27,13 @@ export interface GetCampaignDto {
 }
 
 export interface PutCampaignDto {
-
+    title?: string;
+    description?: string;
+    goalAmount?: number;
+    endDateTime?: Date;
+    categoryIds?: string[];
+    tags?: string[];
+    imageIds?: string[];
 }
 
 export enum CampaignState {
