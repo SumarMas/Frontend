@@ -6,6 +6,8 @@ import { ButtonComponent } from '../button-component/button-component';
 import { InputComponent } from '../input-component/input-component';
 import { MessageService } from '../../services/api/message-service';
 import { ToastService } from '../../services/ui/toast-service';
+import { finalize } from 'rxjs';
+import { FormValidatorService } from '../../services/validations/form-validator-service';
 
 @Component({
   selector: 'app-add-message-component',
@@ -22,6 +24,7 @@ export class AddMessageComponent {
   isLoading = signal(false);
   messageService = inject(MessageService);
   toastService = inject(ToastService);
+  validatorService = inject(FormValidatorService);
 
   messageForm: FormGroup<{
     title: FormControl<string | null>;
@@ -53,14 +56,14 @@ export class AddMessageComponent {
         fileId: this.messageForm.controls.fileId.value?.trim() || undefined
       };
       this.isLoading.set(true);
-      this.messageService.postMessage(this.campaignId,dto).subscribe({
+      this.messageService.postMessage(this.campaignId,dto).pipe(finalize(() => this.isLoading.set(false))).subscribe({
         next: () => {
-          this.isLoading.set(false);
           this.messageSubmitted.emit(dto);
           this.messageForm.reset();
+          this.toastService.open('Actualización creada con éxito.', 'success', 3000);
         },
         error: () => {
-          this.isLoading.set(false);
+          this.toastService.open('Error al crear actualización. Por favor, inténtalo de nuevo.', 'error', 3000);
         }
       });
     } else {

@@ -5,17 +5,14 @@
         <div class="mb-3">
             <app-input-component [control]="messageForm.controls.title" placeholder="Título de la actualización..."
                 type="text" [block]="true"></app-input-component>
-        </div>
-        @if (messageForm.controls.title.invalid && messageForm.controls.title.touched) {
-        <div class="text-xs text-error mt-1">
-            @if (messageForm.controls.title.errors?.['required']) {
-            El título es obligatorio
-            }
-            @if (messageForm.controls.title.errors?.['maxlength']) {
-            Máximo 100 caracteres
+
+            @if (validatorService.showError(messageForm, 'title')) {
+            <div class="text-xs text-error">
+                {{ validatorService.getValidationMessage(messageForm, 'title') }}
+            </div>
             }
         </div>
-        }
+
 
         <!-- Descripción -->
         <div class="mb-3">
@@ -23,24 +20,17 @@
                 placeholder="Describe los avances, novedades o actualizaciones relevantes..." rows="3"
                 formControlName="description">
                             </textarea>
-            @if (messageForm.controls.description.invalid && messageForm.controls.description.touched) {
-            <div class="text-xs text-error mt-1">
-                @if (messageForm.controls.description.errors?.['required']) {
-                La descripción es obligatoria
-                }
-                @if (messageForm.controls.description.errors?.['maxlength']) {
-                Máximo 500 caracteres
-                }
+            @if (validatorService.showError(messageForm, 'description')) {
+            <div class="text-xs text-error">
+                {{ validatorService.getValidationMessage(messageForm, 'description') }}
             </div>
             }
-            <div class="text-xs text-base-content/60 mt-1">{{ messageForm.controls.description.value?.length || 0 }} /
-                500</div>
         </div>
 
         <!-- File (opcional) -->
         <div class="mb-3">
-            <app-input-component [control]="messageForm.controls.fileId" [multiple]="false" [block]="true" variant="violet"
-                type="file"></app-input-component>
+            <app-input-component [control]="messageForm.controls.fileId" [multiple]="false" [block]="true"
+                variant="violet" type="file"></app-input-component>
         </div>
 
         <!-- Botones -->
@@ -48,7 +38,7 @@
             <app-button-component label="Cancelar" variant="violet" size="sm" [outline]="true" (click)="onCancel()">
             </app-button-component>
             <app-button-component label="Publicar actualización" variant="violet" size="sm"
-                [disabled]="messageForm.invalid" (click)="onSubmit()">
+                [disabled]="messageForm.invalid" (click)="onSubmit()" [isLoading]="isLoading()">
             </app-button-component>
         </div>
     </form>
