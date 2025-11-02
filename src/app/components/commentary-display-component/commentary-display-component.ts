@@ -39,7 +39,13 @@ export class CommentaryDisplayComponent implements OnInit {
         this.comments = comments;
       },
       error: (error) => {
-        this.toastService.open('No se han podido cargar los comentarios:' + error.message, 'error', 3000);
+        switch (error.status) {
+          case 500:
+            this.toastService.open('Error del servidor, no se ha podido cargar los comentarios. Por favor, inténtalo de nuevo más tarde.', 'error', 3000);
+            break;
+          default:
+            this.toastService.open('No se han podido cargar los comentarios:' + error.message, 'error', 3000);
+        }
       }
     });
   }
@@ -56,6 +62,15 @@ export class CommentaryDisplayComponent implements OnInit {
           this.toastService.open('Comentario publicado con éxito', 'success', 3000);
         },
         error: (error) => {
+          switch (error.status) {
+            case 400:
+              this.toastService.open('El comentario no puede estar vacío.', 'warning', 3000);
+              break;
+            case 500:
+              this.toastService.open('Error del servidor. Por favor, inténtalo de nuevo más tarde.', 'error', 3000);
+              break;
+            default:
+          }
           this.toastService.open('No se ha podido publicar el comentario:' + error.message, 'error', 3000);
         }
       });
