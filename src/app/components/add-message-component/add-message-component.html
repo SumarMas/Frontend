@@ -1,0 +1,56 @@
+@if (show()) {
+<div class="mb-6 p-4 bg-base-200 rounded-lg animate-in">
+    <form [formGroup]="messageForm">
+        <!-- Título -->
+        <div class="mb-3">
+            <app-input-component [control]="messageForm.controls.title" placeholder="Título de la actualización..."
+                type="text" [block]="true"></app-input-component>
+        </div>
+        @if (messageForm.controls.title.invalid && messageForm.controls.title.touched) {
+        <div class="text-xs text-error mt-1">
+            @if (messageForm.controls.title.errors?.['required']) {
+            El título es obligatorio
+            }
+            @if (messageForm.controls.title.errors?.['maxlength']) {
+            Máximo 100 caracteres
+            }
+        </div>
+        }
+
+        <!-- Descripción -->
+        <div class="mb-3">
+            <textarea class="textarea textarea-bordered w-full"
+                placeholder="Describe los avances, novedades o actualizaciones relevantes..." rows="3"
+                formControlName="description">
+                            </textarea>
+            @if (messageForm.controls.description.invalid && messageForm.controls.description.touched) {
+            <div class="text-xs text-error mt-1">
+                @if (messageForm.controls.description.errors?.['required']) {
+                La descripción es obligatoria
+                }
+                @if (messageForm.controls.description.errors?.['maxlength']) {
+                Máximo 500 caracteres
+                }
+            </div>
+            }
+            <div class="text-xs text-base-content/60 mt-1">{{ messageForm.controls.description.value?.length || 0 }} /
+                500</div>
+        </div>
+
+        <!-- File (opcional) -->
+        <div class="mb-3">
+            <app-input-component [control]="messageForm.controls.fileId" [multiple]="false" [block]="true" variant="violet"
+                type="file"></app-input-component>
+        </div>
+
+        <!-- Botones -->
+        <div class="flex justify-end gap-2 mt-3">
+            <app-button-component label="Cancelar" variant="violet" size="sm" [outline]="true" (click)="onCancel()">
+            </app-button-component>
+            <app-button-component label="Publicar actualización" variant="violet" size="sm"
+                [disabled]="messageForm.invalid" (click)="onSubmit()">
+            </app-button-component>
+        </div>
+    </form>
+</div>
+}
