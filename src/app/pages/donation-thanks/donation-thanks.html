@@ -1,0 +1,65 @@
+<section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar">
+    <div class="w-2/5 bg-white p-8 rounded-lg shadow-lg text-center">
+        <!-- Ícono de éxito -->
+        <div class="mb-6">
+            <div class="w-24 h-24 mx-auto bg-violet-100 rounded-full flex items-center justify-center">
+                <icon class="text-violet-600" name="check" size="xl"></icon>
+            </div>
+            
+        </div>
+
+        <!-- Título -->
+        <h1 class="text-4xl font-bold mb-4 logo text-violet-600">¡Gracias por tu donación!</h1>
+        
+        <!-- Mensaje principal -->
+        <p class="text-lg text-gray-700 mb-4">
+            Tu aporte ha sido procesado exitosamente.
+        </p>
+        
+        <p class="italic text-gray-400 mb-8">
+            Con tu generosidad, estás contribuyendo a una causa noble y ayudando a quienes más lo necesitan. 
+            Cada donación hace la diferencia y nos acerca más a nuestro objetivo.
+        </p>
+
+        <!-- Detalles de la donación -->
+        <div class="bg-gray-50 rounded-lg p-6 mb-8">
+            <h2 class="text-lg font-semibold text-gray-700 mb-4">Detalles de tu donación</h2>
+            <div class="space-y-2 text-left">
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Monto:</span>
+                    <span class="font-semibold text-violet-600">$5,000</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">Fecha:</span>
+                    <span class="font-semibold">2 de noviembre, 2025</span>
+                </div>
+                <div class="flex justify-between">
+                    <span class="text-gray-600">ID de transacción:</span>
+                    <span class="font-semibold text-sm">TXN-2025-001234</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mensaje adicional -->
+        <p class="text-sm text-gray-500 mb-8">
+            Recibirás un correo de confirmación con los detalles de tu donación.
+        </p>
+
+        <!-- Botones de acción -->
+        <div class="flex gap-4 justify-center">
+            <app-button-component 
+                [label]="'Ver campañas'" 
+                variant="violet" 
+                [rounded]="true"
+                size="lg">
+            </app-button-component>
+            
+            <app-button-component 
+                [label]="'Volver al inicio'" 
+                variant="white" 
+                [rounded]="true"
+                size="lg">
+            </app-button-component>
+        </div>
+    </div>
+</section>
