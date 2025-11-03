@@ -1,0 +1,19 @@
+<section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar">
+    <div class="w-2/5 bg-white p-8 rounded-lg shadow-lg">
+        <h1 class="text-4xl font-bold mb-4 logo text-center">Donando a {{campaignName}}</h1>
+        <p class="italic text-gray-400">Con tu donación, estás contribuyendo a una causa noble y ayudando a quienes más
+            lo necesitan.</p>
+
+        <div class="flex gap-4 align-center justify-center my-8">
+            @for (value of commonValues; track $index) {
+            <app-button-component [label]="'$' +value + ''" [variant]="(amount == value ? 'violet': 'white')" size="xl" [rounded]="true"
+                (click)="setAmount = value"></app-button-component>
+            }
+        </div>
+        <p class="text-center italic text-gray-400 mb-8">- o -</p>
+
+        <input type="number" class="input mx-auto block w-full max-w-md mb-8 text-center" placeholder="Ingrese un monto..." [(ngModel)]="amount" pattern="[0-9]*">
+
+        <app-button-component [label]="'Donar'" [block]="true" variant="violet" [rounded]="true" (click)="onDonate()"></app-button-component>
+    </div>
+</section>
