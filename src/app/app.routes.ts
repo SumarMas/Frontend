@@ -10,6 +10,8 @@ import { OrganizationPage } from './pages/organization-page/organization-page';
 import { CampaignList } from './pages/campaign-list/campaign-list';
 import { CampaignRegister } from './pages/campaign-register/campaign-register';
 import { CampaignPage } from './pages/campaign-page/campaign-page';
+import { DonationRegister } from './pages/donation-register/donation-register';
+import { DonationThanks } from './pages/donation-thanks/donation-thanks';
 
 export const routes: Routes = [
     { pathMatch: 'full', path: '', redirectTo: 'home' },
@@ -18,19 +20,32 @@ export const routes: Routes = [
     { path: 'login', title: 'Iniciar sesión', component: Login },
     { path: 'register', title: 'Registrarse', component: Register },
     { path: 'profile', title: 'Mi perfil', component: Profile },
-    { path: 'organizations', children:[
-        { path: 'register', title: 'Registrar organización', component: OrganizationRegister},
-        { path: 'my-organizations', title: 'Mis organizaciones', component: MyOrganizations},
-        { path: ':ngoId', title: 'Organización', children: [
-            { path: '', title: 'Organización', component: OrganizationPage },
-            { path: 'campaign/:campaignId', title: 'Campaña', component: CampaignPage}
-        ]},
-    ]},
-    { path: 'campaigns', children:[
-        { path: 'all', title: 'Descubrir campañas', component: CampaignList },
-        { path: 'create', title: 'Crear campaña', component:  CampaignRegister},
-    ] },
-    // { path: 'donations' },
+    {
+        path: 'organizations', children: [
+            { path: 'register', title: 'Registrar organización', component: OrganizationRegister },
+            { path: 'my-organizations', title: 'Mis organizaciones', component: MyOrganizations },
+            {
+                path: ':ngoId', title: 'Organización', children: [
+                    { path: '', title: 'Organización', component: OrganizationPage },
+                    { path: 'campaign/:campaignId', title: 'Campaña', component: CampaignPage }
+                ]
+            },
+        ]
+    },
+    {
+        path: 'campaigns', children: [
+            { path: 'all', title: 'Descubrir campañas', component: CampaignList },
+            { path: 'create', title: 'Crear campaña', component: CampaignRegister },
+        ]
+    },
+    {
+        path: 'donations', children: [
+            //{ path: 'all', title: 'Todas mis donaciones', component: DonationList },
+            //{ path: ':donationId', title: 'Donación', component: DonationPage },
+            { path: 'new/:campaignName/:campaignId', title: 'Donar', component: DonationRegister },
+            { path: 'thanks', title: 'Gracias por tu donación', component: DonationThanks }
+        ]
+    },
     // { path: 'dashboards' },
 
 
