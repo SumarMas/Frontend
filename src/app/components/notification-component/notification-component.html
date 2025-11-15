@@ -1,0 +1,193 @@
+<!-- Contenedor relativo para el dropdown -->
+<div class="relative">
+    <!-- Botón de notificaciones con badge -->
+    <div class="relative">
+        <app-button-component 
+            icon="notifications" 
+            variant="white" 
+            (onClick)="toggleDropdown()">
+        </app-button-component>
+        
+        <!-- Badge de contador (solo si hay notificaciones sin leer) -->
+        @if(unreadCount() > 0) {
+        <span class="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center">
+            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-violet-400 opacity-75"></span>
+            <span class="relative inline-flex rounded-full h-5 w-5 bg-violet-600 text-white text-xs font-bold items-center justify-center">
+                {{ unreadCount() > 9 ? '9+' : unreadCount() }}
+            </span>
+        </span>
+        }
+    </div>
+
+    <!-- Dropdown (posición absoluta, no ocupa espacio) -->
+    @if(isOpen()) {
+    <div class="notification-dropdown">
+        <!-- Overlay para cerrar al hacer click fuera -->
+        <div class="fixed inset-0 z-40" (click)="closeDropdown()"></div>
+        
+        <!-- Panel de notificaciones -->
+        <div class="absolute right-0 mt-2 w-96 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 max-h-[32rem] flex flex-col">
+            
+            <!-- Header -->
+            <div class="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-violet-50 to-purple-50">
+                <div class="flex items-center gap-2">
+                    <icon name="notifications" class="text-violet-600"></icon>
+                    <h3 class="font-bold text-gray-800">Notificaciones</h3>
+                    @if(unreadCount() > 0) {
+                    <span class="badge badge-sm bg-violet-600 text-white border-none">
+                        {{ unreadCount() }}
+                    </span>
+                    }
+                </div>
+                
+                @if(notifications().length > 0) {
+                <button 
+                    (click)="markAllAsRead()"
+                    class="text-xs text-violet-600 hover:text-violet-800 font-semibold transition-colors">
+                    Marcar todas como leídas
+                </button>
+                }
+            </div>
+
+            <!-- Lista de notificaciones (scrolleable) -->
+            <div class="overflow-y-auto flex-1">
+                @if(notifications().length === 0) {
+                <!-- Estado vacío -->
+                <div class="flex flex-col items-center justify-center py-12 px-4">
+                    <icon name="notifications" class="text-gray-300 text-5xl mb-3"></icon>
+                    <p class="text-gray-500 text-sm text-center">
+                        No tienes notificaciones
+                    </p>
+                    <p class="text-gray-400 text-xs text-center mt-1">
+                        Te avisaremos cuando haya novedades
+                    </p>
+                </div>
+                } @else {
+                
+                <!-- Notificaciones de hoy o no leídas -->
+                @if(getTodayOrUnreadNotifications().length > 0) {
+                <div class="mb-2">
+                    <div class="px-4 py-2 bg-gradient-to-r from-violet-50 to-purple-50">
+                        <h4 class="text-xs font-bold text-violet-700 uppercase tracking-wide">
+                            Recientes
+                        </h4>
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        @for(notification of getTodayOrUnreadNotifications(); track notification.id) {
+                        <div 
+                            class="notification-item"
+                            [class.unread]="!notification.read"
+                            (mouseenter)="handleNotificationHover(notification)"
+                            (click)="handleNotificationClick(notification)">
+                            
+                            <div class="flex gap-3 p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+                                <!-- Icono con color según tipo -->
+                                <div class="flex-shrink-0">
+                                    <div [class]="'p-2 rounded-full ' + getNotificationColor(notification.type)">
+                                        <icon [name]="getNotificationIcon(notification.type)" [size]="'sm'"></icon>
+                                    </div>
+                                </div>
+
+                                <!-- Contenido -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <h4 class="font-semibold text-sm text-gray-800 line-clamp-1">
+                                            {{ notification.title }}
+                                        </h4>
+                                        <button 
+                                            (click)="deleteNotification(notification.id, $event)"
+                                            class="flex-shrink-0 text-gray-400 hover:text-red-600 transition-colors">
+                                            <icon name="close" [size]="'sm'"></icon>
+                                        </button>
+                                    </div>
+                                    
+                                    <p class="text-xs text-gray-600 mt-1 line-clamp-2">
+                                        {{ notification.message }}
+                                    </p>
+                                    
+                                    <div class="flex items-center gap-2 mt-2">
+                                        <span class="text-xs text-gray-400">
+                                            {{ getTimeAgo(notification.timestamp) }}
+                                        </span>
+                                        @if(!notification.read) {
+                                        <span class="w-2 h-2 rounded-full bg-violet-600"></span>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                </div>
+                }
+
+                <!-- Notificaciones anteriores -->
+                @if(getOlderNotifications().length > 0) {
+                <div>
+                    <div class="px-4 py-2 bg-gray-50">
+                        <h4 class="text-xs font-bold text-gray-500 uppercase tracking-wide">
+                            Anteriores
+                        </h4>
+                    </div>
+                    <div class="divide-y divide-gray-100">
+                        @for(notification of getOlderNotifications(); track notification.id) {
+                        <div 
+                            class="notification-item"
+                            (mouseenter)="handleNotificationHover(notification)"
+                            (click)="handleNotificationClick(notification)">
+                            
+                            <div class="flex gap-3 p-4 hover:bg-gray-50 transition-colors cursor-pointer">
+                                <!-- Icono con color según tipo -->
+                                <div class="flex-shrink-0">
+                                    <div [class]="'p-2 rounded-full ' + getNotificationColor(notification.type)">
+                                        <icon [name]="getNotificationIcon(notification.type)" [size]="'sm'"></icon>
+                                    </div>
+                                </div>
+
+                                <!-- Contenido -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="flex items-start justify-between gap-2">
+                                        <h4 class="font-semibold text-sm text-gray-800 line-clamp-1">
+                                            {{ notification.title }}
+                                        </h4>
+                                        <button 
+                                            (click)="deleteNotification(notification.id, $event)"
+                                            class="flex-shrink-0 text-gray-400 hover:text-red-600 transition-colors">
+                                            <icon name="close" [size]="'sm'"></icon>
+                                        </button>
+                                    </div>
+                                    
+                                    <p class="text-xs text-gray-600 mt-1 line-clamp-2">
+                                        {{ notification.message }}
+                                    </p>
+                                    
+                                    <div class="flex items-center gap-2 mt-2">
+                                        <span class="text-xs text-gray-400">
+                                            {{ getTimeAgo(notification.timestamp) }}
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        }
+                    </div>
+                </div>
+                }
+                
+                }
+            </div>
+
+            <!-- Footer con acciones -->
+            @if(notifications().length > 0) {
+            <div class="p-3 border-t border-gray-200 bg-gray-50">
+                <button 
+                    (click)="clearAll()"
+                    class="w-full text-center text-sm text-gray-600 hover:text-red-600 font-semibold transition-colors py-2 hover:bg-red-50 rounded-lg">
+                    Limpiar todas las notificaciones
+                </button>
+            </div>
+            }
+        </div>
+    </div>
+    }
+</div>

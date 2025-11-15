@@ -30,6 +30,7 @@
                                     label="Publicar comentario" 
                                     variant="violet" 
                                     size="sm"
+                                    [isLoading]="isLoading()"
                                     [disabled]="!newComment.trim()"
                                     (click)="submitComment()">
                                 </app-button-component>
@@ -45,7 +46,10 @@
                             </div>
                         }
                         @for (comment of comments; track $index) {
-                            <app-commentary-component [comment]="comment"></app-commentary-component>
+                            <app-commentary-component 
+                                [comment]="comment"
+                                (commentDeleted)="fetchAllComments()">
+                            </app-commentary-component>
                         }
                     </div>
                 </div>

@@ -1,142 +1,324 @@
-<section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar">
+<section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar-light">
 
-    <div class="w-full md:w-3/5 bg-white rounded-xl shadow-2xl overflow-hidden">
+    <!-- Loading state -->
+    @if(isLoading()) {
+    <div class="flex justify-center items-center py-20">
+        <span class="loading loading-spinner loading-lg text-violet-600"></span>
+    </div>
+    }
 
-        <header class="h-50 bg-gray-800 relative overflow-hidden"
-            style="background-image: url('https://img.freepik.com/vector-gratis/fondo-follaje-tropical_23-2148530664.jpg'); background-size: cover; background-position: center;">
+    <!-- Content -->
+    @else if(organization()) {
+    <div class="w-full md:w-4/5 lg:w-3/4 bg-white rounded-2xl shadow-2xl overflow-hidden">
+
+        <!-- Banner superior con gradiente -->
+        <header class="h-64 relative overflow-hidden bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600">
+            @if(organization()!.bannerFileId && getImageUrl(organization()!.bannerFileId)) {
+            <img [src]="getImageUrl(organization()!.bannerFileId)" alt="Banner" class="w-full h-full object-cover opacity-80">
+            } @else {
+            <div class="absolute inset-0 bg-gradient-to-br from-violet-500 via-purple-500 to-pink-500"></div>
+            }
+            <!-- Overlay decorativo -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent"></div>
         </header>
 
-        <div>
+        <!-- Contenedor principal -->
+        <div class="relative">
 
-            <div class="flex flex-col md:flex-row items-start px-6 pt-0 relative">
-                <div class="avatar relative -mt-16 border-4 border-white shadow-md rounded-full bg-white">
-                    <div class="w-32 rounded-full">
-                        <img src="https://www.shutterstock.com/image-vector/world-ngo-day-february-27-260nw-2534536471.jpg"
-                            alt="Avatar de la organización" />
+            <!-- Header con avatar y acciones -->
+            <div class="px-6 lg:px-10 pt-0 pb-6 border-b border-gray-200">
+                <div class="flex flex-col md:flex-row items-start gap-6 relative">
+
+                    <!-- Avatar con sombra y borde -->
+                    <div class="avatar -mt-20 z-10">
+                        <div class="w-36 h-36 rounded-2xl border-4 border-white shadow-2xl bg-white overflow-hidden">
+                            @if(organization()!.profileFileId && getImageUrl(organization()!.profileFileId)) {
+                            <img [src]="getImageUrl(organization()!.profileFileId)"
+                                [alt]="organization()!.name" class="w-full h-full object-cover" />
+                            } @else {
+                            <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-100 to-purple-200">
+                                <icon name="group" class="text-violet-400 text-6xl"></icon>
+                            </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Info y acciones -->
+                    <div class="flex-1 md:mt-4">
+                        <div class="flex flex-col lg:flex-row lg:items-start justify-between gap-4">
+                            <div class="flex-1">
+                                <!-- Nombre y verificación -->
+                                <div class="flex items-center gap-3 mb-2">
+                                    <h1 class="text-3xl lg:text-4xl font-bold text-gray-800 logo">
+                                        {{ organization()!.name }}
+                                    </h1>
+
+                                    @if(organization()!.status === 'VERIFIED' || organization()!.status === 'ACTIVE'){
+                                    <div class="tooltip" data-tip="Organización verificada">
+                                        <icon name="verified" class="text-blue-500 text-2xl"></icon>
+                                    </div>
+                                    }
+                                    @else {
+                                    <div class="tooltip" data-tip="Esta organización está pendiente de verificación">
+                                        <icon name="warning" class="text-yellow-400 text-2xl"></icon>
+                                    </div>
+                                    }
+                                </div>
+
+                                <!-- Metadata -->
+                                <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+                                    <div class="flex items-center gap-2">
+                                        <div class="bg-violet-100 p-1.5 rounded-full">
+                                            <icon name="group" [size]="'sm'" class="text-violet-600"></icon>
+                                        </div>
+                                        <span>Organización sin fines de lucro</span>
+                                    </div>
+                                    @if(organization()!.createdDateTime) {
+                                    <div class="flex items-center gap-2">
+                                        <div class="bg-purple-100 p-1.5 rounded-full">
+                                            <icon name="schedule" [size]="'sm'" class="text-purple-600"></icon>
+                                        </div>
+                                        <span>Registrada el {{ organization()!.createdDateTime | date:'dd/MM/yyyy' }}</span>
+                                    </div>
+                                    }
+                                </div>
+                            </div>
+
+                            <!-- Botones de acción -->
+                            <div class="flex flex-wrap gap-2">
+                                @if(authService.roles().includes('ORGANIZATION') && authService.userId() == organization()!.userCreator.userId){
+                                <app-button-component icon="edit" [label]="isEditMode() ? 'Cancelar' : 'Editar'"
+                                    [variant]="isEditMode() ? 'error' : 'white'" tooltip="Editar organización"
+                                    [rounded]="true" (onClick)="toggleEditMode()">
+                                </app-button-component>
+
+                                <app-button-component icon="add" label="Nueva campaña" variant="violet"
+                                    [rounded]="true">
+                                </app-button-component>
+                                }
+
+                                @if (authService.roles().includes('ADMIN')) {
+                                @if(organization()!.status === 'PENDING' || organization()!.status === 'REJECTED'){
+                                <app-button-component icon="warning" variant="warning" label="Administrar estado"
+                                    [rounded]="true" (onClick)="approvalModal.open()">
+                                </app-button-component>
+                                }
+                                }
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="ml-0 md:ml-6 mt-4 md:mt-8 flex flex-col w-full">
+            <!-- Zona de edición (solo visible en modo edición) -->
+            @if(isEditMode() && authService.roles().includes('ORGANIZATION') && authService.userId() == organization()!.userCreator.userId) {
+            <div class="px-6 lg:px-10 py-8 bg-violet-50 border-t border-violet-200">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <div class="w-1 h-8 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
+                    Editar Organización
+                </h2>
 
-                    <div class="flex items-center space-x-2">
-                        <h1 class="text-3xl md:text-3xl font-bold text-gray-800">
-                            {{ organization?.name || 'Nombre de la Organización' }}
-                        </h1>
+                <form [formGroup]="editForm" class="space-y-6">
+                    <!-- Subir nuevos documentos -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <label class="block mb-3">
+                            <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                <icon name="document" [size]="'sm'" class="text-violet-600"></icon>
+                                Actualizar documentos legales
+                            </span>
+                            <span class="text-xs text-gray-500 block mt-1">Sube nuevos documentos para reemplazar los
+                                existentes (PDF, DOC, etc.)</span>
+                        </label>
+                        <input type="file" multiple accept=".pdf,.doc,.docx"
+                            class="file-input file-input-bordered file-input-violet w-full"
+                            (change)="onFileSelect($event, 'documents')">
+                    </div>
 
-                        @if(organization.status === 'VERIFIED'){
-                        <div class="tooltip" data-tip="Verificado">
-                            <icon [name]="'verified'" class="text-blue-500"></icon>
+                    <!-- Subir nuevas imágenes -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <label class="block mb-3">
+                            <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                <icon name="image" [size]="'sm'" class="text-violet-600"></icon>
+                                Actualizar galería de imágenes
+                            </span>
+                            <span class="text-xs text-gray-500 block mt-1">Sube nuevas imágenes para la galería (JPG,
+                                PNG, etc.)</span>
+                        </label>
+                        <input type="file" multiple accept="image/*"
+                            class="file-input file-input-bordered file-input-violet w-full"
+                            (change)="onFileSelect($event, 'images')">
+
+                        @if(editForm.get('images')?.value && editForm.get('images')?.value?.length) {
+                        <div class="mt-4">
+                            <p class="text-sm text-gray-600 mb-2">Imágenes seleccionadas: {{
+                                editForm.get('images')?.value?.length }}</p>
+                            <div class="flex flex-wrap gap-2">
+                                @for (file of editForm.get('images')?.value || []; track file.name) {
+                                <span class="badge badge-violet">{{ file.name }}</span>
+                                }
+                            </div>
                         </div>
                         }
-                        @else {
-                        <div class="tooltip" data-tip="Esta organización está pendiente de verificación">
-                            <icon [name]="'warning'" class="text-yellow-300"></icon>
-                        </div>
-                        }
-
-
-                        <div class="ml-auto flex space-x-2">
-                            @if(authService.roles().includes('ORGANIZATION') && authService.userId() ==
-                            this.organization.userCreator.userId){
-                            <!-- acciones para dueño de la organizacion -->
-                            <app-button-component icon="edit" variant="white" tooltip="Editar"></app-button-component>
-
-                            <app-button-component icon="add" variant="white"
-                                tooltip="Crear campaña"></app-button-component>
-
-                            <!-- <app-button-component icon="info" variant="white" tooltip="Estado"></app-button-component> -->
-
-                            }
-                            @if (authService.roles().includes('ADMIN')) {
-                            <!-- acciones para admin -->
-                            @if(organization.status === 'PENDING' || organization.status === 'REJECTED'){
-
-                            <app-button-component icon="warning" variant="warning" label="Administrar estado"
-                                (click)="approvalModal.open()"></app-button-component>
-
-                            }
-
-                            }
-                        </div>
                     </div>
 
-                    <p class="text-sm text-gray-500 mt-1">Organización sin fines de lucro | Desde 2015</p>
-                </div>
-            </div>
+                    <!-- Botones de acción -->
+                    <div class="flex justify-end gap-3 pt-4">
+                        <app-button-component label="Cancelar" variant="white" [rounded]="true"
+                            (onClick)="toggleEditMode()">
+                        </app-button-component>
 
-            <div class="p-6 pt-4">
-                <div class="p-4">
-                    <p class="text-gray-600 mt-1">
-                        {{organization?.description || 'Esta es una breve descripción de la organización.'}}
-                    </p>
-                </div>
-            </div>
-
-            <div class="px-6 mt-6 pb-8">
-
-                <div class="carousel w-full rounded-lg overflow-hidden">
-                    @for (image of images; track $index) {
-                    <div [id]="'slide' + ($index + 1)" class="carousel-item relative w-full">
-                        <img [src]="image.url" [alt]="image.alt || ('Imagen ' + ($index + 1))"
-                            class="w-full object-cover h-96" />
-
-                        <div class="absolute left-5 right-5 top-1/2 flex -translate-y-1/2 transform justify-between">
-                            <button (click)="goToSlide(getPreviousIndex($index, images.length) + 1)"
-                                class="btn btn-circle">
-                                ❮
-                            </button>
-                            <button (click)="goToSlide(getNextIndex($index, images.length) + 1)" class="btn btn-circle">
-                                ❯
-                            </button>
-                        </div>
+                        <app-button-component [label]="isSaving() ? 'Guardando...' : 'Guardar cambios'" variant="violet"
+                            [rounded]="true" [disabled]="isSaving()" (onClick)="saveChanges()">
+                        </app-button-component>
                     </div>
-                    } @empty {
-                    <div class="w-full text-center py-10 text-gray-500 bg-gray-100">
-                        No hay imágenes disponibles para esta organización.
-                    </div>
-                    }
-                </div>
-
-                <div class="flex justify-center w-full py-2 gap-2">
-                    @for (image of images; track $index) {
-                    <button (click)="goToSlide($index + 1)" class="btn btn-xs">
-                        {{ $index + 1 }}
-                    </button>
-                    }
-                </div>
-            </div>
-
-            <!-- mostrar documentacion para descargar, solo si es el admin -->
-            @if(authService.roles().includes('ADMIN') && authService.userId() ==
-            this.organization.userCreator.userId){
-            <div class="px-6 mt-4 pb-4">
-                <h3 class="text-xl font-semibold text-gray-800 mb-4">Documentación</h3>
-
-                <h4 class="text-xl">Archivos disponibles ({{documents.length}})</h4>
-                @for (file of documents; track file.name) {
-                <div class="flex gap-2 mb-2 items-center">
-                    <div class="flex border p-2 gap-3 rounded-2xl">
-                        <span>{{ file.name }}</span>
-                        <app-button-component icon="download" label="Descargar" variant="primary" size="sm" (click)="downloadFile(file)"></app-button-component>
-                    </div>
-                </div>
-                }
-
+                </form>
             </div>
             }
 
-            <!-- <div class="px-6 mt-4 pb-8">
-                <h3 class="text-xl font-semibold text-gray-800 mb-4">Nuestras Campañas</h3>
-            </div> -->
+            <!-- Descripción -->
+            <div class="px-6 lg:px-10 py-8 bg-gray-50">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <div class="w-1 h-8 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
+                    Nuestra Misión
+                </h2>
+                <p class="text-gray-700 leading-relaxed">
+                    {{organization()!.description || 'Esta organización no tiene descripción disponible.'}}
+                </p>
+            </div>
+
+            <!-- Galería de imágenes -->
+            <div class="px-6 lg:px-10 py-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <div class="w-1 h-8 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
+                    Galería
+                </h2>
+
+                <div class="carousel w-full rounded-xl overflow-hidden shadow-lg">
+                    @for (image of getCarouselImages(); track image.imageId) {
+                    <div [id]="'slide' + ($index + 1)" class="carousel-item relative w-full">
+                        @if(image.url) {
+                        <img [src]="image.url" [alt]="image.alt || ('Imagen ' + ($index + 1))"
+                            class="w-full object-cover h-[500px]" />
+                        } @else {
+                        <div class="w-full h-[500px] flex items-center justify-center bg-gradient-to-br from-violet-100 to-purple-200">
+                            <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                        </div>
+                        }
+
+                        <div class="absolute left-5 right-5 top-1/2 flex -translate-y-1/2 transform justify-between">
+                            <button (click)="goToSlide(getPreviousIndex($index, getCarouselImages().length) + 1)"
+                                class="btn btn-circle btn-lg bg-white/90 hover:bg-white border-0 shadow-xl">
+                                <icon name="arrow-left"></icon>
+                            </button>
+                            <button (click)="goToSlide(getNextIndex($index, getCarouselImages().length) + 1)"
+                                class="btn btn-circle btn-lg bg-white/90 hover:bg-white border-0 shadow-xl">
+                                <icon name="arrow-right"></icon>
+                            </button>
+                        </div>
+
+                        <!-- Contador de imágenes -->
+                        <div
+                            class="absolute bottom-4 right-4 bg-black/60 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                            {{ $index + 1 }} / {{ getCarouselImages().length }}
+                        </div>
+                    </div>
+                    } @empty {
+                    <div
+                        class="w-full text-center py-20 text-gray-500 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
+                        <icon name="image" [size]="'xl'" class="text-gray-300 mb-4"></icon>
+                        <p class="text-lg">No hay imágenes disponibles para esta organización.</p>
+                    </div>
+                    }
+                </div>
+
+                <!-- Indicadores de slides -->
+                @if(getCarouselImages().length > 0) {
+                <div class="flex justify-center w-full py-4 gap-2">
+                    @for (image of getCarouselImages(); track image.imageId) {
+                    <button (click)="goToSlide($index + 1)" class="w-2 h-2 rounded-full transition-all duration-300"
+                        [class.bg-violet-600]="$index === 0" [class.w-8]="$index === 0"
+                        [class.bg-gray-300]="$index !== 0">
+                    </button>
+                    }
+                </div>
+                }
+            </div>
+
+            <!-- Documentación (solo para admin) -->
+            @if(authService.roles().includes('ADMIN') && organization()!.userCreator){
+            <div class="px-6 lg:px-10 py-8 bg-gray-50 border-t border-gray-200">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <div class="w-1 h-8 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
+                    Documentación Legal
+                </h2>
+
+                <p class="text-gray-600 mb-4">Archivos disponibles ({{getDocuments().length}})</p>
+
+                <div class="grid gap-3">
+                    @for (file of getDocuments(); track file.fileId) {
+                    <div
+                        class="flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 hover:border-violet-300 hover:shadow-md transition-all">
+                        <div class="flex items-center gap-3">
+                            <!-- Ícono según tipo de archivo -->
+                            @if(file.type === 'PDF') {
+                            <div class="bg-red-100 p-3 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/>
+                                </svg>
+                            </div>
+                            } @else if(file.type === 'Imagen') {
+                            <div class="bg-blue-100 p-3 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+                                </svg>
+                            </div>
+                            } @else {
+                            <div class="bg-violet-100 p-3 rounded-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-violet-600" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+                                </svg>
+                            </div>
+                            }
+                            
+                            <div class="flex flex-col">
+                                <span class="font-medium text-gray-800">{{ file.name }}</span>
+                                <span class="text-xs text-gray-500 mt-0.5">
+                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full">
+                                        {{ file.type }}
+                                    </span>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Estado de carga y botón de descarga -->
+                        @if(file.url) {
+                        <app-button-component icon="download" label="Descargar" variant="violet" size="sm"
+                            [rounded]="true" (onClick)="downloadFile(file)">
+                        </app-button-component>
+                        } @else {
+                        <div class="flex items-center gap-2 text-gray-500">
+                            <span class="loading loading-spinner loading-sm"></span>
+                            <span class="text-sm">Cargando...</span>
+                        </div>
+                        }
+                    </div>
+                    } @empty {
+                    <p class="text-gray-500 text-center py-4">No hay documentos disponibles.</p>
+                    }
+                </div>
+            </div>
+            }
 
         </div>
 
+        <!-- Modal de aprobación -->
+        <app-reusable-modal-component #approvalModal (closeModalEvent)="approvalDetailsRef.resetForm()">
+            <app-approval-details-component #approvalDetails [ngoId]="organization()?.ngoId || ''"
+                (closeModal)="this.approvalDetailsRef.resetForm()" (actionSuccess)="onApprovalSuccess()">
+            </app-approval-details-component>
+        </app-reusable-modal-component>
+
     </div>
+    }
 
 </section>
-
-<app-reusable-modal-component #approvalModal (closeModalEvent)="approvalDetailsRef.resetForm()">
-    <app-approval-details-component #approvalDetails [ngoId]="organization.ngoId"
-        (closeModal)="this.approvalDetailsRef.resetForm()" (actionSuccess)="onApprovalSuccess()">
-    </app-approval-details-component>
-</app-reusable-modal-component>

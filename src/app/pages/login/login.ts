@@ -32,6 +32,7 @@ export class Login {
   onSubmit() {
     if (this.loginForm.valid) {
       this.isLoading.set(true);
+      this.loginForm.disable();
       const email = this.loginForm.value.email ?? '';
       const password = this.loginForm.value.password ?? '';
 
@@ -39,8 +40,6 @@ export class Login {
         next: () => {
           this.isLoading.set(false);
           this.toastService.open('Has iniciado sesión con éxito', 'success', 3000, 'bottom-right');
-          console.log(this.authService.roles());
-          
         },
         error: (err) => {
           this.isLoading.set(false);
@@ -48,6 +47,7 @@ export class Login {
         }
       });
       this.loginForm.reset();
+      this.loginForm.enable();
     }
   }
 }

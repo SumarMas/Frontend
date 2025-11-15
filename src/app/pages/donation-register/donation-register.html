@@ -6,14 +6,17 @@
 
         <div class="flex gap-4 align-center justify-center my-8">
             @for (value of commonValues; track $index) {
-            <app-button-component [label]="'$' +value + ''" [variant]="(amount == value ? 'violet': 'white')" size="xl" [rounded]="true"
-                (click)="setAmount = value"></app-button-component>
+            <app-button-component [label]="'$' +value + ''" [variant]="((amount == value) && !isCustomAmount() ? 'violet': 'white')" size="xl" [rounded]="true"
+                (onClick)="setAmount = value"></app-button-component>
             }
+            <app-button-component label="Otro" [variant]="(isCustomAmount() ? 'violet': 'white')" size="xl" [rounded]="true"
+                (onClick)="isCustomAmount.set(true)"></app-button-component>
         </div>
         <p class="text-center italic text-gray-400 mb-8">- o -</p>
 
-        <input type="number" class="input mx-auto block w-full max-w-md mb-8 text-center" placeholder="Ingrese un monto..." [(ngModel)]="amount" pattern="[0-9]*">
+        <input type="number" class="input mx-auto block w-full max-w-md mb-8 text-center" placeholder="Ingrese un monto..." [disabled]="!isCustomAmount()"
+        [(ngModel)]="amount" pattern="[0-9]*" min="0">
 
-        <app-button-component [label]="'Donar'" [block]="true" variant="violet" [rounded]="true" (click)="onDonate()"></app-button-component>
+        <app-button-component [label]="'Donar'" [block]="true" variant="violet" [rounded]="true" [disabled]="disable()" (onClick)="onDonate()"></app-button-component>
     </div>
 </section>

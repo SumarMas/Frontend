@@ -19,7 +19,8 @@ export class ApprovalDetailsComponent {
 
   comment : FormControl<string | null> = new FormControl(null);
 
-  isLoading = signal<boolean>(false);
+  isLoadingApprove = signal<boolean>(false);
+  isLoadingReject = signal<boolean>(false);
 
   private organizationService = inject(OrganizationService);
   private toastService = inject(ToastService);
@@ -38,14 +39,14 @@ export class ApprovalDetailsComponent {
   //aprobar la organizacion
   approveOrganization() {
     if (this.ngoId) {
-      this.isLoading.set(true);
+      this.isLoadingApprove.set(true);
 
       const approveData : ValidateOrganizationDto = {
         comment: this.comment.value || '',
         approved: true
       };
 
-      this.organizationService.changeStatusOrganization(this.ngoId, approveData).pipe(finalize(() => this.isLoading.set(false))).subscribe({
+      this.organizationService.changeStatusOrganization(this.ngoId, approveData).pipe(finalize(() => this.isLoadingApprove.set(false))).subscribe({
         next: () => {
           //emitir exito y cerrar modal
           this.actionSuccess.emit();
@@ -61,14 +62,14 @@ export class ApprovalDetailsComponent {
 
   rejectOrganization() {
     if (this.ngoId) {
-      this.isLoading.set(true);
+      this.isLoadingReject.set(true);
 
       const rejectData : ValidateOrganizationDto = {
         comment: this.comment.value || '',
         approved: false
       };
 
-      this.organizationService.changeStatusOrganization(this.ngoId, rejectData).pipe(finalize(() => this.isLoading.set(false))).subscribe({
+      this.organizationService.changeStatusOrganization(this.ngoId, rejectData).pipe(finalize(() => this.isLoadingReject.set(false))).subscribe({
         next: () => {
           //emitir exito y cerrar modal
           this.actionSuccess.emit();

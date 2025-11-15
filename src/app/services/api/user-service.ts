@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { PostUserDto, GetUserDto } from '../../models/api/user';
+import { PostUserDto, GetUserDto, PutUserDto } from '../../models/api/user';
 import { catchError, delay, map, Observable, of, tap } from 'rxjs';
 import { AuthService } from './auth-service';
 
@@ -22,5 +22,9 @@ export class UserService {
 
   getById(): Observable<GetUserDto> {
     return this.http.get<GetUserDto>(this.apiUrl + '/my-profile');
+  }
+
+  updateUser(userData: PutUserDto, userId: string): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/${userId}/update`, userData);
   }
 }

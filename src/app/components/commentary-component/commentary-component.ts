@@ -1,4 +1,4 @@
-import { Component, inject, Input } from '@angular/core';
+import { Component, inject, Input, Output, EventEmitter } from '@angular/core';
 import { GetCommentDto } from '../../models/api/comment';
 import { DatePipe } from '@angular/common';
 import { AuthService } from '../../services/api/auth-service';
@@ -15,6 +15,7 @@ import { ConfirmService } from '../../services/ui/confirm-service';
 })
 export class CommentaryComponent {
   @Input() comment: GetCommentDto | null = null;
+  @Output() commentDeleted = new EventEmitter<void>();
 
   commentService = inject(CommentService);
   authService = inject(AuthService);
@@ -25,6 +26,7 @@ export class CommentaryComponent {
     this.commentService.deleteComment(commentId).subscribe({
       next: () => {
         this.toastService.open('Comentario eliminado con éxito', 'success', 3000);
+        this.commentDeleted.emit();
       },
       error: (error) => {
         this.toastService.open('No se ha podido eliminar el comentario:' + error.message, 'error', 3000);

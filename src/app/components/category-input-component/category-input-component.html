@@ -1,0 +1,16 @@
+<div class="flex gap-2">
+    <select class="select w-full" [(ngModel)]="selectedCategory"> <option disabled value="">Selecciona una categoria...</option> 
+        @for (cat of availableCategories; track $index) {
+        <option [value]="cat.id">{{cat.name}}</option>
+        }
+    </select>
+    <app-button-component label="Añadir" variant="violet" (onClick)="addCategory()"></app-button-component>
+</div>
+@if(categoriesIds.length > 0) {
+<div class="flex flex-wrap gap-2 m-2 w-full">
+    @for (category of categoriesIds; track $index) {
+    <span class="badge badge-lg badge-primary text-white">{{category.name}}<icon class="hover:cursor-pointer" name="close"
+                size="sm" (click)="removeCategory($index)"></icon></span>
+    }
+</div>
+}

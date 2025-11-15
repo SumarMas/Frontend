@@ -18,7 +18,10 @@
 
         <div class="actions">
             @if(!isLoggedIn()){
-                <app-button-component label="Iniciar Sesión" variant="violet" [rounded]="true" (click)="navigate('/login')" />
+                <app-button-component label="Iniciar Sesión" variant="violet" [rounded]="true" (onClick)="navigate('/login')" />
+            }
+            @else {
+                <app-notification-component></app-notification-component>
             }
         </div>
     </div>

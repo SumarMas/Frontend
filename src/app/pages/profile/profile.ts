@@ -8,18 +8,30 @@ import { SkeletonComponent } from '../../components/skeleton-component/skeleton-
 import { finalize } from 'rxjs';
 import { InputComponent } from "../../components/input-component/input-component";
 import { FormValidatorService } from '../../services/validations/form-validator-service';
+import { AuthService } from '../../services/api/auth-service';
 
 type Variant = 'white' | 'error'
 
 @Component({
   selector: 'app-profile',
-  imports: [ReactiveFormsModule, ButtonComponent, IconComponent, SkeletonComponent, InputComponent],
+  imports: [ReactiveFormsModule, ButtonComponent, IconComponent, InputComponent],
   templateUrl: './profile.html',
   styleUrl: './profile.scss'
 })
 export class Profile implements OnInit {
   view: 'profile' | 'edit' = 'profile';
   isLoading = signal<boolean>(true);
+  
+  profileImageUrl: string | null = null;
+  userRoles: string[] = [];
+  userStatus: string = '';
+  
+  // Guardar datos originales para restaurar al cancelar
+  originalUserData: {
+    firstName: string;
+    lastName: string;
+    email: string;
+  } | null = null;
 
   userData: FormGroup<{
     firstName: FormControl<string | null>,
@@ -38,6 +50,7 @@ export class Profile implements OnInit {
   }
 
   private fb = inject(FormBuilder);
+  private authService = inject(AuthService);
   private userService = inject(UserService);
   private toastService = inject(ToastService);
   formValidator = inject(FormValidatorService);
@@ -53,21 +66,50 @@ export class Profile implements OnInit {
   }
 
   toggleView() {
-    this.view = this.view === 'profile' ? 'edit' : 'profile';
-    this.userData.controls.firstName.disabled ? this.userData.controls.firstName.enable() : this.userData.controls.firstName.disable();
-    this.userData.controls.lastName.disabled ? this.userData.controls.lastName.enable() : this.userData.controls.lastName.disable();
+    if (this.view === 'profile') {
+      // Al entrar en modo edición, guardar los datos actuales
+      this.originalUserData = {
+        firstName: this.userData.controls.firstName.value || '',
+        lastName: this.userData.controls.lastName.value || '',
+        email: this.userData.controls.email.value || ''
+      };
+      this.view = 'edit';
+      this.userData.controls.firstName.enable();
+      this.userData.controls.lastName.enable();
+    } else {
+      // Al cancelar, restaurar los datos originales
+      if (this.originalUserData) {
+        this.userData.patchValue({
+          firstName: this.originalUserData.firstName,
+          lastName: this.originalUserData.lastName,
+          email: this.originalUserData.email
+        });
+      }
+      this.view = 'profile';
+      this.userData.controls.firstName.disable();
+      this.userData.controls.lastName.disable();
+    }
   }
 
   fetchUserData() {
     this.isLoading.set(true);
     this.userService.getById().pipe(finalize(() => this.isLoading.set(false))).subscribe({
       next: (user) => {
-        this.userData.patchValue({
+        const userData = {
           firstName: user.firstName,
           lastName: user.lastName,
           email: user.email
-          //userName: user.userName
-        });
+        };
+        
+        this.userData.patchValue(userData);
+        
+        // Guardar datos originales
+        this.originalUserData = { ...userData };
+        
+        // Guardar roles y estado
+        this.userRoles = user.roles || [];
+        this.userStatus = user.status || 'ACTIVE';
+        this.profileImageUrl = user.profileFileId || null;
       },
       error: (err) => {
         this.toastService.open('Error al cargar los datos del usuario', 'error', 3000);
@@ -77,9 +119,76 @@ export class Profile implements OnInit {
 
   saveChanges() {
     if (this.userData.valid) {
-      //llamar api
-      this.toastService.open('Cambios guardados con éxito', 'success', 3000);
-      this.toggleView();
+      this.userData.disable();
+      // Actualizar los datos originales con los nuevos valores guardados
+      this.originalUserData = {
+        firstName: this.userData.controls.firstName.value || '',
+        lastName: this.userData.controls.lastName.value || '',
+        email: this.userData.controls.email.value || ''
+      };
+
+      const userId = this.authService.userId();
+
+      this.isLoading.set(true);
+
+      this.userService.updateUser(this.originalUserData, userId).pipe(finalize(() => {
+        this.isLoading.set(false);
+      })).subscribe({
+        next: () => {
+          this.toastService.open('Cambios guardados con éxito', 'success', 3000);
+          this.toggleView();
+        },
+        error: () => {
+          this.toastService.open('Error al guardar los cambios', 'error', 3000);
+        }
+      });
     }
+  }
+
+  //------------------------------------Helpers para roles y estados------------------------------------
+
+  getRoleLabel(role: string): string {
+    const labels: Record<string, string> = {
+      'ADMIN': 'Administrador',
+      'ORGANIZATION': 'Organización',
+      'DONOR': 'Donante'
+    };
+    return labels[role] || role;
+  }
+
+  getRoleIcon(role: string): string {
+    const icons: Record<string, string> = {
+      'ADMIN': 'admin',
+      'ORGANIZATION': 'group',
+      'DONOR': 'volunteer-activism'
+    };
+    return icons[role] || 'person';
+  }
+
+  getRoleBadgeClass(role: string): string {
+    const classes: Record<string, string> = {
+      'ADMIN': 'badge badge-lg badge-error gap-1',
+      'ORGANIZATION': 'badge badge-lg badge-info gap-1',
+      'DONOR': 'badge badge-lg badge-success gap-1'
+    };
+    return classes[role] || 'badge badge-ghost gap-1';
+  }
+
+  // getStatusLabel(status: string): string {
+  //   const labels: Record<string, string> = {
+  //     'ACTIVE': 'Activo',
+  //     'INACTIVE': 'Inactivo',
+  //     'PENDING': 'Pendiente'
+  //   };
+  //   return labels[status] || status;
+  // }
+
+  getStatusBadgeClass(status: string): string {
+    const classes: Record<string, string> = {
+      'ACTIVE': 'badge badge-success',
+      'INACTIVE': 'badge badge-error',
+      'PENDING': 'badge badge-warning'
+    };
+    return classes[status] || 'badge badge-ghost';
   }
 }

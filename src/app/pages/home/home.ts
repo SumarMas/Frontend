@@ -28,7 +28,7 @@ export class Home {
     {
       title: '¿Cómo se verifican las ONGs?',
       content: 'Las organizaciones deben registrar su información y subir documentación legal. Un administrador revisa y aprueba antes de que puedan crear campañas.',
-      check: false
+      check: true
     },
     {
       title: '¿Puedo donar de forma anónima?',

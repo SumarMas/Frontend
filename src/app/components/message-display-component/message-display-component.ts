@@ -2,20 +2,17 @@ import { Component, inject, Input, OnInit, Signal, signal } from '@angular/core'
 import { GetMessageDto } from '../../models/api/message';
 import { MessageComponent } from "../message-component/message-component";
 import { MessageService } from '../../services/api/message-service';
-import { IconComponent } from "../icon-component/icon-component";
 
 @Component({
   selector: 'app-message-display-component',
-  imports: [MessageComponent, IconComponent],
+  imports: [MessageComponent],
   templateUrl: './message-display-component.html',
   styleUrl: './message-display-component.scss'
 })
 export class MessageDisplayComponent implements OnInit {
   @Input() campaignId: string = '';
   @Input() isOpen : Signal<boolean> = signal(false);
-  messages: GetMessageDto[] = [{messageCampaignId: '', title: 'Mensaje de prueba', description: 'Este es un mensaje de prueba para la campaña.', creationDateTime: new Date('2025-10-27 18:00:00')},
-    {messageCampaignId: '', title: 'Mensaje de prueba', description: 'Este es un mensaje de prueba para la campaña.', creationDateTime: new Date('2025-10-28 18:00:00')}
-  ];
+  messages: GetMessageDto[] = [];
 
   private messageService = inject(MessageService);
 

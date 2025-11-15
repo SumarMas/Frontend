@@ -53,6 +53,7 @@ export class Register {
 
   onSubmit() {
     if (this.registerForm.valid) {
+      this.registerForm.disable();
       this.isLoading.set(true);
 
         const userData: PostUserDto = this.registerForm.value as PostUserDto;
@@ -69,6 +70,7 @@ export class Register {
             this.toastService.open('Error al crear cuenta', 'error', 3000, 'bottom-right');
           }
         })
+        this.registerForm.enable();
     }
   }
 }

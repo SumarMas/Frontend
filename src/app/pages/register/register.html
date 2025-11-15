@@ -1,4 +1,4 @@
-<section class="min-h-screen flex items-center justify-center bg-sumar">
+<section class="min-h-screen flex items-center justify-center bg-sumar-light">
     <div class="w-2/5 bg-white p-8 rounded-lg shadow-lg">
 
         <div class="flex justify-between">
@@ -76,7 +76,7 @@
                 </div>
             </div>
             <app-button-component [label]="'Crear cuenta'" [disabled]="registerForm.invalid" [block]="true"
-                variant="violet" [rounded]="true" [isLoading]="isLoading()" (click)="onSubmit()"></app-button-component>
+                variant="violet" [rounded]="true" [isLoading]="isLoading()" (onClick)="onSubmit()"></app-button-component>
         </form>
 
     </div>

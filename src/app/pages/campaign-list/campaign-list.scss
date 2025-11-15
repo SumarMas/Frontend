@@ -1,0 +1,72 @@
+// Animación de fade in para las tarjetas (deshabilitada)
+@keyframes fadeIn {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fadeIn {
+    // animation: fadeIn 0.5s ease-out; // Deshabilitada
+}
+
+// Efecto de brillo en el título
+.bg-clip-text {
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+// Transiciones suaves para inputs
+.input {
+    transition: all 0.3s ease;
+
+    &:focus-within {
+        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        border-color: #8b5cf6;
+    }
+}
+
+// Efecto de pulso sutil en las estadísticas (deshabilitado)
+.text-center {
+    icon {
+        // transition: transform 0.3s ease; // Deshabilitado
+    }
+
+    // &:hover icon {
+    //     transform: scale(1.1);
+    // }
+}
+
+// Grid responsive mejorado
+@media (max-width: 768px) {
+    .grid {
+        gap: 1rem;
+    }
+}
+
+// Animación para estadísticas al cargar
+@keyframes countUp {
+    from {
+        opacity: 0;
+        transform: scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+// Efecto para cards de estadísticas (deshabilitado movimiento)
+.bg-gradient-to-br {
+    transition: box-shadow 0.3s ease;
+
+    &:hover {
+        // transform: translateY(-4px); // Deshabilitado
+        box-shadow: 0 10px 25px -5px rgba(139, 92, 246, 0.2);
+    }
+}

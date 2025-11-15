@@ -12,6 +12,9 @@ import { CampaignRegister } from './pages/campaign-register/campaign-register';
 import { CampaignPage } from './pages/campaign-page/campaign-page';
 import { DonationRegister } from './pages/donation-register/donation-register';
 import { DonationThanks } from './pages/donation-thanks/donation-thanks';
+import { MyDonations } from './pages/my-donations/my-donations';
+import { OrganizationList } from './pages/organization-list/organization-list';
+import { PendingOrganizationList } from './pages/pending-organization-list/pending-organization-list';
 
 export const routes: Routes = [
     { pathMatch: 'full', path: '', redirectTo: 'home' },
@@ -22,6 +25,8 @@ export const routes: Routes = [
     { path: 'profile', title: 'Mi perfil', component: Profile },
     {
         path: 'organizations', children: [
+            { path: 'all', title: 'Explorar organizaciones', component: OrganizationList },
+            { path: 'pending', title: 'Organizaciones pendientes', component: PendingOrganizationList },
             { path: 'register', title: 'Registrar organización', component: OrganizationRegister },
             { path: 'my-organizations', title: 'Mis organizaciones', component: MyOrganizations },
             {
@@ -40,7 +45,7 @@ export const routes: Routes = [
     },
     {
         path: 'donations', children: [
-            //{ path: 'all', title: 'Todas mis donaciones', component: DonationList },
+            { path: 'all', title: 'Mis donaciones', component: MyDonations },
             //{ path: ':donationId', title: 'Donación', component: DonationPage },
             { path: 'new/:campaignName/:campaignId', title: 'Donar', component: DonationRegister },
             { path: 'thanks', title: 'Gracias por tu donación', component: DonationThanks }

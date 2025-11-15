@@ -29,16 +29,25 @@
 
         <!-- File (opcional) -->
         <div class="mb-3">
-            <app-input-component [control]="messageForm.controls.fileId" [multiple]="false" [block]="true"
-                variant="violet" type="file"></app-input-component>
+            <label class="label">
+                <span class="label-text">Imagen (opcional)</span>
+            </label>
+            <app-input-component 
+                [control]="messageForm.controls.file" 
+                type="file" 
+                [multiple]="false" 
+                accept="image/*"
+                variant="violet" 
+                [block]="true">
+            </app-input-component>
         </div>
 
         <!-- Botones -->
         <div class="flex justify-end gap-2 mt-3">
-            <app-button-component label="Cancelar" variant="violet" size="sm" [outline]="true" (click)="onCancel()">
+            <app-button-component label="Cancelar" variant="violet" size="sm" [outline]="true" (onClick)="onCancel()">
             </app-button-component>
             <app-button-component label="Publicar actualización" variant="violet" size="sm"
-                [disabled]="messageForm.invalid" (click)="onSubmit()" [isLoading]="isLoading()">
+                [disabled]="messageForm.invalid" (onClick)="onSubmit()" [isLoading]="isLoading()">
             </app-button-component>
         </div>
     </form>

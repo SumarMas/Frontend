@@ -1,11 +1,11 @@
-<div [attr.data-tip]="tooltip || null" [ngClass]="tooltipClasses">
-    <button [disabled]="disabled || isLoading" [ngClass]="classes">
-        @if (isLoading) {
+<div [attr.data-tip]="tooltip() || null" [ngClass]="tooltipClasses">
+    <button [disabled]="disabled() || isLoading()" [ngClass]="classes" (click)="handleClick()">
+        @if (isLoading()) {
         <span class="loading loading-spinner loading-xs"></span>
         }
-        @if (icon){
-        <icon [name]="icon" class="inline-block" [ngClass]="colorIcon" />
+        @if (icon()){
+        <icon [name]="icon()!" class="inline-block" [ngClass]="colorIcon()" />
         }
-        {{ label }}
+        {{ label() }}
     </button>
 </div>

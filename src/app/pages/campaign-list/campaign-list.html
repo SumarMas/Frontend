@@ -1,38 +1,127 @@
-<section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar">
-    <div class="w-3/5 bg-white p-8 rounded-lg shadow-lg">
-        <div class="flex justify-between mb-4">
-            <h1 class="text-4xl font-bold mb-4 logo">Descubra las campañas</h1>
+<section class="min-h-screen pt-24 pb-16 bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50">
+    <div class="container mx-auto px-4 max-w-7xl">
+        
+        <!-- Encabezado mejorado -->
+        <div class="text-center mb-10">
+            <h1 class="text-5xl font-bold mb-4 bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+                Descubre Campañas
+            </h1>
+            <p class="text-gray-600 text-lg max-w-2xl mx-auto">
+                Encuentra causas que transforman vidas y contribuye a hacer la diferencia
+            </p>
+        </div>
 
-            <div class="flex gap-1">
-                <label class="input">
-                    <icon name="search"></icon>
-                    <input type="search" required placeholder="Buscar" [(ngModel)]="searchInput" />
-                </label>
+        <!-- Barra de búsqueda y filtros -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div class="flex flex-col md:flex-row gap-4 items-center mb-6">
+                <!-- Búsqueda -->
+                <div class="flex-1 w-full">
+                    <label class="input input-bordered flex items-center gap-2 w-full">
+                        <icon name="search" class="text-gray-400"></icon>
+                        <input 
+                            type="search" 
+                            placeholder="Buscar campañas por nombre, descripción o etiquetas..." 
+                            [(ngModel)]="searchInput"
+                            class="grow" />
+                    </label>
+                </div>
 
+                <!-- Contador de resultados -->
+                <div class="flex items-center gap-2 px-4 py-2 bg-violet-50 rounded-lg">
+                    <icon name="volunteer-activism" class="text-violet-600"></icon>
+                    <span class="text-sm font-semibold text-violet-700">
+                        {{ campaigns.length }} {{ campaigns.length === 1 ? 'campaña' : 'campañas' }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Filtro de categorías -->
+            <div class="border-t pt-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                    <icon name="category" class="text-violet-600"></icon>
+                    Filtrar por categorías
+                </h3>
+                <app-category-filter-display [(selectedIds)]="selectedCategoryIds"></app-category-filter-display>
             </div>
         </div>
 
-        
-        <h3 class="text-2xl text-center mb-8">Seleccione una o más categorías disponibles</h3>
-            <app-category-filter-display (selectedIdsChange)="filterByCategories($event)"></app-category-filter-display>
-        
-
-        <hr class="my-8">
-
-        <!-- listado de campañas -->
-        @if(campaigns?.length === 0) {
-        <div class="flex justify-center">
-            <div role="alert" class="alert alert-error alert-outline">
-                <span>No se ha encontrado ningún criterio que coincida con la búsqueda</span>
-            </div>
+        <!-- Loading state -->
+        @if(isLoading()) {
+        <div class="flex justify-center items-center py-20">
+            <span class="loading loading-spinner loading-lg text-violet-600"></span>
         </div>
-
         }
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-            @for (campaign of campaigns; track $index) {
+
+        <!-- Mensaje de sin resultados -->
+        @else if(campaigns.length === 0) {
+        <div class="flex flex-col items-center justify-center py-16">
+            <div class="bg-white rounded-2xl shadow-lg p-8 max-w-md text-center">
+                <icon name="search-insights" class="text-gray-300 text-6xl mb-4"></icon>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">No se encontraron campañas</h3>
+                <p class="text-gray-600 mb-4">
+                    No hay campañas activas que coincidan con tu búsqueda. Intenta con otros términos o categorías.
+                </p>
+                <app-button-component 
+                    label="Limpiar filtros" 
+                    variant="violet" 
+                    [rounded]="true"
+                    (onClick)="clearFilters()">
+                </app-button-component>
+            </div>
+        </div>
+        }
+
+        <!-- Listado de campañas en grid -->
+        @else {
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
+            @for (campaign of campaigns; track campaign.id) {
             <app-campaign-card [campaign]="campaign"></app-campaign-card>
             }
         </div>
+        }
+
+        <!-- Estadísticas rápidas -->
+        @if(!isLoading() && campaigns.length > 0) {
+        <div class="mt-12 bg-white rounded-2xl shadow-lg p-8">
+            <h3 class="text-2xl font-bold text-gray-800 mb-6 text-center">
+                Impacto Colectivo de Campañas Activas
+            </h3>
+            <p class="text-center text-gray-600 mb-6 text-sm">
+                Estadísticas basadas en las {{ campaigns.length }} {{ campaigns.length === 1 ? 'campaña activa' : 'campañas activas' }} que estás visualizando
+            </p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Total recaudado -->
+                <div class="text-center p-6 bg-gradient-to-br from-violet-50 to-purple-50 rounded-xl">
+                    <icon name="volunteer-activism" class="text-violet-600 text-3xl mb-2"></icon>
+                    <p class="text-3xl font-bold text-violet-600">
+                        ${{ getTotalRaised() | number:'1.0-0' }}
+                    </p>
+                    <p class="text-sm text-gray-600 mt-1">Total Recaudado</p>
+                    <p class="text-xs text-gray-500 mt-1">en campañas visibles</p>
+                </div>
+
+                <!-- Campañas activas -->
+                <div class="text-center p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl">
+                    <icon name="check" class="text-green-600 text-3xl mb-2"></icon>
+                    <p class="text-3xl font-bold text-green-600">
+                        {{ campaigns.length }}
+                    </p>
+                    <p class="text-sm text-gray-600 mt-1">Campañas Activas</p>
+                    <p class="text-xs text-gray-500 mt-1">actualmente en esta vista</p>
+                </div>
+
+                <!-- Progreso promedio -->
+                <div class="text-center p-6 bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl">
+                    <icon name="bar-chart-4-bars" class="text-pink-600 text-3xl mb-2"></icon>
+                    <p class="text-3xl font-bold text-pink-600">
+                        {{ getAverageProgress() }}%
+                    </p>
+                    <p class="text-sm text-gray-600 mt-1">Progreso Promedio</p>
+                    <p class="text-xs text-gray-500 mt-1">de las campañas mostradas</p>
+                </div>
+            </div>
+        </div>
+        }
 
     </div>
 </section>

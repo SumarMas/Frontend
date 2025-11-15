@@ -5,7 +5,7 @@ export interface PostCampaignDto {
     title: string;
     description: string;
     goalAmount: number;
-    endDateTime: Date;
+    endDateTime: Date | string;
     categoryIds: string[];
     tags: string[];
     imageIds: string[];
@@ -15,14 +15,16 @@ export interface GetCampaignDto {
     id: string;
     ngo: GetOrganizationDto;
     title: string;
-    goalAmount: number;
-    currentAmount: number;
+    goal_amount?: number;
+    current_amount?: number;
     description: string;
-    endDateTime: Date;
-    createDateTime: Date;
+    endDateTime: Date | string;
+    createDateTime: Date | string;
+    end_date_time?: Date | string;
+    create_date_time?: Date | string;
     campaignState: CampaignState;
     categories: CategoryDto[];
-    tags: string[];
+    tags: string;
     images?: string[];
 }
 

@@ -1,21 +1,102 @@
-<div class="flex flex-col rounded-2xl h-64 shadow-lg hover:shadow-violet-300 transition-shadow p-3 lg:p-6">
-    <h2 class="text-xl font-bold mb-2">{{campaign?.title}}</h2>
+<div
+    class="card bg-white shadow-lg hover:shadow-xl transition-shadow duration-300 border border-gray-200 hover:border-violet-300 h-full flex flex-col">
+    <!-- Imagen de la campaña -->
+    <figure class="relative overflow-hidden h-48">
+        @if(campaignImageUrl()) {
+        <img [src]="getCampaignImage()" [alt]="campaign?.title || 'Campaña'" class="w-full h-full object-cover" />
+        } @else {
+        <!-- Gradiente violeta como placeholder -->
+        <div
+            class="w-full h-full bg-gradient-to-br from-violet-400 via-purple-500 to-pink-500 flex items-center justify-center">
+            <icon name="volunteer-activism" class="text-white text-6xl opacity-50"></icon>
+        </div>
+        }
 
+        <!-- Badge de estado en la esquina -->
+        <div class="absolute top-3 right-3">
+            <span class="badge badge-success gap-1 shadow-lg">
+                <icon name="check" class="text-xs"></icon>
+                Activa
+            </span>
+        </div>
 
-    <p class="italic mb-auto text-gray-600">{{(campaign?.description || '') | truncate: 120 }}</p>
+        <!-- Días restantes -->
+        <div class="absolute bottom-3 left-3">
+            <span class="badge gap-1 shadow-lg" [ngClass]="getDaysLeftClass()">
+                <icon [name]="getDaysLeftIcon()" class="text-xs"></icon>
+                {{ daysLeftText() }}
+            </span>
+        </div>
+    </figure>
 
+    <!-- Contenido de la tarjeta -->
+    <div class="card-body p-5 flex-1 flex flex-col">
+        <!-- Título -->
+        <h2 class="card-title text-xl font-bold text-gray-800 mb-2 line-clamp-2">
+            {{ campaign?.title }}
+        </h2>
 
-    <div class="mb-2">
-        <span class="font-bold text-2xl">${{campaign?.currentAmount}}</span> <span class="text-gray-400 text-xs"> recaudados de {{campaign?.goalAmount | currency}}</span>
-        <progress class="progress progress-primary w-full" [value]="campaign?.currentAmount"
-            [max]="campaign?.goalAmount"></progress>
+        <!-- Organización -->
+        <div class="flex items-center gap-2 mb-3">
+            <icon name="group" class="text-violet-500 text-sm"></icon>
+            <span class="text-sm text-gray-600">{{ campaign?.ngo?.name }}</span>
+        </div>
+
+        <!-- Descripción -->
+        <p class="text-gray-600 text-sm mb-4 line-clamp-3 flex-1">
+            {{ campaign?.description }}
+        </p>
+
+        <!-- Progreso -->
+        <div class="mb-4">
+            <div class="flex justify-between items-baseline mb-2">
+                <div>
+                    <span class="text-2xl font-bold text-violet-600">
+                        ${{ (campaign?.current_amount || campaign?.current_amount || 0) | number:'1.0-0' }}
+                    </span>
+                    <span class="text-xs text-gray-500 ml-1">recaudados</span>
+                </div>
+                <span class="text-sm text-gray-500">
+                    Meta: ${{ (campaign?.goal_amount || campaign?.goal_amount || 0) | number:'1.0-0' }}
+                </span>
+            </div>
+
+            <progress class="progress progress-primary w-full h-2"
+                [value]="(campaign?.current_amount || campaign?.current_amount || 0)"
+                [max]="(campaign?.goal_amount || campaign?.goal_amount || 100)">
+            </progress>
+
+            <div class="flex justify-between mt-1">
+                <span class="text-xs text-gray-500">
+                    {{ getProgressPercentage() }}% alcanzado
+                </span>
+                <span class="text-xs text-gray-500">
+                    ${{ getRemainingAmount() | number:'1.0-0' }} restantes
+                </span>
+            </div>
+        </div>
+
+        <!-- Categorías -->
+        @if(getCategories().length > 0) {
+        <div class="flex flex-wrap gap-1 mb-4">
+            @for(category of getVisibleCategories(); track category.id) {
+            <span class="badge badge-outline badge-sm text-violet-600 border-violet-300">
+                {{ category.name }}
+            </span>
+            }
+            @if(hasMoreCategories()) {
+            <span class="badge badge-outline badge-sm text-gray-500">
+                +{{ getRemainingCategoriesCount() }}
+            </span>
+            }
+        </div>
+        }
+
+        <!-- Botón de acción -->
+        <div class="card-actions justify-end mt-auto pt-3 border-t border-gray-200">
+            <app-button-component label="Ver campaña" variant="violet" [rounded]="true" icon="volunteer-activism"
+                (onClick)="navigate()">
+            </app-button-component>
+        </div>
     </div>
-
-    <div class="flex justify-between">
-        <span class="text-sm text-gray-500" [ngClass]="(+daysLeft(campaign?.endDateTime) > 10 ? 'text-green-500' : 'text-red-500')">{{ +daysLeft(campaign?.endDateTime) }} días restantes</span>
-        <app-button-component class="" label="Ver más" variant="violet" (click)="navigate()"
-        [rounded]="true"></app-button-component>
-    </div>
-
-    
 </div>

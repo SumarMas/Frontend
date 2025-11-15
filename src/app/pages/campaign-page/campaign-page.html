@@ -1,11 +1,14 @@
-<section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar">
+<section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar-light">
     <div class="container mx-auto px-4 max-w-6xl">
         @if (campaign) {
         <!-- Imagen principal -->
         <div class="card bg-base-100 shadow-xl mb-6">
-            @if (campaign.images && campaign.images.length > 0) {
+            @if (campaignImageUrl()) {
             <figure class="h-96">
-                <img [src]="campaign.images[0]" [alt]="campaign.title" class="w-full h-full object-cover">
+                <img [src]="campaignImageUrl()!" [alt]="campaign.title" class="w-full h-full object-cover">
+            </figure>
+            } @else {
+            <figure class="h-96 bg-gradient-to-br from-violet-400 via-purple-500 to-pink-500">
             </figure>
             }
 
@@ -33,11 +36,11 @@
                 <!-- Progreso -->
                 <div class="mb-6">
                     <div class="flex justify-between items-center mb-2">
-                        <span class="text-2xl font-bold text-primary">{{ formatCurrency(campaign.currentAmount)
+                        <span class="text-2xl font-bold text-primary">{{ formatCurrency(campaign.current_amount ?? 0)
                             }}</span>
-                        <span class="text-base-content/70">de {{ formatCurrency(campaign.goalAmount) }}</span>
+                        <span class="text-base-content/70">de {{ campaign.goal_amount | currency: 'ARS': '1.1-1'}}</span>
                     </div>
-                    <progress class="progress progress-primary w-full h-4" [value]="getProgressPercentage()"
+                    <progress class="progress progress-primary w-full h-4" [value]="getProgressPercentage() || 0"
                         max="100"></progress>
                     <div class="flex justify-between mt-2 text-sm">
                         <span class="font-semibold">{{ getProgressPercentage().toFixed(1) }}% alcanzado</span>
@@ -57,20 +60,20 @@
 
                         }
                         <app-button-component [icon]="showAddMessage() ? 'close' : 'add'" [variant]="showAddMessage() ? 'error' : 'white'" [tooltip]="showAddMessage() ? 'Cancelar' : 'Agregar actualización'"
-                            tooltipPosition="right" (click)="toggleAddMessage()"></app-button-component>
+                            tooltipPosition="right" (onClick)="toggleAddMessage()"></app-button-component>
                     </div>
 
 
                     <!-- Botón de donación -->
                     <div class="card-actions">
                         <app-button-component label="Donar Ahora" variant="violet" size="lg" icon="volunteer-activism"
-                            [block]="false">
+                            [block]="false" (onClick)="navigate('/donations/new/:campaignName/:campaignId', { campaignId: campaign.id, campaignName: campaign.title })">
                         </app-button-component>
                     </div>
                 </div>
 
                 <app-add-message-component [show]="showAddMessage" [campaignId]="campaign.id"
-                            (messageSubmitted)="handleMessageSubmitted($event)" (cancel)="handleCancel()">
+                            (messageSubmitted)="handleMessageSubmitted()" (cancel)="handleCancel()">
                         </app-add-message-component>
 
                 @if(isOpen()) {
@@ -105,7 +108,7 @@
                             <h3 class="font-semibold mb-2">Etiquetas:</h3>
                             <div class="flex flex-wrap gap-2">
                                 @for (tag of campaign.tags; track tag) {
-                                <div class="badge badge-outline">{{ tag }}</div>
+                                <div class="badge badge-outline badge-lg text-violet-600 border-violet-300">{{ tag }}</div>
                                 }
                             </div>
                         </div>
@@ -122,14 +125,14 @@
                             <icon name="calendar-today" class="text-blue-500"></icon>
                             <div>
                                 <p class="text-sm text-base-content/70">Fecha de inicio</p>
-                                <p class="font-semibold">{{ formatDate(campaign.createDateTime) }}</p>
+                                <p class="font-semibold">{{ formatDate(campaign.createDateTime || campaign.create_date_time) }}</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
                             <icon name="schedule" class="text-red-500"></icon>
                             <div>
                                 <p class="text-sm text-base-content/70">Fecha de cierre</p>
-                                <p class="font-semibold">{{ formatDate(campaign.endDateTime) }}</p>
+                                <p class="font-semibold">{{ formatDate(campaign.endDateTime || campaign.end_date_time) }}</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
@@ -144,7 +147,7 @@
                     <div class="divider"></div>
 
                     <app-button-component label="Ver más sobre la ONG" variant="violet" size="sm" [outline]="true"
-                        [block]="true" (click)="navigate('/organizations/:ngoId', { ngoId: campaign.ngo.ngoId})">
+                        [block]="true" (onClick)="navigate('/organizations/:ngoId', { ngoId: campaign.ngo.ngoId})">
                     </app-button-component>
                 </div>
             </div>

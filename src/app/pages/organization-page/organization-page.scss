@@ -1,0 +1,32 @@
+// Carousel con transiciones suaves (sin zoom)
+.carousel-item {
+    img {
+        transition: opacity 0.3s ease;
+    }
+}
+
+// Indicadores de slides animados
+button[class*="rounded-full"] {
+    transition: all 0.3s ease;
+}
+
+// Cards de documentos con hover
+.grid > div {
+    transition: all 0.3s ease;
+}
+
+// Animación de barra lateral decorativa
+div[class*="w-1"] {
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}

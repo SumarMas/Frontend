@@ -1,39 +1,44 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { GetCampaignDto, CampaignState } from '../../models/api/campaign';
+import { GetCampaignDto } from '../../models/api/campaign';
 import { ButtonComponent } from '../../components/button-component/button-component';
 import { IconComponent } from "../../components/icon-component/icon-component";
 import { CommentaryDisplayComponent } from "../../components/commentary-display-component/commentary-display-component";
-import { MessageComponent } from "../../components/message-component/message-component";
 import { MessageDisplayComponent } from "../../components/message-display-component/message-display-component";
 import { AuthService } from '../../services/api/auth-service';
-import { PostMessageDto } from '../../models/api/message';
 import { AddMessageComponent } from "../../components/add-message-component/add-message-component";
-import { Router } from '@angular/router';
-
-interface Comment {
-  id: string;
-  author: string;
-  content: string;
-  date: Date;
-  avatar?: string;
-}
+import { ActivatedRoute, Router } from '@angular/router';
+import { CampaignService } from '../../services/api/campaign-service';
+import { FileService } from '../../services/api/file-service';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { ToastService } from '../../services/ui/toast-service';
 
 @Component({
   selector: 'app-campaign-page',
-  imports: [CommonModule, FormsModule, ButtonComponent, IconComponent, CommentaryDisplayComponent, MessageComponent, MessageDisplayComponent, AddMessageComponent],
+  imports: [CommonModule, FormsModule, ButtonComponent, IconComponent, 
+    CommentaryDisplayComponent, MessageDisplayComponent, AddMessageComponent,
+    CurrencyPipe
+  ],
   templateUrl: './campaign-page.html',
   styleUrl: './campaign-page.scss'
 })
 export class CampaignPage implements OnInit {
   campaign: GetCampaignDto | null = null;
   isOpen = signal(false);
+  campaignImageUrl = signal<SafeUrl | null>(null);
 
   authService = inject(AuthService);
   router = inject(Router);
+  route = inject(ActivatedRoute);
+  campaignService = inject(CampaignService);
+  fileService = inject(FileService);
+  sanitizer = inject(DomSanitizer);
+  toastService = inject(ToastService);
 
   showAddMessage = signal(false);
+
+  campaignId: string = '';
 
   toggleAddMessage() {
     this.showAddMessage.set(!this.showAddMessage());
@@ -43,46 +48,60 @@ export class CampaignPage implements OnInit {
     this.showAddMessage.set(false);
   }
 
-  handleMessageSubmitted(dto: PostMessageDto) {
-    // Guardar el mensaje vía servicio
-    console.log('Nuevo mensaje:', dto);
+  handleMessageSubmitted() {
+    // Cerrar el formulario y recargar la página para mostrar el nuevo mensaje
     this.showAddMessage.set(false);
+    // Recargar la campaña para actualizar los mensajes
+    if (this.campaignId) {
+      this.loadCampaign();
+    }
   }
 
   ngOnInit(): void {
-    this.loadMockedCampaign();
+    this.campaignId = this.route.snapshot.paramMap.get('campaignId') || '';
+    if (this.campaignId) {
+      this.loadCampaign();
+      console.log('CAMAPAÑA ', this.campaign);
+      
+    } else {
+      this.toastService.open('ID de campaña inválido', 'error', 3000);
+      this.router.navigate(['/campaigns']);
+    }
   }
 
-  loadMockedCampaign(): void {
-    this.campaign = {
-      id: '1',
-      ngo: {
-        ngoId: 'qewrqwerqer',
-        name: 'Fundación Ayuda Solidaria',
-        description: 'Organización dedicada a ayudar a los más necesitados',
-        createdDateTime: '2020-01-15',
-        userCreator: {
-          userId: 'user-1',
-          firstName: 'Admin',
-          lastName: 'Usuario',
-          email: 'admin@ayudasolidaria.org'
-        },
-        images: []
+  loadCampaign(): void {
+    this.campaignService.getCampaignById(this.campaignId).subscribe({
+      next: (campaign) => {
+        this.campaign = campaign;
+        console.log('Campaign loaded:', campaign);
+        
+        // Cargar la primera imagen si existe (imageIds[0])
+        if (campaign.images && campaign.images.length > 0) {
+          console.log('Loading campaign image:', campaign.images[0]);
+          this.loadCampaignImage(campaign.images[0]);
+        } else {
+          console.log('No images available for campaign');
+        }
       },
-      title: 'Campaña de Invierno 2025 - Abrigo para Todos',
-      goalAmount: 500000,
-      currentAmount: 325000,
-      description: 'Este invierno queremos llegar a 500 familias de bajos recursos con abrigo, frazadas y alimentos calientes. Tu donación marca la diferencia en la vida de quienes más lo necesitan. Cada aporte cuenta para hacer realidad este objetivo solidario.',
-      endDateTime: new Date('2025-12-31'),
-      createDateTime: new Date('2025-09-01'),
-      campaignState: CampaignState.ACTIVE,
-      categories: [
-        { id: 'cat-1', name: 'Alimentación', description: 'Ayuda con alimentos' },
-        { id: 'cat-2', name: 'Vestimenta', description: 'Ropa y abrigo' }
-      ],
-      tags: ['invierno', 'solidaridad', 'familias', 'abrigo'],
-      images: ['https://i.ytimg.com/vi/ZRIZc13Mv1w/hq720.jpg?sqp=-oaymwEXCK4FEIIDSFryq4qpAwkIARUAAIhCGAE=&rs=AOn4CLBGs6aprX-8FpoDpFNNUvQacmOEuw']
-    };
+      error: (error) => {
+        console.error('Error al cargar campaña:', error);
+        this.toastService.open('Error al cargar la campaña', 'error', 3000);
+        this.router.navigate(['/campaigns']);
+      }
+    });
+  }
+
+  loadCampaignImage(imageId: string): void {
+    this.fileService.getFile(imageId).subscribe({
+      next: (blob) => {
+        const objectUrl = URL.createObjectURL(blob);
+        const safeUrl = this.sanitizer.bypassSecurityTrustUrl(objectUrl);
+        this.campaignImageUrl.set(safeUrl);
+      },
+      error: (err) => {
+        console.error('Error al cargar imagen de campaña:', err);
+      }
+    });
   }
 
   /**
@@ -90,8 +109,8 @@ export class CampaignPage implements OnInit {
    * @returns number
    */
   getProgressPercentage(): number {
-    if (!this.campaign) return 0;
-    return (this.campaign.currentAmount / this.campaign.goalAmount) * 100;
+    if (!this.campaign || !this.campaign.goal_amount || !this.campaign.current_amount) return 0;
+    return (this.campaign.current_amount / this.campaign.goal_amount) * 100;
   }
 
   /**
@@ -100,15 +119,27 @@ export class CampaignPage implements OnInit {
    */
   getRemainingDays(): number {
     if (!this.campaign) return 0;
+    const endDate = this.campaign.endDateTime || this.campaign.end_date_time;
+    if (!endDate) return 0;
+    
+    // Crear fechas sin considerar la hora para comparación de días completos
     const now = new Date();
-    const end = new Date(this.campaign.endDateTime);
+    now.setHours(0, 0, 0, 0);
+    
+    const end = new Date(endDate);
+    end.setHours(0, 0, 0, 0);
+    
     const diff = end.getTime() - now.getTime();
-    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    return days >= 0 ? days : 0;
   }
 
   /** Formatea una fecha al formato local. */
-  formatDate(date: Date): string {
-    return new Date(date).toLocaleDateString('es-AR', {
+  formatDate(date: Date | string | undefined): string {
+    if (!date) return 'Fecha no disponible';
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    if (isNaN(dateObj.getTime())) return 'Fecha inválida';
+    return dateObj.toLocaleDateString('es-AR', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -117,6 +148,7 @@ export class CampaignPage implements OnInit {
 
   /** Formatea un monto al formato de moneda local. */
   formatCurrency(amount: number): string {
+    if (!amount || amount == 0) return '$0';
     return new Intl.NumberFormat('es-AR', {
       style: 'currency',
       currency: 'ARS'

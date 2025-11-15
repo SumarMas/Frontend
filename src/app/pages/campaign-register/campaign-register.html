@@ -1,4 +1,4 @@
-<section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar">
+<section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar-light">
     <div class="w-3/5 bg-white p-8 rounded-lg shadow-lg">
         <h2 class="text-4xl font-bold logo pb-4">Crea tu campaña</h2>
         <form [formGroup]="campaignRegisterForm">
@@ -7,11 +7,17 @@
                     <label>Nombre de la campaña</label>
                     <app-input-component type="text" [control]="campaignRegisterForm.controls.name"
                         [block]="true"></app-input-component>
+                        @if(formValidator.showError(campaignRegisterForm, 'name')){
+                <p class="error-label">{{formValidator.getValidationMessage(campaignRegisterForm, 'name')}}</p>
+                }
                 </div>
                 <div>
-                    <label>Meta de la campaña</label>
-                    <app-input-component type="text" [control]="campaignRegisterForm.controls.goalAmount"
+                    <label>Meta de la campaña (en pesos Argentinos)</label>
+                    <app-input-component type="number" [control]="campaignRegisterForm.controls.goalAmount"
                         [block]="true"></app-input-component>
+                        @if(formValidator.showError(campaignRegisterForm, 'goalAmount')){
+                <p class="error-label">{{formValidator.getValidationMessage(campaignRegisterForm, 'goalAmount')}}</p>
+                }
                 </div>
 
                 <div class="col-span-2">
@@ -20,30 +26,42 @@
                         formControlName="description"></textarea>
                 </div>
 
-                <div>
+                <div class="col-span-2">
                     <label>Fecha de finalización</label>
                     <input class="input w-full" type="date" formControlName="endDateTime">
+                    @if(formValidator.showError(campaignRegisterForm, 'endDateTime')){
+                <p class="error-label">{{formValidator.getValidationMessage(campaignRegisterForm, 'endDateTime')}}</p>
+                }
                 </div>
 
                 <div>
                     <label>Categorías</label>
-                    <select class="select w-full">
-                        <option disabled selected>Seleccione las categorias...</option>
-                        <option>Ropa</option>
-                        <option>Animales</option>
-                        <option>Ambiental</option>
-                    </select>
+                    <app-category-input-component [(categoryIds)]="categoryIds" (categoryIdsChange)="onCategoryIdsChange($event)"></app-category-input-component>
+                    @if(formValidator.showError(campaignRegisterForm, 'categoryIds')){
+                    <p class="error-label">Debe seleccionar al menos una categoría</p>
+                    }
+                </div>
+
+                <div>
+                    <label>Tags</label>
+                    <div class="tooltip tooltip-right" data-tip="Escriba y luego pulse Enter para agregar un tag">
+                        <icon class="text-violet-500" name="info" size="sm"></icon>
+                    </div>
+                    <app-tag-input-component [(tags)]="tags" (tagsChange)="onTagsChange($event)"></app-tag-input-component>
                 </div>
 
                 <div class="col-span-2">
                     <label>Imagenes</label>
                     <app-input-component type="file" variant="violet" [multiple]="true"
                         [control]="campaignRegisterForm.controls.imagesId" [block]="true"></app-input-component>
+                        @if(formValidator.showError(campaignRegisterForm, 'imagesId')){
+                <p class="error-label">{{formValidator.getValidationMessage(campaignRegisterForm, 'imagesId')}}</p>
+                }
                 </div>
 
                 <div class="col-span-2 mt-2">
                     <app-button-component label="Crear campaña" variant="violet" [isLoading]="isLoading()"
-                    [rounded]="true" [block]="true"></app-button-component>
+                        [rounded]="true" [block]="true" [disabled]="campaignRegisterForm.invalid" (onClick)="onSubmit()"></app-button-component>
                 </div>
             </div>
         </form>
