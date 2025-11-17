@@ -2,6 +2,16 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 
+export interface FileBase64 {
+    uuid:      string;
+    sha256:    string;
+    fileName:  string;
+    mimeType:  string;
+    extension: string;
+    bytes:     null;
+    base64:    string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -24,5 +34,9 @@ export class FileService {
     return this.http.get(`${this.apiUrl}/getFile/${fileId}`, { 
       responseType: 'blob' 
     });
+  }
+
+  getFileBase64(fileId: string): Observable<FileBase64> {
+    return this.http.get<FileBase64>(`${this.apiUrl}/getFileBase64/${fileId}`);
   }
 }

@@ -28,7 +28,7 @@ export const routes: Routes = [
             { path: 'all', title: 'Explorar organizaciones', component: OrganizationList },
             { path: 'pending', title: 'Organizaciones pendientes', component: PendingOrganizationList },
             { path: 'register', title: 'Registrar organización', component: OrganizationRegister },
-            { path: 'my-organizations', title: 'Mis organizaciones', component: MyOrganizations },
+            { path: 'my-organizations', title: 'Mis organización', component: MyOrganizations },
             {
                 path: ':ngoId', title: 'Organización', children: [
                     { path: '', title: 'Organización', component: OrganizationPage },

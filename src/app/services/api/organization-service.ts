@@ -1,5 +1,5 @@
 import { inject, Injectable } from '@angular/core';
-import { GetOrganizationDto, PostOrganizationDto, ValidateOrganizationDto } from '../../models/api/organization';
+import { GetOrganizationDto, PostOrganizationDto, PutOrganizationDto, ValidateOrganizationDto } from '../../models/api/organization';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -33,5 +33,9 @@ export class OrganizationService {
 
   getAllOrganizationsPending(): Observable<GetOrganizationDto[]> {
     return this.http.get<GetOrganizationDto[]>(this.apiUrl + '/pending-approvals');
+  }
+
+  updateNgo(ngoId: string,data: PutOrganizationDto): Observable<GetOrganizationDto> {
+    return this.http.put<GetOrganizationDto>(this.apiUrl + `/${ngoId}/update`, data);
   }
 }

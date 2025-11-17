@@ -1,5 +1,5 @@
 import { Component, inject, input, signal, computed } from '@angular/core';
-import { Sidebuttons } from '../../models/ui/nav-item';
+import { Sidebuttons, NavItem } from '../../models/ui/nav-item';
 import { NgClass } from '@angular/common';
 import { SidebarService } from '../../services/ui/sidebar-service';
 import { IconComponent } from "../icon-component/icon-component";
@@ -29,9 +29,26 @@ export class SidebarComponent {
   
   // Computed para los botones filtrados
   filteredButtons = computed(() => {
-    return this.buttons.filter(button =>
-      button.roles.some(role => this.roles().includes(role))
-    );
+    const userRoles = this.roles();
+    
+    return this.buttons
+      .filter(button => button.roles.some(role => userRoles.includes(role)))
+      .map(button => {
+        // Si tiene children, también filtrarlos
+        if (button.children) {
+          const filteredChildren = button.children.filter(child =>
+            child.roles.some(role => userRoles.includes(role))
+          );
+          
+          // Solo retornar el botón si tiene children visibles
+          if (filteredChildren.length > 0) {
+            return { ...button, children: filteredChildren };
+          }
+          return null;
+        }
+        return button;
+      })
+      .filter(button => button !== null) as NavItem[];
   });
 
   isOpen(title: string): boolean {

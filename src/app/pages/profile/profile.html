@@ -1,5 +1,5 @@
 <section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar-light">
-    <div class="w-full md:w-4/5 lg:w-3/5 bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <div class="w-full md:w-4/5 lg:w-3/5 bg-white rounded-2xl shadow-2xl overflow-visible">
         
         @defer (when !isLoading()) {
 
@@ -9,17 +9,73 @@
             <!-- Avatar y botones -->
             <div class="flex flex-col md:flex-row items-start gap-6">
                 
-                <!-- Avatar -->
-                <div class="avatar">
-                    <div class="w-36 h-36 rounded-2xl border-4 border-gray-200 shadow-lg bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
-                        @if(profileImageUrl) {
-                        <img [src]="profileImageUrl" alt="Avatar" class="w-full h-full object-cover" />
-                        } @else {
-                        <div class="w-full h-full flex items-center justify-center">
-                            <icon name="person" [size]="'xl'" class="text-gray-400"></icon>
+                <!-- Avatar con selector -->
+                <div class="relative z-50">
+                    <div class="avatar">
+                        <div class="w-36 h-36 rounded-2xl border-4 border-gray-200 shadow-lg bg-gradient-to-br from-gray-100 to-gray-200 overflow-hidden">
+                            @if(profileImageUrl) {
+                            <img [src]="profileImageUrl" alt="Avatar" class="w-full h-full object-cover" />
+                            } @else {
+                            <div class="w-full h-full flex items-center justify-center">
+                                <icon name="person" [size]="'xl'" class="text-gray-400"></icon>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                    
+                    <!-- Botón para cambiar avatar (solo en modo edición) -->
+                    @if(view === 'edit') {
+                    <div class="mt-3">
+                        <app-button-component 
+                            label="Cambiar foto"
+                            icon="photo"
+                            variant="violet"
+                            size="sm"
+                            [outline]="true"
+                            [block]="true"
+                            (onClick)="toggleAvatarSelector()">
+                        </app-button-component>
+                        
+                        <!-- Selector de avatares -->
+                        @if(showAvatarSelector()) {
+                        <div class="absolute left-0 mt-2 p-4 bg-white rounded-xl shadow-2xl border-2 border-violet-200 w-80 max-w-[90vw]">
+                            <div class="flex items-center justify-between mb-3">
+                                <h4 class="font-semibold text-gray-800">Selecciona un avatar</h4>
+                                <button type="button" (click)="toggleAvatarSelector()" class="btn btn-ghost btn-sm btn-circle">
+                                    <icon name="close" [size]="'sm'"></icon>
+                                </button>
+                            </div>
+                            
+                            <!-- Avatares predefinidos -->
+                            <div class="grid grid-cols-3 gap-2 mb-3">
+                                @for (avatar of predefinedAvatars; track avatar.path) {
+                                <button 
+                                    type="button"
+                                    (click)="selectPredefinedAvatar(avatar.path)"
+                                    [disabled]="isSavingAvatar()"
+                                    class="p-2 rounded-lg border-2 border-gray-200 hover:border-violet-400 transition-all hover:shadow-md disabled:opacity-50"
+                                    [title]="avatar.name">
+                                    <img [src]="avatar.path" [alt]="avatar.name" class="w-full h-16 object-contain">
+                                </button>
+                                }
+                            </div>
+                            
+                            <div class="divider text-xs text-gray-500">O</div>
+                            
+                            <!-- Subir imagen personalizada -->
+                            <label class="btn btn-outline btn-violet btn-sm btn-block cursor-pointer">
+                                <icon name="upload" [size]="'sm'"></icon>
+                                Subir imagen
+                                <input 
+                                    type="file" 
+                                    accept="image/*" 
+                                    class="hidden" 
+                                    (change)="onCustomAvatarSelected($event)">
+                            </label>
                         </div>
                         }
                     </div>
+                    }
                 </div>
 
                 <!-- Info header y botones -->

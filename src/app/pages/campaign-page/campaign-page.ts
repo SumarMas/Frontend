@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { CommonModule, CurrencyPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { GetCampaignDto } from '../../models/api/campaign';
@@ -13,13 +13,14 @@ import { CampaignService } from '../../services/api/campaign-service';
 import { FileService } from '../../services/api/file-service';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { ToastService } from '../../services/ui/toast-service';
+import { ReusableModalComponent } from '../../components/reusable-modal-component/reusable-modal-component';
+import { DonationRegister } from "../donation-register/donation-register";
 
 @Component({
   selector: 'app-campaign-page',
-  imports: [CommonModule, FormsModule, ButtonComponent, IconComponent, 
+  imports: [CommonModule, FormsModule, ButtonComponent, IconComponent, ReusableModalComponent,
     CommentaryDisplayComponent, MessageDisplayComponent, AddMessageComponent,
-    CurrencyPipe
-  ],
+    CurrencyPipe, DonationRegister],
   templateUrl: './campaign-page.html',
   styleUrl: './campaign-page.scss'
 })
@@ -39,6 +40,8 @@ export class CampaignPage implements OnInit {
   showAddMessage = signal(false);
 
   campaignId: string = '';
+
+  @ViewChild('donateModal') donateModalRef!: ReusableModalComponent;
 
   toggleAddMessage() {
     this.showAddMessage.set(!this.showAddMessage());

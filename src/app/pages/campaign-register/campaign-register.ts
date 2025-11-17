@@ -46,7 +46,7 @@ export class CampaignRegister implements OnInit {
   constructor() {
     this.campaignRegisterForm = this.fb.group({
       name: new FormControl<string | null>(null, [Validators.required]),
-      description: new FormControl<string | null>(null),
+      description: new FormControl<string | null>(null, Validators.required),
       goalAmount: new FormControl<number | null>(null, [Validators.required, Validators.min(1)]),
       endDateTime: new FormControl<string | null>(null, [Validators.required, (control) => this.formValidator.dateMayorThanTodayValidator(control)]),
       categoryIds: new FormControl<string[] | null>(null, [Validators.required]),

@@ -11,11 +11,16 @@ import { Title, DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ToastService } from '../../services/ui/toast-service';
 import { OrganizationService } from '../../services/api/organization-service';
-import { FileService } from '../../services/api/file-service';
+import { FileService, FileBase64 } from '../../services/api/file-service';
+import { CampaignCard } from "../../components/campaign-card/campaign-card";
+import { GetCampaignDto } from '../../models/api/campaign';
+import { CampaignService } from '../../services/api/campaign-service';
+import { InputComponent } from '../../components/input-component/input-component';
 
 @Component({
   selector: 'app-organization-page',
-  imports: [IconComponent, CommonModule, ButtonComponent, ReusableModalComponent, ApprovalDetailsComponent, ReactiveFormsModule],
+  imports: [IconComponent, CommonModule, ButtonComponent, ReusableModalComponent, 
+    ApprovalDetailsComponent, ReactiveFormsModule, CampaignCard, InputComponent],
   templateUrl: './organization-page.html',
   styleUrl: './organization-page.scss'
 })
@@ -24,17 +29,23 @@ export class OrganizationPage implements OnInit {
   isEditMode = signal<boolean>(false);
   isSaving = signal<boolean>(false);
   isLoading = signal<boolean>(true);
+  campaigns = signal<GetCampaignDto[]>([]);
+  currentSlideIndex = signal<number>(0);
+  
+  // Signals para rastrear qué archivos mantener
+  documentsToKeep = signal<string[]>([]);
+  imagesToKeep = signal<string[]>([]);
 
   editForm: FormGroup<{
-    documentsId: FormControl<string[] | null>,
-    images: FormControl<File[] | null>
+    documentsId: FormControl<FileList | null>,
+    images: FormControl<FileList | null>
   }>;
 
   organization = signal<GetOrganizationDto | null>(null);
 
   // Cache de imágenes y documentos
   imageCache = new Map<string, SafeUrl>();
-  documentCache = new Map<string, SafeUrl>();
+  documentCache = new Map<string, FileBase64>();
 
   view: string = '';
 
@@ -50,11 +61,12 @@ export class OrganizationPage implements OnInit {
   private titleService = inject(Title);
   private fb = inject(FormBuilder);
   private toastService = inject(ToastService);
+  private campaignService = inject(CampaignService);
 
   constructor() {
     this.editForm = this.fb.group({
-      documentsId: new FormControl<string[] | null>(null),
-      images: new FormControl<File[] | null>(null)
+      documentsId: new FormControl<FileList | null>(null),
+      images: new FormControl<FileList | null>(null)
     });
   }
 
@@ -108,12 +120,38 @@ export class OrganizationPage implements OnInit {
             this.loadDocument(docId);
           });
         }
+
+        // Cargar campañas de la organización
+        this.loadCampaigns();
+        
+        // Inicializar listas de archivos a mantener
+        if (org.documentsId) {
+          this.documentsToKeep.set([...org.documentsId]);
+        }
+        if (org.images) {
+          this.imagesToKeep.set(org.images.map(img => img.imageId));
+        }
       },
       error: (error) => {
         console.error('Error al cargar organización:', error);
         this.isLoading.set(false);
         this.toastService.open('Error al cargar la organización', 'error', 3000);
         this.router.navigate(['/organizations/all']);
+      }
+    });
+  }
+
+  loadCampaigns() {
+    if (!this.ngoId) return;
+    
+    this.campaignService.filter(undefined, undefined, undefined, this.ngoId).subscribe({
+      next: (campaigns) => {
+        this.campaigns.set(campaigns);
+        console.log(`Campañas cargadas: ${campaigns.length}`);
+      },
+      error: (error) => {
+        console.error('Error al cargar campañas:', error);
+        this.toastService.open('Error al cargar las campañas de la organización', 'error', 3000);
       }
     });
   }
@@ -136,13 +174,10 @@ export class OrganizationPage implements OnInit {
   loadDocument(fileId: string) {
     if (this.documentCache.has(fileId)) return;
 
-    this.fileService.getFile(fileId).subscribe({
-      next: (blob) => {
-        const objectURL = URL.createObjectURL(blob);
-        const safeUrl = this.sanitizer.bypassSecurityTrustUrl(objectURL);
-        // Almacenamos tanto la URL como el tipo de archivo
-        this.documentCache.set(fileId, safeUrl);
-        this.documentCache.set(`${fileId}_type`, blob.type as any);
+    this.fileService.getFileBase64(fileId).subscribe({
+      next: (fileData) => {
+        // Almacenar el objeto completo con toda la información
+        this.documentCache.set(fileId, fileData);
       },
       error: (error) => {
         console.error('Error al cargar documento:', error);
@@ -157,7 +192,12 @@ export class OrganizationPage implements OnInit {
 
   getDocumentUrl(fileId: string | undefined): SafeUrl | null {
     if (!fileId) return null;
-    return this.documentCache.get(fileId) || null;
+    const fileData = this.documentCache.get(fileId);
+    if (!fileData) return null;
+    
+    // Convertir base64 a SafeUrl
+    const dataUrl = `data:${fileData.mimeType};base64,${fileData.base64}`;
+    return this.sanitizer.bypassSecurityTrustUrl(dataUrl);
   }
 
   // Obtener imágenes del carrusel
@@ -179,25 +219,31 @@ export class OrganizationPage implements OnInit {
     const org = this.organization();
     if (!org || !org.documentsId || org.documentsId.length === 0) return [];
     
-    return org.documentsId.map((docId, index) => {
-      const fileType = this.documentCache.get(`${docId}_type`) as string || '';
+    return org.documentsId.map((docId) => {
+      const fileData = this.documentCache.get(docId);
       let type = 'Archivo';
-      let icon = 'description'; // icono por defecto
-      let extension = '';
+      let icon = 'description';
+      let name = 'Documento';
       
-      if (fileType.includes('pdf')) {
-        type = 'PDF';
-        icon = 'picture_as_pdf';
-        extension = '.pdf';
-      } else if (fileType.includes('image')) {
-        type = 'Imagen';
-        icon = 'image';
-        const imageExt = fileType.split('/')[1];
-        extension = `.${imageExt}`;
+      if (fileData) {
+        // Usar el nombre real del archivo
+        name = fileData.fileName;
+        
+        // Determinar tipo basado en mimeType
+        if (fileData.mimeType.includes('pdf')) {
+          type = 'PDF';
+          icon = 'picture_as_pdf';
+        } else if (fileData.mimeType.includes('image')) {
+          type = 'Imagen';
+          icon = 'image';
+        } else if (fileData.mimeType.includes('word') || fileData.mimeType.includes('document')) {
+          type = 'Word';
+          icon = 'description';
+        }
       }
       
       return {
-        name: `Documento Legal ${index + 1}${extension}`,
+        name: name,
         url: this.getDocumentUrl(docId),
         fileId: docId,
         type: type,
@@ -220,7 +266,40 @@ export class OrganizationPage implements OnInit {
 
   goToSlide(index: number) {
     const slideId = `slide${index}`;
-    document.getElementById(slideId)?.scrollIntoView({ behavior: 'smooth' });
+    const slideElement = document.getElementById(slideId);
+    if (slideElement) {
+      // Actualizar el índice actual
+      this.currentSlideIndex.set(index - 1);
+      
+      // Usar scrollIntoView con block: 'nearest' para evitar scroll de toda la página
+      slideElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'nearest',
+        inline: 'start'
+      });
+    }
+  }
+
+  //------------------------------------Métodos auxiliares para preview de archivos------------------------------------
+
+  // Convertir FileList a Array para usar en @for
+  getFileListAsArray(fileList: FileList | null): File[] {
+    if (!fileList) return [];
+    return Array.from(fileList);
+  }
+
+  // Formatear tamaño de archivo
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  // Obtener preview de imagen
+  getImagePreview(file: File): string {
+    return URL.createObjectURL(file);
   }
 
   //------------------------------------Métodos para los modales------------------------------------
@@ -277,36 +356,106 @@ export class OrganizationPage implements OnInit {
   toggleEditMode() {
     this.isEditMode.set(!this.isEditMode());
     if (!this.isEditMode()) {
-      // Si se cancela, resetear el formulario
+      // Si se cancela, resetear el formulario y restaurar listas originales
       this.editForm.reset();
-    }
-  }
-
-  onFileSelect(event: Event, type: 'documents' | 'images') {
-    const input = event.target as HTMLInputElement;
-    if (input.files) {
-      const files = Array.from(input.files);
-      if (type === 'documents') {
-        // Por ahora solo guardamos los archivos, en producción subirías a servidor
-        console.log('Documentos seleccionados:', files);
-      } else {
-        this.editForm.patchValue({ images: files });
+      const org = this.organization();
+      if (org?.documentsId) {
+        this.documentsToKeep.set([...org.documentsId]);
+      }
+      if (org?.images) {
+        this.imagesToKeep.set(org.images.map(img => img.imageId));
       }
     }
   }
 
+  removeDocument(fileId: string) {
+    const current = this.documentsToKeep();
+    this.documentsToKeep.set(current.filter(id => id !== fileId));
+  }
+
+  removeImage(fileId: string) {
+    const current = this.imagesToKeep();
+    this.imagesToKeep.set(current.filter(id => id !== fileId));
+  }
+
+  // Obtener solo los documentos que se van a mantener
+  getDocumentsToEdit(): { name: string, url: SafeUrl | null, fileId: string, type: string, icon: string }[] {
+    return this.getDocuments().filter(doc => this.documentsToKeep().includes(doc.fileId));
+  }
+
+  // Obtener solo las imágenes que se van a mantener
+  getImagesToEdit(): { url: SafeUrl | null, alt: string, imageId: string }[] {
+    return this.getCarouselImages().filter(img => this.imagesToKeep().includes(img.imageId));
+  }
+
   async saveChanges() {
-    if (this.editForm.valid && this.ngoId) {
+    if (this.ngoId) {
       this.isSaving.set(true);
 
-      // TODO: Implementar lógica de actualización cuando esté disponible en el backend
-      // Por ahora solo mostramos un mensaje
-      setTimeout(() => {
-        this.toastService.open('Funcionalidad de edición en desarrollo', 'info', 3000);
+      try {
+        const formValue = this.editForm.value;
+        
+        // Arrays para almacenar los IDs finales
+        let finalDocumentIds: string[] = [...this.documentsToKeep()];
+        let finalImageIds: string[] = [...this.imagesToKeep()];
+
+        // Subir nuevos documentos si hay
+        if (formValue.documentsId && formValue.documentsId.length > 0) {
+          const docFiles = Array.from(formValue.documentsId);
+          const docUploadPromises = docFiles.map(file => 
+            this.fileService.uploadFile(file).toPromise()
+          );
+          
+          const newDocIds = await Promise.all(docUploadPromises);
+          finalDocumentIds = [...finalDocumentIds, ...newDocIds.filter(id => id !== undefined) as string[]];
+          
+          this.toastService.open(`${docFiles.length} documento(s) subido(s) exitosamente`, 'success', 2000);
+        }
+
+        // Subir nuevas imágenes si hay
+        if (formValue.images && formValue.images.length > 0) {
+          const imageFiles = Array.from(formValue.images);
+          const imageUploadPromises = imageFiles.map(file => 
+            this.fileService.uploadFile(file).toPromise()
+          );
+          
+          const newImageIds = await Promise.all(imageUploadPromises);
+          finalImageIds = [...finalImageIds, ...newImageIds.filter(id => id !== undefined) as string[]];
+          
+          this.toastService.open(`${imageFiles.length} imagen(es) subida(s) exitosamente`, 'success', 2000);
+        }
+
+        console.log('IDs finales de documentos:', finalDocumentIds);
+        console.log('IDs finales de imágenes:', finalImageIds);
+
+        // Actualizar organización con los nuevos IDs
+        const updateDto: PutOrganizationDto = {
+          documentsId: finalDocumentIds,
+          images: finalImageIds.map((imageId, index) => ({
+            imageId,
+            orderIndex: index
+          }))
+        };
+
+        await this.organizationService.updateNgo(this.ngoId, updateDto).toPromise();
+
+        this.toastService.open('Organización actualizada exitosamente', 'success', 3000);
         this.isEditMode.set(false);
-        this.isSaving.set(false);
         this.editForm.reset();
-      }, 1000);
+        
+        // Recargar la organización para ver los cambios
+        this.loadOrganization(this.ngoId);
+        
+      } catch (error) {
+        console.error('Error al guardar cambios:', error);
+        this.toastService.open('Error al subir los archivos', 'error', 3000);
+      } finally {
+        this.isSaving.set(false);
+      }
     }
+  }
+
+  navigate(url: string){
+    this.router.navigate([url]);
   }
 }

@@ -24,6 +24,9 @@
                     <label>Descripción</label>
                     <textarea class="textarea w-full" placeholder="Detalle sobre su campaña..." rows="4"
                         formControlName="description"></textarea>
+                        @if(formValidator.showError(campaignRegisterForm, 'description')){
+                <p class="error-label">{{formValidator.getValidationMessage(campaignRegisterForm, 'description')}}</p>
+                }
                 </div>
 
                 <div class="col-span-2">

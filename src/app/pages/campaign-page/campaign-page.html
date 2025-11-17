@@ -38,7 +38,7 @@
                     <div class="flex justify-between items-center mb-2">
                         <span class="text-2xl font-bold text-primary">{{ formatCurrency(campaign.current_amount ?? 0)
                             }}</span>
-                        <span class="text-base-content/70">de {{ campaign.goal_amount | currency: 'ARS': '1.1-1'}}</span>
+                        <span class="text-base-content/70">de {{ campaign.goal_amount | currency: 'ARS'}}</span>
                     </div>
                     <progress class="progress progress-primary w-full h-4" [value]="getProgressPercentage() || 0"
                         max="100"></progress>
@@ -59,22 +59,24 @@
                         @if(campaign.ngo.userCreator.userId === authService.userId()){
 
                         }
-                        <app-button-component [icon]="showAddMessage() ? 'close' : 'add'" [variant]="showAddMessage() ? 'error' : 'white'" [tooltip]="showAddMessage() ? 'Cancelar' : 'Agregar actualización'"
-                            tooltipPosition="right" (onClick)="toggleAddMessage()"></app-button-component>
+                        <app-button-component [icon]="showAddMessage() ? 'close' : 'add'"
+                            [variant]="showAddMessage() ? 'error' : 'white'"
+                            [tooltip]="showAddMessage() ? 'Cancelar' : 'Agregar actualización'" tooltipPosition="right"
+                            (onClick)="toggleAddMessage()"></app-button-component>
                     </div>
 
 
                     <!-- Botón de donación -->
                     <div class="card-actions">
                         <app-button-component label="Donar Ahora" variant="violet" size="lg" icon="volunteer-activism"
-                            [block]="false" (onClick)="navigate('/donations/new/:campaignName/:campaignId', { campaignId: campaign.id, campaignName: campaign.title })">
+                            [block]="false" (onClick)="donateModalRef.open()">
                         </app-button-component>
                     </div>
                 </div>
 
                 <app-add-message-component [show]="showAddMessage" [campaignId]="campaign.id"
-                            (messageSubmitted)="handleMessageSubmitted()" (cancel)="handleCancel()">
-                        </app-add-message-component>
+                    (messageSubmitted)="handleMessageSubmitted()" (cancel)="handleCancel()">
+                </app-add-message-component>
 
                 @if(isOpen()) {
                 <div class="mt-6">
@@ -108,7 +110,8 @@
                             <h3 class="font-semibold mb-2">Etiquetas:</h3>
                             <div class="flex flex-wrap gap-2">
                                 @for (tag of campaign.tags; track tag) {
-                                <div class="badge badge-outline badge-lg text-violet-600 border-violet-300">{{ tag }}</div>
+                                <div class="badge badge-outline badge-lg text-violet-600 border-violet-300">{{ tag }}
+                                </div>
                                 }
                             </div>
                         </div>
@@ -125,14 +128,16 @@
                             <icon name="calendar-today" class="text-blue-500"></icon>
                             <div>
                                 <p class="text-sm text-base-content/70">Fecha de inicio</p>
-                                <p class="font-semibold">{{ formatDate(campaign.createDateTime || campaign.create_date_time) }}</p>
+                                <p class="font-semibold">{{ formatDate(campaign.createDateTime ||
+                                    campaign.create_date_time) }}</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
                             <icon name="schedule" class="text-red-500"></icon>
                             <div>
                                 <p class="text-sm text-base-content/70">Fecha de cierre</p>
-                                <p class="font-semibold">{{ formatDate(campaign.endDateTime || campaign.end_date_time) }}</p>
+                                <p class="font-semibold">{{ formatDate(campaign.endDateTime || campaign.end_date_time)
+                                    }}</p>
                             </div>
                         </div>
                         <div class="flex items-start gap-3">
@@ -159,4 +164,9 @@
         </div>
         }
     </div>
+
+    <app-reusable-modal-component #donateModal>
+        <app-donation-register [campaignId]="campaign!.id"
+        [campaignName]="campaign!.title"></app-donation-register>
+    </app-reusable-modal-component>
 </section>

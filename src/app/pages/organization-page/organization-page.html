@@ -87,13 +87,13 @@
                             <!-- Botones de acción -->
                             <div class="flex flex-wrap gap-2">
                                 @if(authService.roles().includes('ORGANIZATION') && authService.userId() == organization()!.userCreator.userId){
-                                <app-button-component icon="edit" [label]="isEditMode() ? 'Cancelar' : 'Editar'"
-                                    [variant]="isEditMode() ? 'error' : 'white'" tooltip="Editar organización"
+                                <app-button-component [icon]="isEditMode() ? 'close' : 'edit'" [label]="isEditMode() ? 'Cancelar' : 'Editar'"
+                                    [variant]="isEditMode() ? 'error' : 'white'"
                                     [rounded]="true" (onClick)="toggleEditMode()">
                                 </app-button-component>
 
                                 <app-button-component icon="add" label="Nueva campaña" variant="violet"
-                                    [rounded]="true">
+                                    [rounded]="true" (onClick)="navigate('/campaigns/create')">
                                 </app-button-component>
                                 }
 
@@ -119,46 +119,112 @@
                 </h2>
 
                 <form [formGroup]="editForm" class="space-y-6">
+                    <!-- Documentos actuales -->
+                    @if(getDocumentsToEdit().length > 0) {
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                            <icon name="description" [size]="'sm'" class="text-violet-600"></icon>
+                            Documentos actuales ({{ getDocumentsToEdit().length }})
+                        </h3>
+                        <div class="grid gap-2">
+                            @for (doc of getDocumentsToEdit(); track doc.fileId) {
+                            <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                                <div class="bg-violet-100 p-2 rounded-lg">
+                                    <icon [name]="doc.icon" [size]="'sm'" class="text-violet-600"></icon>
+                                </div>
+                                <div class="flex-1">
+                                    <p class="text-sm font-medium text-gray-800">{{ doc.name }}</p>
+                                    <p class="text-xs text-gray-500">{{ doc.type }}</p>
+                                </div>
+                                <div class="flex gap-2">
+                                    <app-button-component 
+                                        icon="download" 
+                                        variant="violet" 
+                                        size="sm"
+                                        [outline]="true"
+                                        (onClick)="downloadFile(doc)">
+                                    </app-button-component>
+                                    <app-button-component 
+                                        icon="delete" 
+                                        variant="error" 
+                                        size="sm"
+                                        [outline]="true"
+                                        (onClick)="removeDocument(doc.fileId)">
+                                    </app-button-component>
+                                </div>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                    }
+                    
                     <!-- Subir nuevos documentos -->
                     <div class="bg-white p-6 rounded-xl shadow-sm">
                         <label class="block mb-3">
                             <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                <icon name="document" [size]="'sm'" class="text-violet-600"></icon>
-                                Actualizar documentos legales
+                                <icon name="upload" [size]="'sm'" class="text-violet-600"></icon>
+                                {{ getDocumentsToEdit().length > 0 ? 'Agregar más documentos' : 'Subir documentos legales' }}
                             </span>
-                            <span class="text-xs text-gray-500 block mt-1">Sube nuevos documentos para reemplazar los
-                                existentes (PDF, DOC, etc.)</span>
+                            <span class="text-xs text-gray-500 block mt-1">Sube nuevos documentos (PDF, DOC, etc.)</span>
                         </label>
-                        <input type="file" multiple accept=".pdf,.doc,.docx"
-                            class="file-input file-input-bordered file-input-violet w-full"
-                            (change)="onFileSelect($event, 'documents')">
+                        <app-input-component 
+                            type="file" 
+                            [control]="editForm.controls.documentsId"
+                            [multiple]="true"
+                            accept=".pdf,.doc,.docx"
+                            variant="violet"
+                            [block]="true">
+                        </app-input-component>
                     </div>
+
+                    <!-- Imágenes actuales -->
+                    @if(getImagesToEdit().length > 0) {
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                            <icon name="image" [size]="'sm'" class="text-violet-600"></icon>
+                            Imágenes actuales ({{ getImagesToEdit().length }})
+                        </h3>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            @for (img of getImagesToEdit(); track img.imageId) {
+                            <div class="relative group">
+                                @if(img.url) {
+                                <img [src]="img.url" [alt]="img.alt" 
+                                    class="w-full h-32 object-cover rounded-lg border-2 border-gray-200">
+                                } @else {
+                                <div class="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+                                    <span class="loading loading-spinner loading-sm text-violet-600"></span>
+                                </div>
+                                }
+                                <button 
+                                    type="button"
+                                    (click)="removeImage(img.imageId)"
+                                    class="absolute top-2 right-2 btn btn-circle btn-sm btn-error opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <icon name="delete" [size]="'sm'" class="text-white"></icon>
+                                </button>
+                            </div>
+                            }
+                        </div>
+                    </div>
+                    }
 
                     <!-- Subir nuevas imágenes -->
                     <div class="bg-white p-6 rounded-xl shadow-sm">
                         <label class="block mb-3">
                             <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                <icon name="image" [size]="'sm'" class="text-violet-600"></icon>
-                                Actualizar galería de imágenes
+                                <icon name="upload" [size]="'sm'" class="text-violet-600"></icon>
+                                {{ getImagesToEdit().length > 0 ? 'Agregar más imágenes' : 'Subir imágenes de galería' }}
                             </span>
                             <span class="text-xs text-gray-500 block mt-1">Sube nuevas imágenes para la galería (JPG,
                                 PNG, etc.)</span>
                         </label>
-                        <input type="file" multiple accept="image/*"
-                            class="file-input file-input-bordered file-input-violet w-full"
-                            (change)="onFileSelect($event, 'images')">
-
-                        @if(editForm.get('images')?.value && editForm.get('images')?.value?.length) {
-                        <div class="mt-4">
-                            <p class="text-sm text-gray-600 mb-2">Imágenes seleccionadas: {{
-                                editForm.get('images')?.value?.length }}</p>
-                            <div class="flex flex-wrap gap-2">
-                                @for (file of editForm.get('images')?.value || []; track file.name) {
-                                <span class="badge badge-violet">{{ file.name }}</span>
-                                }
-                            </div>
-                        </div>
-                        }
+                        <app-input-component 
+                            type="file" 
+                            [control]="editForm.controls.images"
+                            [multiple]="true"
+                            accept="image/*"
+                            variant="violet"
+                            [block]="true">
+                        </app-input-component>
                     </div>
 
                     <!-- Botones de acción -->
@@ -167,8 +233,8 @@
                             (onClick)="toggleEditMode()">
                         </app-button-component>
 
-                        <app-button-component [label]="isSaving() ? 'Guardando...' : 'Guardar cambios'" variant="violet"
-                            [rounded]="true" [disabled]="isSaving()" (onClick)="saveChanges()">
+                        <app-button-component label="Guardar cambios" variant="violet"
+                            [rounded]="true" [isLoading]="isSaving()" (onClick)="saveChanges()">
                         </app-button-component>
                     </div>
                 </form>
@@ -208,11 +274,11 @@
                         <div class="absolute left-5 right-5 top-1/2 flex -translate-y-1/2 transform justify-between">
                             <button (click)="goToSlide(getPreviousIndex($index, getCarouselImages().length) + 1)"
                                 class="btn btn-circle btn-lg bg-white/90 hover:bg-white border-0 shadow-xl">
-                                <icon name="arrow-left"></icon>
+                                <icon class="text-violet-500" name="arrow-left"></icon>
                             </button>
                             <button (click)="goToSlide(getNextIndex($index, getCarouselImages().length) + 1)"
                                 class="btn btn-circle btn-lg bg-white/90 hover:bg-white border-0 shadow-xl">
-                                <icon name="arrow-right"></icon>
+                                <icon class="text-violet-500" name="arrow-right"></icon>
                             </button>
                         </div>
 
@@ -236,8 +302,9 @@
                 <div class="flex justify-center w-full py-4 gap-2">
                     @for (image of getCarouselImages(); track image.imageId) {
                     <button (click)="goToSlide($index + 1)" class="w-2 h-2 rounded-full transition-all duration-300"
-                        [class.bg-violet-600]="$index === 0" [class.w-8]="$index === 0"
-                        [class.bg-gray-300]="$index !== 0">
+                        [class.bg-violet-600]="$index === currentSlideIndex()" 
+                        [class.w-8]="$index === currentSlideIndex()"
+                        [class.bg-gray-300]="$index !== currentSlideIndex()">
                     </button>
                     }
                 </div>
@@ -308,7 +375,27 @@
                 </div>
             </div>
             }
+            
+            <!-- Campañas de la organización -->
+            <div class="px-6 lg:px-10 py-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                    <div class="w-1 h-8 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
+                    Campañas Activas
+                </h2>
 
+                @if(campaigns().length > 0) {
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
+                    @for (campaign of campaigns(); track campaign.id) {
+                    <app-campaign-card [campaign]="campaign"></app-campaign-card>
+                    }
+                </div>
+                } @else {
+                <div class="text-center py-20 text-gray-500 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
+                    <icon name="search-insights" [size]="'xl'" class="text-gray-300 mb-4"></icon>
+                    <p class="text-lg">Esta organización no tiene campañas activas en este momento.</p>
+                </div>
+                }
+            </div>
         </div>
 
         <!-- Modal de aprobación -->

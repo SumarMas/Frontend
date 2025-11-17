@@ -5,6 +5,7 @@ import { ButtonComponent } from "./components/button-component/button-component"
 import { FooterComponent } from "./components/footer-component/footer-component";
 import { SidebarComponent } from "./components/sidebar-component/sidebar-component";
 import { SidebarService } from './services/ui/sidebar-service';
+import { AuthService } from './services/api/auth-service';
 
 @Component({
   selector: 'app-root',
@@ -16,5 +17,10 @@ export class App {
   protected readonly title = signal('frontend');
 
   sidebarService = inject(SidebarService);
+  authService = inject(AuthService);
+
+  getUserRoles() {
+    return this.authService.roles() as ('ADMIN' | 'DONOR' | 'ORGANIZATION')[];
+  }
 
 }

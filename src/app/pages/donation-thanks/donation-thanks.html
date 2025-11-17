@@ -1,4 +1,4 @@
-<section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar">
+<section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar-light">
     <div class="w-2/5 bg-white p-8 rounded-lg shadow-lg text-center">
         <!-- Ícono de éxito -->
         <div class="mb-6">
@@ -22,7 +22,7 @@
         </p>
 
         <!-- Detalles de la donación -->
-        <div class="bg-gray-50 rounded-lg p-6 mb-8">
+        <!-- <div class="bg-gray-50 rounded-lg p-6 mb-8">
             <h2 class="text-lg font-semibold text-gray-700 mb-4">Detalles de tu donación</h2>
             <div class="space-y-2 text-left">
                 <div class="flex justify-between">
@@ -38,7 +38,7 @@
                     <span class="font-semibold text-sm">TXN-2025-001234</span>
                 </div>
             </div>
-        </div>
+        </div> -->
 
         <!-- Mensaje adicional -->
         <p class="text-sm text-gray-500 mb-8">
@@ -51,14 +51,16 @@
                 [label]="'Ver campañas'" 
                 variant="violet" 
                 [rounded]="true"
-                size="lg">
+                size="lg"
+                (onClick)="navigate('/campaigns/all')">
             </app-button-component>
             
             <app-button-component 
                 [label]="'Volver al inicio'" 
                 variant="white" 
                 [rounded]="true"
-                size="lg">
+                size="lg"
+                (onClick)="navigate('/home')">
             </app-button-component>
         </div>
     </div>
