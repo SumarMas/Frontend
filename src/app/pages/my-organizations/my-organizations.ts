@@ -4,10 +4,13 @@ import { OrganizationService } from '../../services/api/organization-service';
 import { Router } from '@angular/router';
 import { ButtonComponent } from "../../components/button-component/button-component";
 import { CommonModule } from '@angular/common';
+import { FileService } from '../../services/api/file-service';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { IconComponent } from '../../components/icon-component/icon-component';
 
 @Component({
   selector: 'app-my-organizations',
-  imports: [CommonModule, ButtonComponent],
+  imports: [CommonModule, ButtonComponent, IconComponent],
   templateUrl: './my-organizations.html',
   styleUrl: './my-organizations.scss'
 })
@@ -15,8 +18,13 @@ export class MyOrganizations implements OnInit {
   organization = signal<GetOrganizationDto | null>(null);
   isLoading = signal<boolean>(true);
   errorMessage = signal<string | null>(null);
+  
+  // Cache de imágenes
+  imageCache = new Map<string, SafeUrl>();
 
   private organizationService = inject(OrganizationService);
+  private fileService = inject(FileService);
+  private sanitizer = inject(DomSanitizer);
   private router = inject(Router);
 
   ngOnInit(): void {
@@ -29,6 +37,14 @@ export class MyOrganizations implements OnInit {
       next: (org: GetOrganizationDto) => {
         this.organization.set(org);
         this.isLoading.set(false);
+        
+        // Cargar banner y perfil
+        if (org.bannerFileId) {
+          this.loadImage(org.bannerFileId);
+        }
+        if (org.profileFileId) {
+          this.loadImage(org.profileFileId);
+        }
       },
       error: (err) => {
         this.isLoading.set(false);
@@ -75,5 +91,21 @@ export class MyOrganizations implements OnInit {
 
   createOrganization() {
     this.router.navigate(['/organizations/register']);
+  }
+  
+  loadImage(fileId: string) {
+    this.fileService.getFile(fileId).subscribe({
+      next: (blob) => {
+        const objectUrl = URL.createObjectURL(blob);
+        this.imageCache.set(fileId, this.sanitizer.bypassSecurityTrustUrl(objectUrl));
+      },
+      error: (err) => {
+        console.error('Error al cargar imagen:', err);
+      }
+    });
+  }
+
+  getImageUrl(fileId: string): SafeUrl | null {
+    return this.imageCache.get(fileId) || null;
   }
 }

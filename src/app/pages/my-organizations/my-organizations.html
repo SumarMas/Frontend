@@ -46,8 +46,17 @@
         @else if(organization()) {
         <div class="bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300">
             
-            <!-- Header con gradiente -->
-            <div class="h-32 bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600 relative overflow-hidden">
+            <!-- Header con gradiente o banner -->
+            <div class="h-40 relative overflow-hidden">
+                @if(organization()!.bannerFileId) {
+                    @if(getImageUrl(organization()!.bannerFileId!)) {
+                    <img [src]="getImageUrl(organization()!.bannerFileId!)" alt="Banner" class="w-full h-full object-cover opacity-80">
+                    } @else {
+                    <div class="h-full bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600"></div>
+                    }
+                } @else {
+                <div class="h-full bg-gradient-to-r from-violet-600 via-purple-600 to-pink-600"></div>
+                }
                 <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
                 <div class="absolute top-4 right-4">
                     <!-- <span class="badge badge-lg" [ngClass]="getStatusBadgeClass(organization()!.status!)">

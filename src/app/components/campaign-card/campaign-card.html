@@ -13,17 +13,17 @@
         }
 
         <!-- Badge de estado en la esquina -->
-        <div class="absolute top-3 right-3">
+        <!-- <div class="absolute top-3 right-3">
             <span class="badge badge-success gap-1 shadow-lg">
                 <icon name="check" class="text-xs"></icon>
                 Activa
             </span>
-        </div>
+        </div> -->
 
         <!-- Días restantes -->
         <div class="absolute bottom-3 left-3">
             <span class="badge gap-1 shadow-lg" [ngClass]="getDaysLeftClass()">
-                <icon [name]="getDaysLeftIcon()" class="text-xs"></icon>
+                <!-- <icon [name]="getDaysLeftIcon()" class="text-xs"></icon> -->
                 {{ daysLeftText() }}
             </span>
         </div>
