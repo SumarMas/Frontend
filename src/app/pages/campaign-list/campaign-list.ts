@@ -88,8 +88,8 @@ export class CampaignList implements OnInit {
     if (searchTerm.length > 0) {
       filtered = filtered.filter(c =>
         c.title.toLowerCase().includes(searchTerm) ||
-        c.description.toLowerCase().includes(searchTerm)
-        //c.tags.some(tag => tag.toLowerCase().includes(searchTerm))
+        c.description.toLowerCase().includes(searchTerm) ||
+        c.tags.some(tag => tag.toLowerCase().includes(searchTerm))
       );
     }
 

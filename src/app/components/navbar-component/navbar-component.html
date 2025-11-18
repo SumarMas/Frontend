@@ -21,6 +21,7 @@
                 <app-button-component label="Iniciar Sesión" variant="violet" [rounded]="true" (onClick)="navigate('/login')" />
             }
             @else {
+                <p>{{ authService._userName() }}</p>
                 <app-notification-component></app-notification-component>
             }
         </div>

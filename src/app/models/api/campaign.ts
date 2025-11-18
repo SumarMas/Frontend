@@ -24,7 +24,7 @@ export interface GetCampaignDto {
     create_date_time?: Date | string;
     campaignState: CampaignState;
     categories: CategoryDto[];
-    tags: string;
+    tags: string[];
     images?: string[];
 }
 

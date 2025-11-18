@@ -11,9 +11,9 @@ export interface NavItem {
 
 export const Sidebuttons: NavItem[] = [
     { title: 'Mi perfil', route: '/profile', roles: ['DONOR', 'ORGANIZATION', 'ADMIN'], icon: 'person' },
-    { title: 'Organizaciones', roles: ['DONOR', 'ORGANIZATION'], icon: 'community', children:[
-        { title: 'Registrar organización', route: '/organizations/register', roles: ['DONOR', 'ORGANIZATION'], icon: 'add' },
-        { title: 'Mis organizaciones', route: '/organizations/my-organizations', roles: ['DONOR', 'ORGANIZATION'], icon: 'diversity-1' },
+    { title: 'Organizaciones', roles: ['DONOR', 'ORGANIZATION', 'ADMIN'], icon: 'community', children:[
+        { title: 'Registrar organización', route: '/organizations/register', roles: ['DONOR'], icon: 'add' },
+        { title: 'Mis organizaciones', route: '/organizations/my-organizations', roles: ['ORGANIZATION'], icon: 'diversity-1' },
         { title: 'Gestionar pendientes', route: '/organizations/pending', roles: ['ADMIN'], icon: 'admin' },
     ] },
     { title: 'Campañas', roles: ['ADMIN'], icon: 'diversity-1', children: [

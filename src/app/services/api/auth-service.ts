@@ -1,5 +1,5 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
 import { catchError, delay, map, mapTo, Observable, of, tap, throwError } from 'rxjs';
@@ -24,6 +24,7 @@ export class AuthService {
 
   //busco el token en el localStorage
   _token = signal<string | null>(localStorage.getItem('token'));
+  _userName = signal<string | null>(null);
 
   private _tokenExpTs = signal<number | null>(
     localStorage.getItem('token_exp_ts') ? Number(localStorage.getItem('token_exp_ts')) : null

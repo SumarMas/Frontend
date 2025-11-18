@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { CommentaryComponent } from '../commentary-component/commentary-component';
 import { CommentService } from '../../services/api/comment-service';
 import { ToastService } from '../../services/ui/toast-service';
+import { AuthService } from '../../services/api/auth-service';
 
 @Component({
   selector: 'app-commentary-display-component',
@@ -22,6 +23,7 @@ export class CommentaryDisplayComponent implements OnInit {
 
   commentService = inject(CommentService);
   toastService = inject(ToastService);
+  authService = inject(AuthService);
 
   ngOnInit(): void {
     this.fetchAllComments();

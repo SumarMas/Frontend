@@ -9,7 +9,7 @@
 @if(categoriesIds.length > 0) {
 <div class="flex flex-wrap gap-2 m-2 w-full">
     @for (category of categoriesIds; track $index) {
-    <span class="badge badge-lg badge-primary text-white">{{category.name}}<icon class="hover:cursor-pointer" name="close"
+    <span class="badge badge-lg bg-violet-500 text-white">{{category.name}}<icon class="hover:cursor-pointer" name="close"
                 size="sm" (click)="removeCategory($index)"></icon></span>
     }
 </div>

@@ -1,17 +1,10 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { ButtonComponent } from "../button-component/button-component";
 import { CommonModule } from '@angular/common';
 import { IconComponent } from '../icon-component/icon-component';
-
-interface Notification {
-  id: string;
-  title: string;
-  message: string;
-  type: 'info' | 'success' | 'warning' | 'error';
-  read: boolean; // Esta propiedad viene del backend
-  timestamp: Date;
-  actionUrl?: string;
-}
+import { NotificationService } from '../../services/api/notification-service';
+import { GetNotificationDto, NotificationType } from '../../models/api/notification';
+import { ToastService } from '../../services/ui/toast-service';
 
 @Component({
   selector: 'app-notification-component',
@@ -19,50 +12,36 @@ interface Notification {
   templateUrl: './notification-component.html',
   styleUrl: './notification-component.scss'
 })
-export class NotificationComponent {
+export class NotificationComponent implements OnInit {
   isOpen = signal<boolean>(false);
-  notifications = signal<Notification[]>([
-    // TODO: Reemplazar con llamada al servicio del backend
-    // Estos son datos de ejemplo para desarrollo
-    {
-      id: '1',
-      title: 'Nueva donación recibida',
-      message: 'Has recibido una donación de $500 para la campaña "Ayuda Alimentaria"',
-      type: 'success',
-      read: false, // Viene del backend
-      timestamp: new Date(Date.now() - 1000 * 60 * 5), // 5 minutos atrás
-      actionUrl: '/campaigns/123'
-    },
-    {
-      id: '2',
-      title: 'Campaña aprobada',
-      message: 'Tu campaña "Educación para Todos" ha sido aprobada y está activa',
-      type: 'info',
-      read: false, // Viene del backend
-      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 minutos atrás
-      actionUrl: '/campaigns/456'
-    },
-    {
-      id: '3',
-      title: 'Documento pendiente',
-      message: 'Necesitas actualizar tus documentos de verificación',
-      type: 'warning',
-      read: true, // Viene del backend
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 horas atrás
-      actionUrl: '/profile/documents'
-    },
-    {
-      id: '4',
-      title: 'Meta alcanzada',
-      message: '¡Felicitaciones! Tu campaña alcanzó el 100% de su meta',
-      type: 'success',
-      read: true, // Viene del backend
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 día atrás
-      actionUrl: '/campaigns/789'
-    }
-  ]);
+  notifications = signal<GetNotificationDto[]>([]);
+  unreadCount = signal<number>(0);
+  isLoading = signal<boolean>(false);
 
-  unreadCount = signal<number>(this.notifications().filter(n => !n.read).length);
+  private notificationService = inject(NotificationService);
+  private toastService = inject(ToastService);
+
+  ngOnInit(): void {
+    this.loadNotifications();
+
+
+  }
+
+  loadNotifications() {
+    this.isLoading.set(true);
+    this.notificationService.getMyNotifications().subscribe({
+      next: (notifications) => {
+        this.notifications.set(notifications);
+        this.updateUnreadCount();
+        this.isLoading.set(false);
+        console.log(this.notifications());
+      },
+      error: (error) => {
+        console.error('Error al cargar notificaciones:', error);
+        this.isLoading.set(false);
+      }
+    });
+  }
 
   toggleDropdown() {
     this.isOpen.set(!this.isOpen());
@@ -73,44 +52,53 @@ export class NotificationComponent {
   }
 
   markAsRead(notificationId: string) {
-    // Verificar si ya está leída para evitar llamadas innecesarias
-    const notification = this.notifications().find(n => n.id === notificationId);
+    const notification = this.notifications().find(n => n.notification_id === notificationId);
     if (notification?.read) return;
-    
-    // TODO: Hacer llamada al backend para marcar como leída
-    // Ejemplo: this.notificationService.markAsRead(notificationId).subscribe(...)
-    
-    const updatedNotifications = this.notifications().map(n => 
-      n.id === notificationId ? { ...n, read: true } : n
-    );
-    this.notifications.set(updatedNotifications);
-    this.updateUnreadCount();
+
+    this.notificationService.markAsRead(notificationId).subscribe({
+      next: () => {
+        const updatedNotifications = this.notifications().map(n =>
+          n.notification_id === notificationId ? { ...n, read: true } : n
+        );
+        this.notifications.set(updatedNotifications);
+        this.updateUnreadCount();
+      },
+      error: (error) => {
+        console.error('Error al marcar como leída:', error);
+        this.toastService.open('Error al actualizar notificación', 'error', 3000);
+      }
+    });
   }
 
   markAllAsRead() {
-    // TODO: Hacer llamada al backend para marcar todas como leídas
-    // Ejemplo: this.notificationService.markAllAsRead().subscribe(...)
-    
-    const updatedNotifications = this.notifications().map(n => ({ ...n, read: true }));
-    this.notifications.set(updatedNotifications);
-    this.updateUnreadCount();
+    const unreadIds = this.notifications().filter(n => !n.read).map(n => n.notification_id);
+
+    if (unreadIds.length === 0) return;
+
+    // Marcar todas en paralelo
+    Promise.all(
+      unreadIds.map(id => this.notificationService.markAsRead(id).toPromise())
+    ).then(() => {
+      const updatedNotifications = this.notifications().map(n => ({ ...n, read: true }));
+      this.notifications.set(updatedNotifications);
+      this.updateUnreadCount();
+    }).catch(error => {
+      console.error('Error al marcar todas como leídas:', error);
+      this.toastService.open('Error al actualizar notificaciones', 'error', 3000);
+    });
   }
 
   deleteNotification(notificationId: string, event: Event) {
     event.stopPropagation();
-    
-    // TODO: Hacer llamada al backend para eliminar la notificación
-    // Ejemplo: this.notificationService.deleteNotification(notificationId).subscribe(...)
-    
-    const updatedNotifications = this.notifications().filter(n => n.id !== notificationId);
+
+    // Por ahora solo eliminar del frontend, el backend no tiene endpoint de delete
+    const updatedNotifications = this.notifications().filter(n => n.notification_id !== notificationId);
     this.notifications.set(updatedNotifications);
     this.updateUnreadCount();
   }
 
   clearAll() {
-    // TODO: Hacer llamada al backend para eliminar todas las notificaciones
-    // Ejemplo: this.notificationService.clearAll().subscribe(...)
-    
+    // Por ahora solo limpiar del frontend
     this.notifications.set([]);
     this.unreadCount.set(0);
   }
@@ -119,27 +107,58 @@ export class NotificationComponent {
     this.unreadCount.set(this.notifications().filter(n => !n.read).length);
   }
 
-  getNotificationIcon(type: Notification['type']): string {
+  getNotificationIcon(type: NotificationType): string {
     switch (type) {
-      case 'success': return 'check';
-      case 'warning': return 'warning';
-      case 'error': return 'error';
-      case 'info': 
-      default: return 'info';
+      case NotificationType.USER_CREATED:
+        return 'person';
+      case NotificationType.NGO_DOCUMENTS_RECEIVED:
+        return 'description';
+      case NotificationType.NGO_DOCUMENTS_APPROVED:
+        return 'check';
+      case NotificationType.NGO_DOCUMENTS_REJECTED:
+        return 'close';
+      case NotificationType.DONATION_SUCCESS:
+        return 'volunteer-activism';
+      case NotificationType.CAMPAIGN_FINALIZED:
+        return 'diversity-1';
+      case NotificationType.NGO_PUBLISHED_MESSAGE:
+        return 'chat';
+      case NotificationType.PAYOUT_REQUESTED:
+        return 'search-insights';
+      case NotificationType.PAYOUT_APPROVED:
+        return 'check';
+      default:
+        return 'info';
     }
   }
 
-  getNotificationColor(type: Notification['type']): string {
+  getNotificationColor(type: NotificationType): string {
     switch (type) {
-      case 'success': return 'text-green-600 bg-green-50';
-      case 'warning': return 'text-orange-600 bg-orange-50';
-      case 'error': return 'text-red-600 bg-red-50';
-      case 'info': 
-      default: return 'text-blue-600 bg-blue-50';
+      case NotificationType.USER_CREATED:
+        return 'text-blue-600 bg-blue-50';
+      case NotificationType.NGO_DOCUMENTS_RECEIVED:
+        return 'text-purple-600 bg-purple-50';
+      case NotificationType.NGO_DOCUMENTS_APPROVED:
+        return 'text-green-600 bg-green-50';
+      case NotificationType.NGO_DOCUMENTS_REJECTED:
+        return 'text-red-600 bg-red-50';
+      case NotificationType.DONATION_SUCCESS:
+        return 'text-violet-600 bg-violet-50';
+      case NotificationType.CAMPAIGN_FINALIZED:
+        return 'text-pink-600 bg-pink-50';
+      case NotificationType.NGO_PUBLISHED_MESSAGE:
+        return 'text-indigo-600 bg-indigo-50';
+      case NotificationType.PAYOUT_REQUESTED:
+        return 'text-orange-600 bg-orange-50';
+      case NotificationType.PAYOUT_APPROVED:
+        return 'text-emerald-600 bg-emerald-50';
+      default:
+        return 'text-blue-600 bg-blue-50';
     }
   }
 
-  getTimeAgo(date: Date): string {
+  getTimeAgo(dateString: string): string {
+    const date = new Date(dateString);
     const now = new Date();
     const diffInMs = now.getTime() - date.getTime();
     const diffInMinutes = Math.floor(diffInMs / (1000 * 60));
@@ -154,45 +173,33 @@ export class NotificationComponent {
     return date.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
   }
 
-  isToday(date: Date): boolean {
+  isToday(dateString: string): boolean {
+    const date = new Date(dateString);
     const today = new Date();
     return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
+      date.getMonth() === today.getMonth() &&
+      date.getFullYear() === today.getFullYear();
   }
 
-  getTodayOrUnreadNotifications(): Notification[] {
-    return this.notifications().filter(n => this.isToday(n.timestamp) || !n.read);
+  getTodayOrUnreadNotifications(): GetNotificationDto[] {
+    return this.notifications().filter(n => this.isToday(n.createdAt) || !n.read);
   }
 
-  getOlderNotifications(): Notification[] {
-    return this.notifications().filter(n => !this.isToday(n.timestamp) && n.read);
+  getOlderNotifications(): GetNotificationDto[] {
+    return this.notifications().filter(n => !this.isToday(n.createdAt) && n.read);
   }
 
-  handleNotificationClick(notification: Notification) {
-    // Ya no necesita marcar como leída aquí, ya se marcó al abrir
-    if (notification.actionUrl) {
-      // TODO: Implementar navegación con Router cuando esté disponible
-      // Ejemplo: this.router.navigate([notification.actionUrl]);
-      console.log('Navigate to:', notification.actionUrl);
+  handleNotificationClick(notification: GetNotificationDto) {
+    // Marcar como leída al hacer click
+    if (!notification.read) {
+      this.markAsRead(notification.notification_id);
     }
   }
 
-  handleNotificationHover(notification: Notification) {
+  handleNotificationHover(notification: GetNotificationDto) {
     // Marcar como leída al hacer hover si aún no lo está
     if (!notification.read) {
-      this.markAsRead(notification.id);
+      this.markAsRead(notification.notification_id);
     }
   }
-
-  // TODO: Agregar método para cargar notificaciones desde el backend
-  // loadNotifications() {
-  //   this.notificationService.getUserNotifications().subscribe({
-  //     next: (notifications) => {
-  //       this.notifications.set(notifications);
-  //       this.updateUnreadCount();
-  //     },
-  //     error: (error) => console.error('Error loading notifications:', error)
-  //   });
-  // }
 }
