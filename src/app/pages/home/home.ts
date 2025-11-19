@@ -40,9 +40,29 @@ export class Home {
       content: 'La campaña se cierra automáticamente al cumplir la meta económica o al llegar a la fecha de finalización. La ONG puede luego solicitar el pago de los fondos recaudados.',
       check: false
     },
+    {
+      title: '¿Es seguro subir documentación o imágenes?',
+      content: 'Sí, la información se procesa de forma segura y solo se utiliza para validar la identidad de la organización.',
+      check: false
+    },
+    {
+      title: '¿Qué sucede si una campaña no alcanza su meta?',
+      content: 'La campaña igualmente finaliza en la fecha definida. La ONG podrá solicitar los fondos recaudados y usarlos según lo anunciado.',
+      check: false
+    },
+    {
+      title: '¿Qué pasa si la documentación de una ONG es rechazada?',
+      content: 'La organización recibe una notificación indicando los motivos y puede volver a subir la documentación corregida.',
+      check: false
+    },
+    {
+      title: '¿Cómo se procesan los pagos?',
+      content: 'Los pagos se procesan mediante un proveedor seguro y certificado. La plataforma no almacena datos sensibles de tarjetas o métodos de pago.',
+      check: false
+    },
   ];
 
-    steps= [
+  steps = [
     {
       title: 'Crear cuenta',
       subtitle: 'Donante u ONG',

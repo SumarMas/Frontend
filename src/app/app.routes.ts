@@ -15,6 +15,7 @@ import { DonationThanks } from './pages/donation-thanks/donation-thanks';
 import { MyDonations } from './pages/my-donations/my-donations';
 import { OrganizationList } from './pages/organization-list/organization-list';
 import { PendingOrganizationList } from './pages/pending-organization-list/pending-organization-list';
+import { TermsAndConditionsPage } from './pages/terms-and-conditions-page/terms-and-conditions-page';
 
 export const routes: Routes = [
     { pathMatch: 'full', path: '', redirectTo: 'home' },
@@ -23,6 +24,7 @@ export const routes: Routes = [
     { path: 'login', title: 'Iniciar sesión', component: Login },
     { path: 'register', title: 'Registrarse', component: Register },
     { path: 'profile', title: 'Mi perfil', component: Profile },
+    { path: 'terms-and-conditions', title: 'Términos y condiciones', component: TermsAndConditionsPage },
     {
         path: 'organizations', children: [
             { path: 'all', title: 'Explorar organizaciones', component: OrganizationList },
