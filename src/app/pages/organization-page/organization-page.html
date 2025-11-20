@@ -120,6 +120,75 @@
                 </h2>
 
                 <form [formGroup]="editForm" class="space-y-6">
+                    <!-- Nombre de la organización -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <label class="block mb-3">
+                            <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                <icon name="group" [size]="'sm'" class="text-violet-600"></icon>
+                                Nombre de la organización
+                            </span>
+                            <span class="text-xs text-gray-500 block mt-1">El nombre con el que se identificará tu organización</span>
+                        </label>
+                        <app-input-component 
+                            type="text" 
+                            [control]="editForm.controls.name"
+                            placeholder="Ej: Fundación Solidaria"
+                            variant="violet"
+                            [block]="true">
+                        </app-input-component>
+                    </div>
+
+                    <!-- Descripción de la organización -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <label class="block mb-3">
+                            <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                <icon name="description" [size]="'sm'" class="text-violet-600"></icon>
+                                Descripción y misión
+                            </span>
+                            <span class="text-xs text-gray-500 block mt-1">Describe la misión y objetivos de tu organización</span>
+                        </label>
+                        <textarea 
+                            [formControl]="editForm.controls.description"
+                            class="textarea textarea-bordered w-full min-h-32 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                            placeholder="Describe la misión, visión y objetivos de tu organización..."></textarea>
+                    </div>
+
+                    <!-- Foto de perfil -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <label class="block mb-3">
+                            <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                <icon name="account_circle" [size]="'sm'" class="text-violet-600"></icon>
+                                Foto de perfil
+                            </span>
+                            <span class="text-xs text-gray-500 block mt-1">Sube una nueva foto de perfil para tu organización (PNG, JPG)</span>
+                        </label>
+                        <app-input-component 
+                            type="file" 
+                            [control]="editForm.controls.profileFileId"
+                            accept="image/*"
+                            variant="violet"
+                            [block]="true">
+                        </app-input-component>
+                    </div>
+
+                    <!-- Banner -->
+                    <div class="bg-white p-6 rounded-xl shadow-sm">
+                        <label class="block mb-3">
+                            <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                <icon name="image" [size]="'sm'" class="text-violet-600"></icon>
+                                Banner de portada
+                            </span>
+                            <span class="text-xs text-gray-500 block mt-1">Sube un nuevo banner para la portada de tu organización (PNG, JPG - Recomendado: 1200x300px)</span>
+                        </label>
+                        <app-input-component 
+                            type="file" 
+                            [control]="editForm.controls.bannerFileId"
+                            accept="image/*"
+                            variant="violet"
+                            [block]="true">
+                        </app-input-component>
+                    </div>
+
                     <!-- Documentos actuales -->
                     @if(getDocumentsToEdit().length > 0) {
                     <div class="bg-white p-6 rounded-xl shadow-sm">

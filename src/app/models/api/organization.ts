@@ -22,9 +22,8 @@ export interface PostOrganizationDto {
     images: CarrouselImage[];
 }
 
-export interface PutOrganizationDto {
-    documentsId?: string[];
-    images?: CarrouselImage[];
+export interface PutOrganizationDto extends Partial<PostOrganizationDto> {
+
 }
 
 export interface ValidateOrganizationDto {

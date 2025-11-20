@@ -37,6 +37,10 @@ export class OrganizationPage implements OnInit {
   imagesToKeep = signal<string[]>([]);
 
   editForm: FormGroup<{
+    name: FormControl<string | null>,
+    description: FormControl<string | null>,
+    profileFileId: FormControl<FileList | null>,
+    bannerFileId: FormControl<FileList | null>,
     documentsId: FormControl<FileList | null>,
     images: FormControl<FileList | null>
   }>;
@@ -65,6 +69,10 @@ export class OrganizationPage implements OnInit {
 
   constructor() {
     this.editForm = this.fb.group({
+      name: new FormControl<string | null>(null),
+      description: new FormControl<string | null>(null),
+      profileFileId: new FormControl<FileList | null>(null),
+      bannerFileId: new FormControl<FileList | null>(null),
       documentsId: new FormControl<FileList | null>(null),
       images: new FormControl<FileList | null>(null)
     });
@@ -354,8 +362,19 @@ export class OrganizationPage implements OnInit {
   //------------------------------------Edición de organización------------------------------------
 
   toggleEditMode() {
-    this.isEditMode.set(!this.isEditMode());
-    if (!this.isEditMode()) {
+    const newEditMode = !this.isEditMode();
+    this.isEditMode.set(newEditMode);
+    
+    if (newEditMode) {
+      // Al activar el modo edición, cargar valores actuales
+      const org = this.organization();
+      if (org) {
+        this.editForm.patchValue({
+          name: org.name,
+          description: org.description
+        });
+      }
+    } else {
       // Si se cancela, resetear el formulario y restaurar listas originales
       this.editForm.reset();
       const org = this.organization();
@@ -398,6 +417,22 @@ export class OrganizationPage implements OnInit {
         // Arrays para almacenar los IDs finales
         let finalDocumentIds: string[] = [...this.documentsToKeep()];
         let finalImageIds: string[] = [...this.imagesToKeep()];
+        let newProfileFileId: string | undefined;
+        let newBannerFileId: string | undefined;
+
+        // Subir nueva foto de perfil si hay
+        if (formValue.profileFileId && formValue.profileFileId.length > 0) {
+          const profileFile = formValue.profileFileId[0];
+          newProfileFileId = await this.fileService.uploadFile(profileFile).toPromise();
+          this.toastService.open('Foto de perfil actualizada', 'success', 2000);
+        }
+
+        // Subir nuevo banner si hay
+        if (formValue.bannerFileId && formValue.bannerFileId.length > 0) {
+          const bannerFile = formValue.bannerFileId[0];
+          newBannerFileId = await this.fileService.uploadFile(bannerFile).toPromise();
+          this.toastService.open('Banner actualizado', 'success', 2000);
+        }
 
         // Subir nuevos documentos si hay
         if (formValue.documentsId && formValue.documentsId.length > 0) {
@@ -428,7 +463,7 @@ export class OrganizationPage implements OnInit {
         console.log('IDs finales de documentos:', finalDocumentIds);
         console.log('IDs finales de imágenes:', finalImageIds);
 
-        // Actualizar organización con los nuevos IDs
+        // Actualizar organización con los nuevos IDs y campos editables
         const updateDto: PutOrganizationDto = {
           documentsId: finalDocumentIds,
           images: finalImageIds.map((imageId, index) => ({
@@ -436,6 +471,22 @@ export class OrganizationPage implements OnInit {
             orderIndex: index
           }))
         };
+
+        // Agregar name y description solo si fueron modificados
+        if (formValue.name && formValue.name.trim() !== '') {
+          updateDto.name = formValue.name.trim();
+        }
+        if (formValue.description && formValue.description.trim() !== '') {
+          updateDto.description = formValue.description.trim();
+        }
+        
+        // Agregar profileFileId y bannerFileId si fueron subidos
+        if (newProfileFileId) {
+          updateDto.profileFileId = newProfileFileId;
+        }
+        if (newBannerFileId) {
+          updateDto.bannerFileId = newBannerFileId;
+        }
 
         await this.organizationService.updateNgo(this.ngoId, updateDto).toPromise();
 

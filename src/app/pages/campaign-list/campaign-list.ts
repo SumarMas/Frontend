@@ -20,7 +20,8 @@ export class CampaignList implements OnInit {
   campaigns: GetCampaignDto[] = [];
   isLoading = signal<boolean>(true);
   filterByClosed = signal<boolean>(false);
-  activeOrClosed = computed(() => { return this.filterByClosed() ? 'CLOSED' : 'ACTIVE';})
+  activeOrClosed = computed(() => { return this.filterByClosed() ? 'CLOSED' : 'ACTIVE'})
+
   constructor(){
     effect(() => {
       this.fetchCampaigns();
@@ -68,6 +69,7 @@ export class CampaignList implements OnInit {
         this.campaigns = uniqueCampaigns;
         this.campaignsCopy = uniqueCampaigns;
         this.isLoading.set(false);
+        this.selectedCategoryIds = []; // Resetear filtros al cargar nuevas campañas
       },
       error: (error) => {
         console.error('Error al cargar campañas:', error);

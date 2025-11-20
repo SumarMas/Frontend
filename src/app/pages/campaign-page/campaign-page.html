@@ -1,24 +1,59 @@
 <section class="min-h-screen pt-24 pb-16 flex items-center justify-center bg-sumar-light">
     <div class="container mx-auto px-4 max-w-6xl">
         @if (campaign) {
-        <!-- Imagen principal -->
+        <!-- Imagen principal con carrusel -->
         <div class="card bg-base-100 shadow-xl mb-6">
             @if (campaignImageUrl()) {
-            <figure class="h-96">
-                <img [src]="campaignImageUrl()!" [alt]="campaign.title" class="w-full h-full object-cover">
+            <figure class="h-96 relative">
+                <img [src]="campaignImageUrl()!" [alt]="campaign.title"
+                    class="w-full h-full object-cover transition-opacity duration-500">
+
+                <!-- Badge de estado en la esquina superior derecha -->
+                <div class="absolute top-4 right-4">
+                    <div class="badge badge-lg shadow-lg" [class.badge-success]="campaign.campaign_state === 'ACTIVE'"
+                        [class.badge-error]="campaign.campaign_state !== 'ACTIVE'">
+                        {{ campaign.campaign_state === 'ACTIVE' ? 'ACTIVA' : 'CERRADA' }}
+                    </div>
+                </div>
+
+                <!-- Indicadores del carrusel -->
+                @if (carouselImages().length > 1) {
+                <div
+                    class="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2 bg-black/30 px-3 py-2 rounded-full backdrop-blur-sm">
+                    @for (img of carouselImages(); track $index) {
+                    <div [class]="currentImageIndex() === $index 
+                                ? 'w-3 h-3 rounded-full bg-white transition-all duration-300' 
+                                : 'w-3 h-3 rounded-full bg-white/50 transition-all duration-300'">
+                    </div>
+                    }
+                </div>
+                }
             </figure>
             } @else {
-            <figure class="h-96 bg-gradient-to-br from-violet-400 via-purple-500 to-pink-500">
+            <figure class="h-96 bg-gradient-to-br from-violet-400 via-purple-500 to-pink-500 relative">
+                <!-- Badge de estado en la esquina superior derecha -->
+                <div class="absolute top-4 right-4">
+                    <div class="badge badge-lg shadow-lg" [class.badge-success]="campaign.campaign_state === 'ACTIVE'"
+                        [class.badge-error]="campaign.campaign_state !== 'ACTIVE'">
+                        {{ campaign.campaign_state === 'ACTIVE' ? 'ACTIVA' : 'CERRADA' }}
+                    </div>
+                </div>
             </figure>
             }
 
             <div class="card-body">
-                <!-- Título y estado -->
+
+                <!-- Título y botón de edición -->
                 <div class="flex justify-between items-start mb-4">
                     <h1 class="card-title text-3xl font-bold">{{ campaign.title }}</h1>
-                    <div class="badge badge-success badge-lg">{{ campaign.campaign_state === 'ACTIVE' ? 'ACTIVA' : 'CERRADA' }}
-                    </div>
+                    @if(campaign.ngo.userCreator.userId === authService.userId()){
+                    <app-button-component [icon]="isEditMode() ? 'close' : 'edit'"
+                        [label]="isEditMode() ? 'Cancelar' : 'Editar campaña'"
+                        [variant]="isEditMode() ? 'error' : 'white'" [rounded]="true" (onClick)="toggleEditMode()">
+                    </app-button-component>
+                    }
                 </div>
+
 
                 <!-- Información de la ONG -->
                 <div class="flex items-center gap-3 mb-4">
@@ -49,20 +84,19 @@
                 </div>
 
                 <div class="flex justify-between items-center w-full">
-                    <!-- Sección de actualizaciones -->
-                    <div class="flex items-center">
+                    <!-- Sección de actualizaciones y edición -->
+                    <div class="flex items-center gap-2">
                         <div class="flex items-center hover:cursor-pointer mr-4" (click)="toggle()">
                             <icon [name]="(isOpen()? 'arrow-drop-up': 'arrow-drop-down')"></icon>
                             <div class="text-2xl">Actualizaciones</div>
                         </div>
                         <!-- si el creador es el usuario autenticado -->
                         @if(campaign.ngo.userCreator.userId === authService.userId()){
-
-                        }
                         <app-button-component [icon]="showAddMessage() ? 'close' : 'add'"
                             [variant]="showAddMessage() ? 'error' : 'white'"
                             [tooltip]="showAddMessage() ? 'Cancelar' : 'Agregar actualización'" tooltipPosition="right"
                             (onClick)="toggleAddMessage()"></app-button-component>
+                        }
                     </div>
 
 
@@ -82,6 +116,174 @@
                 <div class="mt-6">
                     <app-message-display-component [isOpen]="isOpen"
                         [campaignId]="campaign.id"></app-message-display-component>
+                </div>
+                }
+
+                <!-- Formulario de Edición -->
+                @if(isEditMode() && campaign.ngo.userCreator.userId === authService.userId() && campaign.campaign_state === 'ACTIVE') {
+                <div class="mt-6 p-6 bg-violet-50 border-t-4 border-violet-500 rounded-lg">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+                        <div class="w-1 h-8 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
+                        Editar Campaña
+                    </h2>
+
+                    <form [formGroup]="editForm" class="space-y-6">
+                        <!-- Título -->
+                        <div class="bg-white p-6 rounded-xl shadow-sm">
+                            <label class="block mb-3">
+                                <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                    <icon name="title" [size]="'sm'" class="text-violet-600"></icon>
+                                    Título de la campaña
+                                </span>
+                                <span class="text-xs text-gray-500 block mt-1">Un título claro y atractivo para tu
+                                    campaña</span>
+                            </label>
+                            <app-input-component type="text" [control]="editForm.controls.title"
+                                placeholder="Ej: Ayuda para construir un comedor comunitario" variant="violet"
+                                [block]="true">
+                            </app-input-component>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="bg-white p-6 rounded-xl shadow-sm">
+                            <label class="block mb-3">
+                                <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                    <icon name="description" [size]="'sm'" class="text-violet-600"></icon>
+                                    Descripción
+                                </span>
+                                <span class="text-xs text-gray-500 block mt-1">Describe en detalle el objetivo de tu
+                                    campaña</span>
+                            </label>
+                            <textarea [formControl]="editForm.controls.description"
+                                class="textarea textarea-bordered w-full min-h-32 focus:border-violet-500 focus:outline-none focus:ring-2 focus:ring-violet-200"
+                                placeholder="Describe el objetivo, impacto esperado y cómo se utilizarán los fondos..."></textarea>
+                        </div>
+
+                        <!-- Meta y Fecha -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Meta económica -->
+                            <div class="bg-white p-6 rounded-xl shadow-sm">
+                                <label class="block mb-3">
+                                    <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                        <icon name="bar-chart-4-bars" [size]="'sm'" class="text-violet-600"></icon>
+                                        Meta económica (ARS)
+                                    </span>
+                                    <span class="text-xs text-gray-500 block mt-1">Monto objetivo a recaudar</span>
+                                </label>
+                                <app-input-component type="number" [control]="editForm.controls.goalAmount"
+                                    placeholder="Ej: 500000" variant="violet" [block]="true">
+                                </app-input-component>
+                            </div>
+
+                            <!-- Fecha de finalización -->
+                            <div class="bg-white p-6 rounded-xl shadow-sm">
+                                <label class="block mb-3">
+                                    <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                        <icon name="schedule" [size]="'sm'" class="text-violet-600"></icon>
+                                        Fecha de finalización
+                                    </span>
+                                    <span class="text-xs text-gray-500 block mt-1">Fecha límite para recaudar
+                                        fondos</span>
+                                </label>
+                                <input type="date" [formControl]="editForm.controls.endDateTime"
+                                    class="input input-bordered w-full focus:input-primary">
+                                @if(validateFormService.showError(editForm, 'endDateTime')){
+                                <p class="error-label">{{validateFormService.getValidationMessage(editForm,
+                                    'endDateTime')}}</p>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Categorías -->
+                        <div class="bg-white p-6 rounded-xl shadow-sm">
+                            <label class="block mb-3">
+                                <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                    <icon name="category" [size]="'sm'" class="text-violet-600"></icon>
+                                    Categorías
+                                </span>
+                                <span class="text-xs text-gray-500 block mt-1">Selecciona las categorías que mejor
+                                    describen tu campaña</span>
+                            </label>
+                            <div class="flex flex-wrap gap-2">
+                                @for (category of categories(); track category.id) {
+                                <button type="button" (click)="toggleCategory(category.id)" [class]="isCategorySelected(category.id) 
+                                            ? 'badge badge-primary badge-lg cursor-pointer' 
+                                            : 'badge badge-outline badge-lg cursor-pointer hover:badge-primary'">
+                                    {{ category.name }}
+                                </button>
+                                }
+                            </div>
+                        </div>
+
+                        <!-- Tags -->
+                        <div class="bg-white p-6 rounded-xl shadow-sm">
+                            <label class="block mb-3">
+                                <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                    <icon name="label" [size]="'sm'" class="text-violet-600"></icon>
+                                    Etiquetas
+                                </span>
+                                <span class="text-xs text-gray-500 block mt-1">Palabras clave separadas por comas (Ej:
+                                    educación, niños, salud)</span>
+                            </label>
+                            <app-input-component type="text" [control]="editForm.controls.tags"
+                                placeholder="Ej: educación, niños, salud" variant="violet" [block]="true">
+                            </app-input-component>
+                        </div>
+
+                        <!-- Imágenes actuales -->
+                        @if(getImagesToEdit().length > 0) {
+                        <div class="bg-white p-6 rounded-xl shadow-sm">
+                            <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+                                <icon name="image" [size]="'sm'" class="text-violet-600"></icon>
+                                Imágenes actuales ({{ getImagesToEdit().length }})
+                            </h3>
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                @for (img of getImagesToEdit(); track img.imageId) {
+                                <div class="relative group">
+                                    @if(img.url) {
+                                    <img [src]="img.url" alt="Imagen de campaña"
+                                        class="w-full h-32 object-cover rounded-lg border-2 border-gray-200">
+                                    } @else {
+                                    <div class="w-full h-32 bg-gray-100 rounded-lg flex items-center justify-center">
+                                        <span class="loading loading-spinner loading-sm text-violet-600"></span>
+                                    </div>
+                                    }
+                                    <button type="button" (click)="removeImage(img.imageId)"
+                                        class="absolute top-2 right-2 btn btn-circle btn-sm btn-error opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <icon name="delete" [size]="'sm'" class="text-white"></icon>
+                                    </button>
+                                </div>
+                                }
+                            </div>
+                        </div>
+                        }
+
+                        <!-- Subir nuevas imágenes -->
+                        <div class="bg-white p-6 rounded-xl shadow-sm">
+                            <label class="block mb-3">
+                                <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                                    <icon name="upload" [size]="'sm'" class="text-violet-600"></icon>
+                                    {{ getImagesToEdit().length > 0 ? 'Agregar más imágenes' : 'Subir imágenes' }}
+                                </span>
+                                <span class="text-xs text-gray-500 block mt-1">Sube imágenes que representen tu campaña
+                                    (JPG, PNG)</span>
+                            </label>
+                            <app-input-component type="file" [control]="editForm.controls.images" [multiple]="true"
+                                accept="image/*" variant="violet" [block]="true">
+                            </app-input-component>
+                        </div>
+
+                        <!-- Botones de acción -->
+                        <div class="flex justify-end gap-3 pt-4">
+                            <app-button-component label="Cancelar" variant="white" [rounded]="true"
+                                (onClick)="toggleEditMode()">
+                            </app-button-component>
+
+                            <app-button-component label="Guardar cambios" variant="violet" [rounded]="true"
+                                [isLoading]="isSaving()" (onClick)="saveChanges()">
+                            </app-button-component>
+                        </div>
+                    </form>
                 </div>
                 }
             </div>
@@ -166,7 +368,6 @@
     </div>
 
     <app-reusable-modal-component #donateModal>
-        <app-donation-register [campaignId]="campaign!.id"
-        [campaignName]="campaign!.title"></app-donation-register>
+        <app-donation-register [campaignId]="campaign!.id" [campaignName]="campaign!.title"></app-donation-register>
     </app-reusable-modal-component>
 </section>

@@ -32,6 +32,6 @@ export class CampaignService {
   }
 
   updateCampaign(campaignId: string, campaignData: PutCampaignDto): Observable<GetCampaignDto> {
-    return this.http.put<GetCampaignDto>(`${this.apiUrl}/${campaignId}`, campaignData);
+    return this.http.put<GetCampaignDto>(`${this.apiUrl}/${campaignId}/update`, campaignData);
   }
 }
