@@ -21,12 +21,21 @@
         </div> -->
 
         <!-- Días restantes -->
+
         <div class="absolute bottom-3 left-3">
+            @if(campaign?.campaign_state === 'ACTIVE'){
             <span class="badge gap-1 shadow-lg" [ngClass]="getDaysLeftClass()">
-                <!-- <icon [name]="getDaysLeftIcon()" class="text-xs"></icon> -->
                 {{ daysLeftText() }}
             </span>
+            }
+            @if(campaign?.campaign_state === 'CLOSED'){
+                <span class="badge badge-error gap-1 shadow-lg">
+                Cerrada
+            </span>
+            }
         </div>
+
+
     </figure>
 
     <!-- Contenido de la tarjeta -->

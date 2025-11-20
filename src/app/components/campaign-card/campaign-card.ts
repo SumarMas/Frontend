@@ -1,6 +1,6 @@
 import { Component, inject, Input, OnInit, signal } from '@angular/core';
 import { ButtonComponent } from '../button-component/button-component';
-import { GetCampaignDto } from '../../models/api/campaign';
+import { GetCampaignDto} from '../../models/api/campaign';
 import { DecimalPipe, NgClass, CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { IconComponent } from '../icon-component/icon-component';

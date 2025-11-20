@@ -35,6 +35,11 @@
                 </div>
             </div>
 
+            <div class="my-4 flex gap-2">
+                <span>Mostrar campañas cerradas</span>
+                <input type="checkbox" [checked]="filterByClosed()" (change)="filterByClosed.set(!filterByClosed())" class="toggle toggle-primary" />
+            </div>
+
             <!-- Filtro de categorías -->
             <div class="border-t pt-6">
                 <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
@@ -106,7 +111,12 @@
                     <p class="text-3xl font-bold text-green-600">
                         {{ campaigns.length }}
                     </p>
-                    <p class="text-sm text-gray-600 mt-1">Campañas Activas</p>
+                    @if(activeOrClosed() === 'ACTIVE'){
+                        <p class="text-sm text-gray-600 mt-1">Campañas Activas</p>
+                    }
+                    @else {
+                        <p class="text-sm text-gray-600 mt-1">Campañas Cerradas</p>
+                    }
                     <p class="text-xs text-gray-500 mt-1">actualmente en esta vista</p>
                 </div>
 

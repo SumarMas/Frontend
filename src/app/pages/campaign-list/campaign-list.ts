@@ -1,4 +1,4 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { IconComponent } from "../../components/icon-component/icon-component";
 import { ButtonComponent } from "../../components/button-component/button-component";
 import { CampaignCard } from "../../components/campaign-card/campaign-card";
@@ -19,6 +19,13 @@ export class CampaignList implements OnInit {
   campaignsCopy: GetCampaignDto[] = [];
   campaigns: GetCampaignDto[] = [];
   isLoading = signal<boolean>(true);
+  filterByClosed = signal<boolean>(false);
+  activeOrClosed = computed(() => { return this.filterByClosed() ? 'CLOSED' : 'ACTIVE';})
+  constructor(){
+    effect(() => {
+      this.fetchCampaigns();
+    })
+  }
   
   private campaignService = inject(CampaignService);
   private toastService = inject(ToastService);
@@ -44,7 +51,7 @@ export class CampaignList implements OnInit {
     this.isLoading.set(true);
     
     // Obtener campañas activas del backend
-    this.campaignService.filter('ACTIVE').subscribe({
+    this.campaignService.filter(this.activeOrClosed()).subscribe({
       next: (campaigns) => {
         console.log('Campañas recibidas del backend:', campaigns);
         console.log('Cantidad de campañas:', campaigns.length);

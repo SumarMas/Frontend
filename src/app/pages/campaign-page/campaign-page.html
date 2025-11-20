@@ -16,7 +16,7 @@
                 <!-- Título y estado -->
                 <div class="flex justify-between items-start mb-4">
                     <h1 class="card-title text-3xl font-bold">{{ campaign.title }}</h1>
-                    <div class="badge badge-success badge-lg">{{ campaign.campaignState === 0 ? 'ACTIVA' : 'CERRADA' }}
+                    <div class="badge badge-success badge-lg">{{ campaign.campaign_state === 'ACTIVE' ? 'ACTIVA' : 'CERRADA' }}
                     </div>
                 </div>
 
