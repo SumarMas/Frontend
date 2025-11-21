@@ -11,6 +11,7 @@ export interface GetOrganizationDto {
     images: CarrouselImage[];
     status?: string;
     createdDateTime: string;
+    reasonDenied?: string;
 }
 
 export interface PostOrganizationDto {

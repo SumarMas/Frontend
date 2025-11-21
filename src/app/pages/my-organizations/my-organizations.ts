@@ -61,12 +61,14 @@ export class MyOrganizations implements OnInit {
 
   getStatusBadgeClass(status: string): string {
     switch (status) {
-      case 'ACTIVE':
+      case 'VERIFIED':
         return 'badge-success';
       case 'PENDING':
         return 'badge-warning';
-      case 'INACTIVE':
+      case 'DENIED':
         return 'badge-error';
+      case 'UNVERIFIED':
+        return 'badge-ghost';
       default:
         return 'badge-ghost';
     }
@@ -74,14 +76,31 @@ export class MyOrganizations implements OnInit {
 
   getStatusName(status: string): string {
     switch (status) {
-      case 'ACTIVE':
-        return 'Activa';
+      case 'VERIFIED':
+        return 'Verificada';
       case 'PENDING':
         return 'Pendiente';
-      case 'INACTIVE':
-        return 'Inactiva';
+      case 'DENIED':
+        return 'Denegada';
+      case 'UNVERIFIED':
+        return 'No Verificada';
       default:
         return 'Desconocido';
+    }
+  }
+
+  getStatusIcon(status: string): string {
+    switch (status) {
+      case 'VERIFIED':
+        return 'check-circle';
+      case 'PENDING':
+        return 'schedule';
+      case 'DENIED':
+        return 'cancel';
+      case 'UNVERIFIED':
+        return 'info';
+      default:
+        return 'info';
     }
   }
 
