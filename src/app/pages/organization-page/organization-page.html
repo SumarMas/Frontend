@@ -86,6 +86,14 @@
                                         <span>Registrada el {{ organization()!.createdDateTime | date:'dd/MM/yyyy' }}</span>
                                     </div>
                                     }
+                                    @if(organization()!.userCreator) {
+                                    <div class="flex items-center gap-2">
+                                        <div class="bg-pink-100 p-1.5 rounded-full">
+                                            <icon name="person" [size]="'sm'" class="text-pink-600"></icon>
+                                        </div>
+                                        <span>Fundador: {{ organization()!.userCreator.firstName }} {{ organization()!.userCreator.lastName }}</span>
+                                    </div>
+                                    }
                                 </div>
                             </div>
 
@@ -162,7 +170,7 @@
                     <div class="bg-white p-6 rounded-xl shadow-sm">
                         <label class="block mb-3">
                             <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                <icon name="account_circle" [size]="'sm'" class="text-violet-600"></icon>
+                                <icon name="photo" [size]="'sm'" class="text-violet-600"></icon>
                                 Foto de perfil
                             </span>
                             <span class="text-xs text-gray-500 block mt-1">Sube una nueva foto de perfil para tu organización (PNG, JPG)</span>
@@ -180,7 +188,7 @@
                     <div class="bg-white p-6 rounded-xl shadow-sm">
                         <label class="block mb-3">
                             <span class="text-sm font-semibold text-gray-700 flex items-center gap-2">
-                                <icon name="image" [size]="'sm'" class="text-violet-600"></icon>
+                                <icon name="banner" [size]="'sm'" class="text-violet-600"></icon>
                                 Banner de portada
                             </span>
                             <span class="text-xs text-gray-500 block mt-1">Sube un nuevo banner para la portada de tu organización (PNG, JPG - Recomendado: 1200x300px)</span>
