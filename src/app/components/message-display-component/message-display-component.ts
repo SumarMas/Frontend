@@ -29,16 +29,14 @@ export class MessageDisplayComponent implements OnInit {
   fetchMessages(): void {
     this.messageService.getAllMessages(this.campaignId).subscribe({
       next: (messages) => {
-        this.messages = messages;
-        this.orderDescByDate();
+        // Ordenar de forma descendente (más reciente primero)
+        this.messages = messages.sort((a, b) => 
+          new Date(b.creationDateTime).getTime() - new Date(a.creationDateTime).getTime()
+        );
       },
       error: (error) => {
         console.error('No se han podido cargar los mensajes:', error);
       }
     });
-  }
-
-  orderDescByDate(): void {
-    this.messages.sort((a, b) => b.creationDateTime.getTime() - a.creationDateTime.getTime());
   }
 }

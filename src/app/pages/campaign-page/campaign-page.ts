@@ -46,6 +46,8 @@ export class CampaignPage implements OnInit, OnDestroy {
   // Cache de imágenes para edición
   imageCache = new Map<string, SafeUrl>();
 
+  @ViewChild(MessageDisplayComponent) messageDisplayComponent!: MessageDisplayComponent;
+
   editForm: FormGroup<{
     title: FormControl<string | null>,
     description: FormControl<string | null>,
@@ -92,11 +94,11 @@ export class CampaignPage implements OnInit, OnDestroy {
   }
 
   handleMessageSubmitted() {
-    // Cerrar el formulario y recargar la página para mostrar el nuevo mensaje
+    // Cerrar el formulario y recargar los mensajes
     this.showAddMessage.set(false);
-    // Recargar la campaña para actualizar los mensajes
-    if (this.campaignId) {
-      this.loadCampaign();
+    // Recargar solo los mensajes sin recargar toda la campaña
+    if (this.messageDisplayComponent) {
+      this.messageDisplayComponent.fetchMessages();
     }
   }
 

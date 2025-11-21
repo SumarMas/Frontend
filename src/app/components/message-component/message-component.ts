@@ -1,4 +1,4 @@
-import { Component, inject, Input, OnInit, signal } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnInit, Output, signal } from '@angular/core';
 import { GetMessageDto } from '../../models/api/message';
 import { CommonModule, DatePipe } from '@angular/common';
 import { ButtonComponent } from "../button-component/button-component";
@@ -17,6 +17,7 @@ import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 })
 export class MessageComponent implements OnInit {
   @Input() message: GetMessageDto | null = null;
+  @Output() messageDeleted = new EventEmitter<void>();
 
   authService = inject(AuthService);
   messageService = inject(MessageService);
@@ -50,6 +51,7 @@ export class MessageComponent implements OnInit {
     this.messageService.deleteMessage(messageCampaignId).subscribe({
       next: () => {
         this.toastService.open('Actualización eliminada correctamente', 'success', 3000);
+        this.messageDeleted.emit();
       },
       error: () => {
         this.toastService.open('Error al eliminar la actualización', 'error', 3000);
