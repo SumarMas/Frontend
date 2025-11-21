@@ -135,7 +135,7 @@ export class MyPayouts implements OnInit {
         
       },
       error: (error) => {
-        this.toastService.open('Error al cargar las donaciones disponibles', 'error', 3000);
+        //this.toastService.open('Error al cargar las donaciones disponibles', 'error', 3000);
       }
     });
   }

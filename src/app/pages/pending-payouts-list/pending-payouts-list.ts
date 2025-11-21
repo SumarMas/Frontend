@@ -51,7 +51,7 @@ export class PendingPayoutsList implements OnInit {
           this.loadOrganizations(data);
         },
         error: () => {
-          this.toastService.open('Error al cargar solicitudes pendientes', 'error', 3000);
+          //this.toastService.open('Error al cargar solicitudes pendientes', 'error', 3000);
         }
       });
   }
