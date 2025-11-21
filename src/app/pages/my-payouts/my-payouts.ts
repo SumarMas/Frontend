@@ -23,6 +23,10 @@ export class MyPayouts implements OnInit {
   availableDonations = signal<PayoutResponse | null>(null);
   isLoading = signal<boolean>(false);
   isRequestingPayout = signal<boolean>(false);
+  showCampaignDetails = signal<boolean>(false);
+  
+  // Exponer Math para el template
+  Math = Math;
   
   // Datos mock para pruebas
   // private mockPayouts: PayoutDto[] = [
@@ -87,6 +91,14 @@ export class MyPayouts implements OnInit {
     return this.availableDonations()?.totalAvailable || 0;
   })
 
+  sortedPayouts = computed(() => {
+    return [...this.payouts()].sort((a, b) => {
+      const dateA = new Date(a.request_datetime).getTime();
+      const dateB = new Date(b.request_datetime).getTime();
+      return dateB - dateA; // Orden descendente (más reciente primero)
+    });
+  });
+
   ngOnInit(): void {
     this.fetchPayouts();
     this.fetchAvailableDonations();
@@ -119,6 +131,7 @@ export class MyPayouts implements OnInit {
       next: (data) => {
         // Handle the available donations data here
         console.log(data);
+        this.availableDonations.set(data);
         
       },
       error: (error) => {
@@ -137,6 +150,7 @@ export class MyPayouts implements OnInit {
           this.toastService.open('Solicitud de pago creada con éxito', 'success', 3000);
           this.requestPayoutModal.close();
           this.fetchPayouts();
+          this.fetchAvailableDonations();
         },
         error: (error) => {
           this.toastService.open('Error al crear la solicitud de pago', 'error', 3000);
@@ -159,6 +173,10 @@ export class MyPayouts implements OnInit {
         this.toastService.open('Error al descargar comprobante', 'error', 3000);
       }
     });
+  }
+
+  toggleCampaignDetails(): void {
+    this.showCampaignDetails.update(val => !val);
   }
 
   openModal(): void {

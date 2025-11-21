@@ -102,8 +102,9 @@
 
                     <!-- Botón de donación -->
                     <div class="card-actions">
-                        <app-button-component label="Donar Ahora" variant="violet" size="lg" icon="volunteer-activism"
-                        [disabled]="campaign.campaign_state === 'CLOSED'" [block]="false" (onClick)="donateModalRef.open()">
+                        <app-button-component label="Donar Ahora" variant="violet" size="lg" icon="volunteer-activism" 
+                        [tooltip]="campaign.campaign_state === 'CLOSED' ? 'La campaña está cerrada' : (!authService.isAuthenticated() ? 'Debes iniciar sesión para donar' : '')"
+                        [disabled]="campaign.campaign_state === 'CLOSED' || !authService.isAuthenticated()" [block]="false" (onClick)="donateModalRef.open()">
                         </app-button-component>
                     </div>
                 </div>
@@ -222,12 +223,10 @@
                                     <icon name="label" [size]="'sm'" class="text-violet-600"></icon>
                                     Etiquetas
                                 </span>
-                                <span class="text-xs text-gray-500 block mt-1">Palabras clave separadas por comas (Ej:
-                                    educación, niños, salud)</span>
+                                <span class="text-xs text-gray-500 block mt-1">Agrega palabras clave para facilitar la búsqueda de tu campaña</span>
                             </label>
-                            <app-input-component type="text" [control]="editForm.controls.tags"
-                                placeholder="Ej: educación, niños, salud" variant="violet" [block]="true">
-                            </app-input-component>
+                            <app-tag-input-component [(tags)]="editTags" (tagsChange)="onTagsChange($event)">
+                            </app-tag-input-component>
                         </div>
 
                         <!-- Imágenes actuales -->

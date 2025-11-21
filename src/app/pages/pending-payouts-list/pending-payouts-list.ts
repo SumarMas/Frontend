@@ -3,12 +3,15 @@ import { PayoutDto } from '../../models/api/payouts';
 import { PayoutService } from '../../services/api/payout-service';
 import { FileService } from '../../services/api/file-service';
 import { ToastService } from '../../services/ui/toast-service';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { CurrencyPipe, DatePipe, NgClass } from '@angular/common';
 import { IconComponent } from '../../components/icon-component/icon-component';
 import { ButtonComponent } from '../../components/button-component/button-component';
 import { PayStatusPipe } from '../../pipes/pay-status-pipe';
 import { PayColorPipe } from '../../pipes/pay-status-color';
+import { OrganizationService } from '../../services/api/organization-service';
+import { GetOrganizationDto } from '../../models/api/organization';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-pending-payouts-list',
@@ -23,95 +26,14 @@ export class PendingPayoutsList implements OnInit {
   selectedFiles = signal<Map<string, File>>(new Map());
   uploadedFileIds = signal<Map<string, string>>(new Map());
   approvingPayouts = signal<Map<string, boolean>>(new Map());
+  organizationsMap = signal<Map<string, GetOrganizationDto>>(new Map());
+  imageCache = new Map<string, SafeUrl>();
 
   payoutService = inject(PayoutService);
   fileService = inject(FileService);
   toastService = inject(ToastService);
-
-  // Datos mock para pruebas
-  private mockPayouts: PayoutDto[] = [
-    {
-      payout_request_id: 'payout-pending-1',
-      ngo_id: 'ngo-fundacion-esperanza',
-      amount: 450000,
-      request_datetime: new Date('2025-11-18T14:30:00'),
-      approval_datetime: null,
-      status: 'PENDING',
-      proof_file_id: null,
-      donations: [
-        {
-          payout_request_id: 'payout-pending-1',
-          donation_id: 'donation-1',
-          campaign_id: 'campaign-educacion',
-          amount: 250000
-        },
-        {
-          payout_request_id: 'payout-pending-1',
-          donation_id: 'donation-2',
-          campaign_id: 'campaign-educacion',
-          amount: 150000
-        },
-        {
-          payout_request_id: 'payout-pending-1',
-          donation_id: 'donation-3',
-          campaign_id: 'campaign-salud',
-          amount: 50000
-        }
-      ]
-    },
-    {
-      payout_request_id: 'payout-pending-2',
-      ngo_id: 'ngo-ayuda-solidaria',
-      amount: 320000,
-      request_datetime: new Date('2025-11-19T09:15:00'),
-      approval_datetime: null,
-      status: 'PENDING',
-      proof_file_id: null,
-      donations: [
-        {
-          payout_request_id: 'payout-pending-2',
-          donation_id: 'donation-4',
-          campaign_id: 'campaign-alimentos',
-          amount: 200000
-        },
-        {
-          payout_request_id: 'payout-pending-2',
-          donation_id: 'donation-5',
-          campaign_id: 'campaign-alimentos',
-          amount: 120000
-        }
-      ]
-    },
-    {
-      payout_request_id: 'payout-pending-3',
-      ngo_id: 'ngo-manos-unidas',
-      amount: 580000,
-      request_datetime: new Date('2025-11-19T16:45:00'),
-      approval_datetime: null,
-      status: 'PENDING',
-      proof_file_id: null,
-      donations: [
-        {
-          payout_request_id: 'payout-pending-3',
-          donation_id: 'donation-6',
-          campaign_id: 'campaign-vivienda',
-          amount: 350000
-        },
-        {
-          payout_request_id: 'payout-pending-3',
-          donation_id: 'donation-7',
-          campaign_id: 'campaign-vivienda',
-          amount: 150000
-        },
-        {
-          payout_request_id: 'payout-pending-3',
-          donation_id: 'donation-8',
-          campaign_id: 'campaign-educacion',
-          amount: 80000
-        }
-      ]
-    }
-  ];
+  organizationService = inject(OrganizationService);
+  sanitizer = inject(DomSanitizer);
 
   ngOnInit(): void {
     this.fetchPendingPayouts();
@@ -120,23 +42,69 @@ export class PendingPayoutsList implements OnInit {
   fetchPendingPayouts(): void {
     this.isLoading.set(true);
     
-    // Comentar para usar datos reales del backend
-    // this.payoutService.payoutsPending()
-    //   .pipe(finalize(() => this.isLoading.set(false)))
-    //   .subscribe({
-    //     next: (data) => {
-    //       this.payouts.set(data);
-    //     },
-    //     error: () => {
-    //       this.toastService.open('Error al cargar solicitudes pendientes', 'error', 3000);
-    //     }
-    //   });
+    this.payoutService.payoutsPending()
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (data) => {
+          this.payouts.set(data);
+          console.log(data);
+          this.loadOrganizations(data);
+        },
+        error: () => {
+          this.toastService.open('Error al cargar solicitudes pendientes', 'error', 3000);
+        }
+      });
+  }
 
-    // Usar datos mock para pruebas
-    setTimeout(() => {
-      this.payouts.set(this.mockPayouts);
-      this.isLoading.set(false);
-    }, 800);
+  loadOrganizations(payouts: PayoutDto[]): void {
+    const uniqueNgoIds = [...new Set(payouts.map(p => p.ngo_id))];
+    
+    const organizationRequests = uniqueNgoIds.map(ngoId => 
+      this.organizationService.getOrganizationById(ngoId)
+    );
+
+    if (organizationRequests.length === 0) return;
+
+    forkJoin(organizationRequests).subscribe({
+      next: (organizations) => {
+        const orgMap = new Map<string, GetOrganizationDto>();
+        organizations.forEach(org => {
+          orgMap.set(org.ngoId, org);
+          // Cargar imagen de perfil si existe
+          if (org.profileFileId) {
+            this.loadImage(org.profileFileId);
+          }
+        });
+        this.organizationsMap.set(orgMap);
+      },
+      error: (error) => {
+        console.error('Error al cargar organizaciones:', error);
+      }
+    });
+  }
+
+  loadImage(fileId: string): void {
+    if (this.imageCache.has(fileId)) return;
+
+    this.fileService.getFile(fileId).subscribe({
+      next: (blob) => {
+        const objectURL = URL.createObjectURL(blob);
+        const safeUrl = this.sanitizer.bypassSecurityTrustUrl(objectURL);
+        this.imageCache.set(fileId, safeUrl);
+      },
+      error: (error) => {
+        console.error('Error al cargar imagen:', error);
+      }
+    });
+  }
+
+  getOrganization(ngoId: string): GetOrganizationDto | undefined {
+    return this.organizationsMap().get(ngoId);
+  }
+
+  getImageUrl(fileId: string | undefined): SafeUrl | null {
+    if (!fileId) return null;
+    return this.imageCache.get(fileId) || null;
   }
 
   onFileSelected(event: Event, payoutId: string): void {

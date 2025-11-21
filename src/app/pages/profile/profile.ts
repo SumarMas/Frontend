@@ -116,6 +116,8 @@ export class Profile implements OnInit {
     this.isLoading.set(true);
     this.userService.getById().pipe(finalize(() => this.isLoading.set(false))).subscribe({
       next: (user) => {
+        console.log('FOTO DE PERFIL ' + user.profileFileId);
+        
         const userData = {
           firstName: user.firstName,
           lastName: user.lastName,

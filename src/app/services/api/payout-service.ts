@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { map, Observable, pipe } from 'rxjs';
+import { map, Observable, pipe, tap } from 'rxjs';
 import { PayoutDto } from '../../models/api/payouts';
 
 export enum DonationStatus {
@@ -154,7 +154,15 @@ export class PayoutService {
      */
     getAvailableDonations(): Observable<PayoutResponse> {
         return this.http.get<AvailableDonationDto[]>(`${this.apiUrl}/available-donations`).pipe(
+            tap(data => console.log('Available donations data:', data)),
             map(campaigns => {
+                if (!campaigns || campaigns.length === 0) {
+                    return {
+                        campaigns: [],
+                        totalAvailable: 0
+                    };
+                }
+
                 const mappedCampaigns = campaigns.map(donation => ({
                     id: donation.id,
                     name: donation.title,

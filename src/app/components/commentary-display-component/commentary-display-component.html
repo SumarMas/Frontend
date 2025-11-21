@@ -5,6 +5,8 @@
                             [label]="showCommentInput ? 'Cancelar' : 'Agregar comentario'" 
                             variant="violet" 
                             size="sm"
+                            [tooltip]="authService.isAuthenticated() ? '' : 'Debes iniciar sesión para agregar un comentario'"
+                            [disabled]="!authService.isAuthenticated()"
                             (click)="toggleCommentInput()">
                         </app-button-component>
                     </div>

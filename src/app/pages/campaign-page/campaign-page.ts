@@ -19,12 +19,13 @@ import { InputComponent } from '../../components/input-component/input-component
 import { CategoryService } from '../../services/api/category-service';
 import { CategoryDto } from '../../models/api/category';
 import { FormValidatorService } from '../../services/validations/form-validator-service';
+import { TagInputComponent } from '../../components/tag-input-component/tag-input-component';
 
 @Component({
   selector: 'app-campaign-page',
   imports: [CommonModule, FormsModule, ReactiveFormsModule, ButtonComponent, IconComponent, ReusableModalComponent,
     CommentaryDisplayComponent, MessageDisplayComponent, AddMessageComponent,
-    CurrencyPipe, DonationRegister, InputComponent],
+    CurrencyPipe, DonationRegister, InputComponent, TagInputComponent],
   templateUrl: './campaign-page.html',
   styleUrl: './campaign-page.scss'
 })
@@ -39,6 +40,7 @@ export class CampaignPage implements OnInit, OnDestroy {
   isSaving = signal<boolean>(false);
   imagesToKeep = signal<string[]>([]);
   categories = signal<CategoryDto[]>([]);
+  editTags = signal<string[]>([]);
   
   // Cache de imágenes para edición
   imageCache = new Map<string, SafeUrl>();
@@ -49,7 +51,6 @@ export class CampaignPage implements OnInit, OnDestroy {
     goalAmount: FormControl<number | null>,
     endDateTime: FormControl<string | null>,
     categoryIds: FormControl<string[] | null>,
-    tags: FormControl<string | null>,
     images: FormControl<FileList | null>
   }>;
 
@@ -77,7 +78,6 @@ export class CampaignPage implements OnInit, OnDestroy {
       goalAmount: new FormControl<number | null>(null),
       endDateTime: new FormControl<string | null>(null, [this.validateFormService.dateMayorThanTodayValidator]),
       categoryIds: new FormControl<string[] | null>(null),
-      tags: new FormControl<string | null>(null),
       images: new FormControl<FileList | null>(null)
     });
   }
@@ -321,12 +321,15 @@ export class CampaignPage implements OnInit, OnDestroy {
         description: this.campaign.description,
         goalAmount: this.campaign.goal_amount || 0,
         endDateTime: endDateString,
-        categoryIds: this.campaign.categories.map(c => c.id),
-        tags: this.campaign.tags.join(', ')
+        categoryIds: this.campaign.categories.map(c => c.id)
       });
+      
+      // Cargar las tags existentes en el signal
+      this.editTags.set([...this.campaign.tags]);
     } else {
-      // Si se cancela, resetear el formulario
+      // Si se cancela, resetear el formulario y las tags
       this.editForm.reset();
+      this.editTags.set([]);
       if (this.campaign?.images) {
         this.imagesToKeep.set([...this.campaign.images]);
       }
@@ -350,6 +353,10 @@ export class CampaignPage implements OnInit, OnDestroy {
     } else {
       this.editForm.controls.categoryIds.setValue([...current, categoryId]);
     }
+  }
+
+  onTagsChange(tags: string[]): void {
+    this.editTags.set(tags);
   }
 
   async saveChanges(): Promise<void> {
@@ -397,9 +404,8 @@ export class CampaignPage implements OnInit, OnDestroy {
       if (formValue.categoryIds && formValue.categoryIds.length > 0) {
         updateDto.categoryIds = formValue.categoryIds;
       }
-      if (formValue.tags && formValue.tags.trim() !== '') {
-        // Convertir string de tags separados por coma a array
-        updateDto.tags = formValue.tags.split(',').map(tag => tag.trim()).filter(tag => tag !== '');
+      if (this.editTags().length > 0) {
+        updateDto.tags = this.editTags();
       }
 
       await this.campaignService.updateCampaign(this.campaignId, updateDto).toPromise();

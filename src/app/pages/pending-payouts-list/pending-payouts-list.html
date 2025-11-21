@@ -73,12 +73,27 @@
                             @for (payout of payouts(); track payout.payout_request_id) {
                             <tr class="hover">
                                 <td>
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-violet-400 to-purple-400 flex items-center justify-center text-white font-bold">
-                                            {{ payout.ngo_id.substring(0, 2).toUpperCase() }}
+                                    <div class="flex items-center gap-3">
+                                        <!-- Foto de perfil de la organización -->
+                                        <div class="avatar">
+                                            <div class="w-12 h-12 rounded-full">
+                                                @if(getOrganization(payout.ngo_id)?.profileFileId && getImageUrl(getOrganization(payout.ngo_id)?.profileFileId)) {
+                                                <img
+                                                    [src]="getImageUrl(getOrganization(payout.ngo_id)?.profileFileId)"
+                                                    [alt]="getOrganization(payout.ngo_id)?.name"
+                                                    class="w-full h-full object-cover" />
+                                                } @else {
+                                                <div class="w-full h-full rounded-full bg-gradient-to-br from-violet-400 to-purple-400 flex items-center justify-center text-white font-bold">
+                                                    {{ payout.ngo_id.substring(0, 2).toUpperCase() }}
+                                                </div>
+                                                }
+                                            </div>
                                         </div>
+                                        <!-- Información de la organización -->
                                         <div>
-                                            <div class="font-semibold">NGO ID</div>
+                                            <div class="font-semibold text-gray-800">
+                                                {{ getOrganization(payout.ngo_id)?.name || 'Cargando...' }}
+                                            </div>
                                             <div class="text-xs text-gray-500">{{ payout.ngo_id }}</div>
                                         </div>
                                     </div>

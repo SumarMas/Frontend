@@ -2,8 +2,15 @@ import { Component, OnInit, signal, AfterViewInit, PLATFORM_ID, inject, effect }
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { IconComponent } from '../../components/icon-component/icon-component';
 import { ButtonComponent } from '../../components/button-component/button-component';
-import { CurrencyPipe, DatePipe } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import { isPlatformBrowser } from '@angular/common';
+import { CampaignService } from '../../services/api/campaign-service';
+import { PayoutService } from '../../services/api/payout-service';
+import { DonationService } from '../../services/api/donation-service';
+import { forkJoin } from 'rxjs';
+import { GetCampaignDto } from '../../models/api/campaign';
+import { GetDonationDto } from '../../models/api/donation';
+import { PayoutDto } from '../../models/api/payouts';
 
 Chart.register(...registerables);
 
@@ -16,12 +23,22 @@ interface Campaign {
 
 @Component({
   selector: 'app-dashboard-organization',
-  imports: [IconComponent, ButtonComponent, CurrencyPipe, DatePipe],
+  imports: [IconComponent, ButtonComponent, CurrencyPipe],
   templateUrl: './dashboard-organization.html',
   styleUrl: './dashboard-organization.scss'
 })
 export class DashboardOrganization implements OnInit, AfterViewInit {
   private platformId = inject(PLATFORM_ID);
+  private campaignService = inject(CampaignService);
+  private payoutService = inject(PayoutService);
+  private donationService = inject(DonationService);
+  
+  // Data from API
+  private allCampaigns: GetCampaignDto[] = [];
+  private allDonations: GetDonationDto[] = [];
+  private allPayouts: PayoutDto[] = [];
+  
+  isLoading = signal<boolean>(true);
   
   // Charts instances
   private campaignProgressChart?: Chart;
@@ -117,14 +134,212 @@ export class DashboardOrganization implements OnInit, AfterViewInit {
     effect(() => {
       const dateFilter = this.selectedDateFilter();
       const campaign = this.selectedCampaign();
-      if (isPlatformBrowser(this.platformId)) {
+      if (isPlatformBrowser(this.platformId) && !this.isLoading()) {
         this.updateDataByFilters(dateFilter, campaign);
       }
     });
   }
 
   ngOnInit(): void {
-    this.generateDailyData();
+    this.loadDashboardData();
+  }
+
+  private loadDashboardData(): void {
+    this.isLoading.set(true);
+
+    forkJoin({
+      availableData: this.payoutService.getAvailableDonations(),
+      payouts: this.payoutService.getMyPayouts()
+    }).subscribe({
+      next: ({ availableData, payouts }) => {
+        // Las campaigns vienen desde available donations con sus donaciones
+        this.allCampaigns = availableData.campaigns.map(c => ({
+          id: c.id,
+          ngo: {} as any,
+          title: c.name,
+          goal_amount: c.goal,
+          current_amount: c.totalReceipt,
+          description: '',
+          endDateTime: new Date(),
+          createDateTime: new Date(),
+          end_date_time: new Date(),
+          create_date_time: new Date(),
+          campaign_state: 'ACTIVE' as 'ACTIVE' | 'CLOSED',
+          categories: [],
+          tags: [],
+          images: []
+        }));
+
+        // Extraer todas las donaciones de todas las campañas
+        // No tenemos acceso directo a las donaciones, solo a los totales
+        this.allDonations = [];
+        this.allPayouts = payouts;
+
+        // Construir lista de campañas para el filtro
+        const campaignOptions: Campaign[] = [
+          { id: 'all', name: 'Todas las campañas' },
+          ...availableData.campaigns.map(c => ({ id: c.id, name: c.name }))
+        ];
+        this.campaigns.set(campaignOptions);
+
+        // Calcular estadísticas desde available data
+        this.calculateStatsFromAvailableData(availableData, payouts);
+        this.isLoading.set(false);
+      },
+      error: (error) => {
+        console.error('Error loading dashboard data:', error);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  private calculateStatsFromAvailableData(availableData: any, payouts: PayoutDto[]): void {
+    const selectedCampaignId = this.selectedCampaign();
+
+    // Filtrar campañas según selección
+    const filteredCampaigns = selectedCampaignId === 'all'
+      ? availableData.campaigns
+      : availableData.campaigns.filter((c: any) => c.id === selectedCampaignId);
+
+    // Calcular totales
+    const totalDonations = filteredCampaigns.reduce((sum: number, c: any) => sum + c.totalDonations, 0);
+    const totalAmount = filteredCampaigns.reduce((sum: number, c: any) => sum + c.totalReceipt, 0);
+    const avgDonation = totalDonations > 0 ? totalAmount / totalDonations : 0;
+    const activeCampaigns = filteredCampaigns.length;
+
+    // Contar payouts
+    const pendingPayouts = payouts.filter(p => p.status === 'PENDING').length;
+    const approvedPayouts = payouts.filter(p => p.status === 'APPROVED').length;
+
+    this.stats.set({
+      totalDonations,
+      totalAmount,
+      activeCampaigns,
+      avgDonation,
+      pendingPayouts,
+      approvedPayouts,
+      topDonor: 'N/A',
+      topDonorAmount: 0
+    });
+
+    // Actualizar datos de campaña
+    if (filteredCampaigns.length > 0) {
+      const campaign = filteredCampaigns[0];
+      this.campaignData = {
+        name: campaign.name,
+        goal: campaign.goal,
+        raised: campaign.totalReceipt,
+        daysActive: 30, // No tenemos esta info
+        daysLimit: 90,  // No tenemos esta info
+        donationsCount: campaign.totalDonations,
+        progress: Math.min(Math.floor((campaign.totalReceipt / campaign.goal) * 100), 100)
+      };
+    }
+
+    // Generar datos mock para gráficos (ya que no tenemos detalle)
+    this.generateMockChartData(filteredCampaigns);
+
+    // Actualizar datos de payouts
+    this.updatePayoutData(payouts);
+
+    // Recrear gráficos si ya están inicializados
+    if (this.campaignProgressChart) {
+      this.recreateCharts();
+    }
+  }
+
+  private generateMockChartData(campaigns: any[]): void {
+    const totalAmount = campaigns.reduce((sum: any, c: any) => sum + c.totalReceipt, 0);
+
+    // Generar datos diarios mock basados en el total
+    const days = 30;
+    const labels: string[] = [];
+    const amounts: number[] = [];
+    const today = new Date();
+    const dailyAvg = totalAmount / days;
+
+    for (let i = days - 1; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      labels.push(`${date.getDate()}/${date.getMonth() + 1}`);
+      // Variar ±30% del promedio
+      const variation = dailyAvg * (0.7 + Math.random() * 0.6);
+      amounts.push(Math.floor(variation));
+    }
+
+    this.dailyDonationsData = { labels, amounts };
+
+    // Distribuir por categorías mock
+    const categories = ['Educación', 'Salud', 'Alimentación', 'Vivienda'];
+    const categoryData: any = {};
+    categories.forEach((cat, index) => {
+      const percentage = [0.35, 0.30, 0.20, 0.15][index];
+      categoryData[cat] = Math.floor(totalAmount * percentage);
+    });
+    this.donationsByCategoryData = categoryData;
+
+    // Estados mock (90% aprobadas, 7% pendientes, 3% rechazadas)
+    const totalDonations = campaigns.reduce((sum: any, c: any) => sum + c.totalDonations, 0);
+    this.donationsByStatusData = {
+      APPROVED: Math.floor(totalDonations * 0.90),
+      PENDING: Math.floor(totalDonations * 0.07),
+      REJECTED: Math.floor(totalDonations * 0.03)
+    };
+
+    // Medios de pago mock
+    this.paymentMethodData = {
+      'Tarjeta de Crédito': Math.floor(totalAmount * 0.60),
+      'Tarjeta de Débito': Math.floor(totalAmount * 0.25),
+      'Transferencia': Math.floor(totalAmount * 0.15)
+    };
+  }
+
+  private updatePayoutData(payouts: PayoutDto[]): void {
+    const pending = payouts.filter(p => p.status === 'PENDING');
+    const approved = payouts.filter(p => p.status === 'APPROVED');
+
+    this.payoutData = {
+      byStatus: {
+        PENDING: pending.length,
+        APPROVED: approved.length
+      },
+      byAmount: {
+        PENDING: pending.reduce((sum, p) => sum + p.amount, 0),
+        APPROVED: approved.reduce((sum, p) => sum + p.amount, 0)
+      }
+    };
+  }
+
+  private calculateStats(): void {
+    // Recargar datos con los filtros actuales
+    forkJoin({
+      availableData: this.payoutService.getAvailableDonations(),
+      payouts: this.payoutService.getMyPayouts()
+    }).subscribe({
+      next: ({ availableData, payouts }) => {
+        this.allPayouts = payouts;
+        
+        // Actualizar campañas
+        this.allCampaigns = availableData.campaigns.map(c => ({
+          id: c.id,
+          ngo: {} as any,
+          title: c.name,
+          goal_amount: c.goal,
+          current_amount: c.totalReceipt,
+          description: '',
+          endDateTime: new Date(),
+          createDateTime: new Date(),
+          end_date_time: new Date(),
+          create_date_time: new Date(),
+          campaign_state: 'ACTIVE' as 'ACTIVE' | 'CLOSED',
+          categories: [],
+          tags: [],
+          images: []
+        }));
+
+        this.calculateStatsFromAvailableData(availableData, payouts);
+      }
+    });
   }
 
   ngAfterViewInit(): void {
@@ -165,72 +380,7 @@ export class DashboardOrganization implements OnInit, AfterViewInit {
   }
 
   private updateDataByFilters(dateFilter: DateFilter, campaignId: string): void {
-    const multiplier = this.getMultiplier(dateFilter);
-    const campaignMultiplier = campaignId === 'all' ? 1 : 0.25;
-    
-    // Actualizar stats
-    this.stats.set({
-      totalDonations: Math.floor(487 * multiplier * campaignMultiplier),
-      totalAmount: Math.floor(12450000 * multiplier * campaignMultiplier),
-      activeCampaigns: campaignId === 'all' ? 4 : 1,
-      avgDonation: Math.floor(25565 * multiplier),
-      pendingPayouts: Math.floor(3 * multiplier),
-      approvedPayouts: Math.floor(18 * multiplier),
-      topDonor: 'Juan Pérez',
-      topDonorAmount: Math.floor(450000 * multiplier)
-    });
-
-    // Actualizar datos de campaña
-    this.campaignData.raised = Math.floor(3200000 * multiplier * campaignMultiplier);
-    this.campaignData.donationsCount = Math.floor(156 * multiplier * campaignMultiplier);
-    this.campaignData.progress = Math.floor((this.campaignData.raised / this.campaignData.goal) * 100);
-
-    // Actualizar categorías
-    Object.keys(this.donationsByCategoryData).forEach(key => {
-      const baseValue = key === 'Educación' ? 4200000 : key === 'Salud' ? 3100000 : key === 'Alimentación' ? 2800000 : 2350000;
-      (this.donationsByCategoryData as any)[key] = Math.floor(baseValue * multiplier * campaignMultiplier);
-    });
-
-    // Actualizar estados
-    this.donationsByStatusData = {
-      APPROVED: Math.floor(425 * multiplier * campaignMultiplier),
-      PENDING: Math.floor(48 * multiplier * campaignMultiplier),
-      REJECTED: Math.floor(14 * multiplier * campaignMultiplier)
-    };
-
-    // Generar datos diarios según filtro
-    this.generateDailyDataByFilter(dateFilter);
-
-    // Recrear gráficos
-    this.recreateCharts();
-  }
-
-  private generateDailyDataByFilter(filter: DateFilter): void {
-    const days = filter === '7d' ? 7 : filter === '30d' ? 30 : filter === '3m' ? 90 : 365;
-    const labels: string[] = [];
-    const amounts: number[] = [];
-    const today = new Date();
-
-    const step = days > 90 ? 7 : days > 30 ? 3 : 1; // Agrupar datos si es mucho tiempo
-    
-    for (let i = days - 1; i >= 0; i -= step) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      labels.push(`${date.getDate()}/${date.getMonth() + 1}`);
-      amounts.push(Math.floor(Math.random() * 150000) + 50000);
-    }
-
-    this.dailyDonationsData = { labels, amounts };
-  }
-
-  private getMultiplier(filter: DateFilter): number {
-    switch(filter) {
-      case '7d': return 0.25;
-      case '30d': return 1;
-      case '3m': return 2.8;
-      case '1y': return 5;
-      default: return 1;
-    }
+    this.calculateStats();
   }
 
   private recreateCharts(): void {
