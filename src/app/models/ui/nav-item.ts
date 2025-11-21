@@ -18,7 +18,7 @@ export const Sidebuttons: NavItem[] = [
         ]
         
     },
-    { title: 'Gestionar pendientes', route: '/organizations/pending', roles: ['ADMIN'], icon: 'admin' },
+    { title: 'ONGs pendientes', route: '/organizations/pending', roles: ['ADMIN'], icon: 'admin' },
     {
         title: 'Campañas', roles: ['ADMIN'], icon: 'diversity-1', children: [
             { title: 'Crear campaña', route: '/campaigns/create', roles: ['ORGANIZATION'], icon: 'add' },
@@ -28,6 +28,9 @@ export const Sidebuttons: NavItem[] = [
     { title: 'Mis donaciones', roles: ['DONOR'], route: '/donations/all', icon: 'volunteer-activism' }
     ,
     {
-        title: 'Dashboards', route: '/dashboards', roles: ['ADMIN', 'ORGANIZATION'], icon: 'bar-chart-4-bars'
+        title: 'Dashboards', route: '/dashboards/admin', roles: ['ADMIN'], icon: 'bar-chart-4-bars'
+    },
+    {
+        title: 'Dashboards', route: '/dashboards/organization', roles: ['ORGANIZATION'], icon: 'bar-chart-4-bars'
     },
 ];

@@ -18,6 +18,8 @@ import { PendingOrganizationList } from './pages/pending-organization-list/pendi
 import { TermsAndConditionsPage } from './pages/terms-and-conditions-page/terms-and-conditions-page';
 import { MyPayouts } from './pages/my-payouts/my-payouts';
 import { PendingPayoutsList } from './pages/pending-payouts-list/pending-payouts-list';
+import { DashboardAdmin } from './pages/dashboard-admin/dashboard-admin';
+import { DashboardOrganization } from './pages/dashboard-organization/dashboard-organization';
 
 export const routes: Routes = [
     { pathMatch: 'full', path: '', redirectTo: 'home' },
@@ -61,7 +63,10 @@ export const routes: Routes = [
             { path: 'pending-payouts', title: 'Solicitudes de pago pendientes', component: PendingPayoutsList },
         ]
     },
-    // { path: 'dashboards' },
+    { path: 'dashboards', children: [
+        { path: 'admin', title: 'Panel de administración', component: DashboardAdmin},
+        { path: 'organization', title: 'Panel de organización', component: DashboardOrganization},
+    ]},
 
 
     //paginas de error

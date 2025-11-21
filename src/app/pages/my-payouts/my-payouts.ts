@@ -3,13 +3,13 @@ import { PayoutDto } from '../../models/api/payouts';
 import { PayStatusPipe } from '../../pipes/pay-status-pipe';
 import { PayColorPipe } from '../../pipes/pay-status-color';
 import { CurrencyPipe, DatePipe, NgClass } from '@angular/common';
-import { PayoutService } from '../../services/api/payout-service';
 import { ToastService } from '../../services/ui/toast-service';
 import { finalize } from 'rxjs';
 import { ButtonComponent } from '../../components/button-component/button-component';
 import { ReusableModalComponent } from "../../components/reusable-modal-component/reusable-modal-component";
 import { IconComponent } from '../../components/icon-component/icon-component';
 import { FileService } from '../../services/api/file-service';
+import { PayoutResponse, PayoutService } from '../../services/api/payout-service';
 
 @Component({
   selector: 'app-my-payouts',
@@ -20,52 +20,53 @@ import { FileService } from '../../services/api/file-service';
 })
 export class MyPayouts implements OnInit {
   payouts = signal<PayoutDto[]>([]);
+  availableDonations = signal<PayoutResponse | null>(null);
   isLoading = signal<boolean>(false);
   isRequestingPayout = signal<boolean>(false);
   
   // Datos mock para pruebas
-  private mockPayouts: PayoutDto[] = [
-    {
-      payout_request_id: 'payout-mock-1',
-      ngo_id: 'mock-1',
-      amount: 125000,
-      request_datetime: new Date('2025-11-15T10:30:00'),
-      approval_datetime: null,
-      status: 'APPROVED',
-      proof_file_id: null,
-      donations: [
-        {
-          payout_request_id: 'payout-mock-1',
-          donation_id: 'donation-1',
-          campaign_id: 'campaign-1',
-          amount: 75000
-        },
-        {
-          payout_request_id: 'payout-mock-1',
-          donation_id: 'donation-2',
-          campaign_id: 'campaign-1',
-          amount: 50000
-        }
-      ]
-    },
-    {
-      payout_request_id: 'payout-mock-2',
-      ngo_id: 'mock-2',
-      amount: 87500,
-      request_datetime: new Date('2025-11-18T09:15:00'),
-      approval_datetime: null,
-      status: 'PENDING',
-      proof_file_id: null,
-      donations: [
-        {
-          payout_request_id: 'payout-mock-2',
-          donation_id: 'donation-3',
-          campaign_id: 'campaign-2',
-          amount: 87500
-        }
-      ]
-    }
-  ];
+  // private mockPayouts: PayoutDto[] = [
+  //   {
+  //     payout_request_id: 'payout-mock-1',
+  //     ngo_id: 'mock-1',
+  //     amount: 125000,
+  //     request_datetime: new Date('2025-11-15T10:30:00'),
+  //     approval_datetime: null,
+  //     status: 'APPROVED',
+  //     proof_file_id: null,
+  //     donations: [
+  //       {
+  //         payout_request_id: 'payout-mock-1',
+  //         donation_id: 'donation-1',
+  //         campaign_id: 'campaign-1',
+  //         amount: 75000
+  //       },
+  //       {
+  //         payout_request_id: 'payout-mock-1',
+  //         donation_id: 'donation-2',
+  //         campaign_id: 'campaign-1',
+  //         amount: 50000
+  //       }
+  //     ]
+  //   },
+  //   {
+  //     payout_request_id: 'payout-mock-2',
+  //     ngo_id: 'mock-2',
+  //     amount: 87500,
+  //     request_datetime: new Date('2025-11-18T09:15:00'),
+  //     approval_datetime: null,
+  //     status: 'PENDING',
+  //     proof_file_id: null,
+  //     donations: [
+  //       {
+  //         payout_request_id: 'payout-mock-2',
+  //         donation_id: 'donation-3',
+  //         campaign_id: 'campaign-2',
+  //         amount: 87500
+  //       }
+  //     ]
+  //   }
+  // ];
 
   @ViewChild('requestPayoutModal') requestPayoutModal!: ReusableModalComponent;
 
@@ -73,38 +74,57 @@ export class MyPayouts implements OnInit {
   toastService = inject(ToastService);
   fileService = inject(FileService);
 
+  // totalAvailable = computed(()=> {
+  //   let total = 0;
+  //   this.payouts().forEach(payout => {
+  //     if (payout.status === 'DENIED') {
+  //       total += payout.amount;
+  //     }
+  //   })
+  //   return total;
+  // })
   totalAvailable = computed(()=> {
-    let total = 0;
-    this.payouts().forEach(payout => {
-      if (payout.status === 'APPROVED') {
-        total += payout.amount;
-      }
-    })
-    return total;
+    return this.availableDonations()?.totalAvailable || 0;
   })
 
   ngOnInit(): void {
     this.fetchPayouts();
+    this.fetchAvailableDonations();
+    console.log(this.availableDonations());
+    
   }
 
   fetchPayouts(): void {
     this.isLoading.set(true);
 
-    // Comentar para usar datos reales del backend
-    // this.payoutService.getMyPayouts().pipe(finalize(() => this.isLoading.set(false))).subscribe({
-    //   next: (data) => {
-    //     this.payouts.set(data);
-    //   },
-    //   error: (error) => {
-    //     this.toastService.open('Error al cargar las solicitudes de pago', 'error', 3000);
-    //   }
-    // })
+    //Comentar para usar datos reales del backend
+    this.payoutService.getMyPayouts().pipe(finalize(() => this.isLoading.set(false))).subscribe({
+      next: (data) => {
+        this.payouts.set(data);
+      },
+      error: (error) => {
+        this.toastService.open('Error al cargar las solicitudes de pago', 'error', 3000);
+      }
+    })
     
     // Usar datos mock para pruebas
-    setTimeout(() => {
-      this.payouts.set(this.mockPayouts);
-      this.isLoading.set(false);
-    }, 500);
+    // setTimeout(() => {
+    //   this.payouts.set(this.mockPayouts);
+    //   this.isLoading.set(false);
+    // }, 500);
+  }
+
+  fetchAvailableDonations(): void {
+    this.payoutService.getAvailableDonations().subscribe({
+      next: (data) => {
+        // Handle the available donations data here
+        console.log(data);
+        
+      },
+      error: (error) => {
+        this.toastService.open('Error al cargar las donaciones disponibles', 'error', 3000);
+      }
+    });
   }
   
   confirmPayoutRequest(): void {

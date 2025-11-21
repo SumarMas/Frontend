@@ -341,7 +341,8 @@
                         </div>
                         }
 
-                        <div class="absolute left-5 right-5 top-1/2 flex -translate-y-1/2 transform justify-between">
+                        @if(getCarouselImages().length > 1) {
+                            <div class="absolute left-5 right-5 top-1/2 flex -translate-y-1/2 transform justify-between">
                             <button (click)="goToSlide(getPreviousIndex($index, getCarouselImages().length) + 1)"
                                 class="btn btn-circle btn-lg bg-white/90 hover:bg-white border-0 shadow-xl">
                                 <icon class="text-violet-500" name="arrow-left"></icon>
@@ -351,6 +352,7 @@
                                 <icon class="text-violet-500" name="arrow-right"></icon>
                             </button>
                         </div>
+                        }
 
                         <!-- Contador de imágenes -->
                         <div
@@ -450,7 +452,7 @@
             <div class="px-6 lg:px-10 py-8">
                 <h2 class="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
                     <div class="w-1 h-8 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
-                    Campañas Activas
+                    Campañas Asociadas
                 </h2>
 
                 @if(campaigns().length > 0) {

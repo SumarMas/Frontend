@@ -103,7 +103,7 @@
                     <!-- Botón de donación -->
                     <div class="card-actions">
                         <app-button-component label="Donar Ahora" variant="violet" size="lg" icon="volunteer-activism"
-                            [block]="false" (onClick)="donateModalRef.open()">
+                        [disabled]="campaign.campaign_state === 'CLOSED'" [block]="false" (onClick)="donateModalRef.open()">
                         </app-button-component>
                     </div>
                 </div>
