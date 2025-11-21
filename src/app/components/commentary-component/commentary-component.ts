@@ -42,7 +42,7 @@ export class CommentaryComponent {
       variant: 'warning'
     }).then((confirmed) => {
       if (confirmed && this.comment) {
-        this.deleteComment(this.comment.commentId);
+        this.deleteComment(this.comment.comment_id);
       }
     });
   }

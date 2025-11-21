@@ -34,6 +34,6 @@ export class MessageService {
    * @param messageId - ID de la actualización a eliminar
    */
   deleteMessage(messageId: string) : Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${messageId}`);
+    return this.http.delete<void>(`${this.apiUrl}/${messageId}/delete`);
   }
 }
