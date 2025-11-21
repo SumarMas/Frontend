@@ -16,6 +16,8 @@ import { MyDonations } from './pages/my-donations/my-donations';
 import { OrganizationList } from './pages/organization-list/organization-list';
 import { PendingOrganizationList } from './pages/pending-organization-list/pending-organization-list';
 import { TermsAndConditionsPage } from './pages/terms-and-conditions-page/terms-and-conditions-page';
+import { MyPayouts } from './pages/my-payouts/my-payouts';
+import { PendingPayoutsList } from './pages/pending-payouts-list/pending-payouts-list';
 
 export const routes: Routes = [
     { pathMatch: 'full', path: '', redirectTo: 'home' },
@@ -51,6 +53,12 @@ export const routes: Routes = [
             //{ path: ':donationId', title: 'Donación', component: DonationPage },
             { path: 'new/:campaignName/:campaignId', title: 'Donar', component: DonationRegister },
             { path: 'thanks', title: 'Gracias por tu donación', component: DonationThanks }
+        ]
+    },
+    {
+        path: 'payouts', children: [
+            { path: 'my-payouts', title: 'Mis solicitudes de pago', component: MyPayouts },
+            { path: 'pending-payouts', title: 'Solicitudes de pago pendientes', component: PendingPayoutsList },
         ]
     },
     // { path: 'dashboards' },

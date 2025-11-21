@@ -1,0 +1,156 @@
+<section class="min-h-screen pt-24 pb-16 bg-sumar-light">
+    <div class="container mx-auto px-4 max-w-7xl">
+        
+        <!-- Header con título -->
+        <div class="text-center mb-8">
+            <div class="inline-block p-4 bg-gradient-to-br from-violet-100 to-purple-100 rounded-2xl mb-4">
+                <icon name="pending" class="text-violet-600 text-5xl"></icon>
+            </div>
+            <h1 class="text-4xl font-bold pb-4 bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+                Solicitudes Pendientes de Aprobación
+            </h1>
+            <p class="text-gray-600 text-lg">
+                Revisa y aprueba las solicitudes de pago de las organizaciones
+            </p>
+        </div>
+
+        <!-- Tarjeta con tabla -->
+        <div class="card bg-white shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-2xl mb-6 flex items-center gap-2">
+                    <div class="w-1 h-8 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
+                    Solicitudes Pendientes
+                </h2>
+                
+                @if(isLoading()) {
+                <div class="flex justify-center items-center py-20">
+                    <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                </div>
+                } @else {
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra">
+                        <thead class="bg-gradient-to-r from-violet-500 to-purple-500 text-white">
+                            <tr>
+                                <th class="text-white">
+                                    <div class="flex items-center gap-2">
+                                        <icon name="group" [size]="'sm'"></icon>
+                                        Organización
+                                    </div>
+                                </th>
+                                <th class="text-white">
+                                    <div class="flex items-center gap-2">
+                                        <icon name="bar-chart-4-bars" [size]="'sm'"></icon>
+                                        Monto
+                                    </div>
+                                </th>
+                                <th class="text-white">
+                                    <div class="flex items-center gap-2">
+                                        <icon name="schedule" [size]="'sm'"></icon>
+                                        Fecha de Solicitud
+                                    </div>
+                                </th>
+                                <th class="text-white">
+                                    <div class="flex items-center gap-2">
+                                        <icon name="volunteer-activism" [size]="'sm'"></icon>
+                                        Donaciones
+                                    </div>
+                                </th>
+                                <th class="text-white">
+                                    <div class="flex items-center gap-2">
+                                        <icon name="upload" [size]="'sm'"></icon>
+                                        Comprobante
+                                    </div>
+                                </th>
+                                <th class="text-white">
+                                    <div class="flex items-center gap-2">
+                                        <icon name="check" [size]="'sm'"></icon>
+                                        Acciones
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (payout of payouts(); track payout.payout_request_id) {
+                            <tr class="hover">
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-violet-400 to-purple-400 flex items-center justify-center text-white font-bold">
+                                            {{ payout.ngo_id.substring(0, 2).toUpperCase() }}
+                                        </div>
+                                        <div>
+                                            <div class="font-semibold">NGO ID</div>
+                                            <div class="text-xs text-gray-500">{{ payout.ngo_id }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="font-bold text-violet-600 text-lg">
+                                    {{payout.amount | currency:'ARS':'symbol-narrow':'1.0-0'}}
+                                </td>
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <icon name="calendar-today" [size]="'sm'" class="text-gray-400"></icon>
+                                        <span>{{payout.request_datetime | date:'shortDate'}}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="badge badge-info badge-lg">
+                                        <icon name="volunteer-activism" [size]="'sm'" class="mr-1"></icon>
+                                        {{ payout.donations.length || 0 }} donaciones
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex flex-col gap-2">
+                                        @if(hasUploadedFile(payout.payout_request_id)) {
+                                        <div class="flex items-center gap-2 text-green-600">
+                                            <icon name="check-circle" [size]="'sm'"></icon>
+                                            <span class="text-sm font-medium">{{ getFileName(payout.payout_request_id) }}</span>
+                                        </div>
+                                        } @else {
+                                        <label class="btn btn-sm btn-outline btn-violet gap-2 cursor-pointer">
+                                            @if(isUploading(payout.payout_request_id)) {
+                                            <span class="loading loading-spinner loading-xs"></span>
+                                            } @else {
+                                            <icon name="upload" [size]="'sm'"></icon>
+                                            }
+                                            <span>{{ isUploading(payout.payout_request_id) ? 'Subiendo...' : 'Seleccionar' }}</span>
+                                            <input 
+                                                type="file" 
+                                                class="hidden" 
+                                                accept=".pdf,.jpg,.jpeg,.png"
+                                                (change)="onFileSelected($event, payout.payout_request_id)"
+                                                [disabled]="isUploading(payout.payout_request_id)">
+                                        </label>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    <app-button-component 
+                                        label="Aprobar" 
+                                        icon="check"
+                                        variant="violet" 
+                                        size="sm"
+                                        [disabled]="!hasUploadedFile(payout.payout_request_id) || isApproving(payout.payout_request_id)"
+                                        [isLoading]="isApproving(payout.payout_request_id)"
+                                        (onClick)="approvePayout(payout.payout_request_id)">
+                                    </app-button-component>
+                                </td>
+                            </tr>
+                            }
+                            @empty {
+                            <tr>
+                                <td colspan="6">
+                                    <div class="alert alert-success shadow-sm">
+                                        <icon name="check-circle" class="text-green-500"></icon>
+                                        <span>No hay solicitudes pendientes de aprobación</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

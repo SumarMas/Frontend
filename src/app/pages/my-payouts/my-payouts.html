@@ -1,0 +1,214 @@
+<section class="min-h-screen pt-24 pb-16 bg-sumar-light">
+    <div class="container mx-auto px-4 max-w-6xl">
+        
+        <!-- Header con título -->
+        <div class="text-center mb-8">
+            <div class="inline-block p-4 bg-gradient-to-br from-violet-100 to-purple-100 rounded-2xl mb-4">
+                <icon name="search-insights" class="text-violet-600 text-5xl"></icon>
+            </div>
+            <h1 class="text-4xl font-bold pb-4 bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+                Mis Solicitudes de Pago
+            </h1>
+            <p class="text-gray-600 text-lg">
+                Gestiona tus recaudaciones y solicitudes de pago
+            </p>
+        </div>
+
+        <!-- Card de monto disponible -->
+        <div class="card bg-white shadow-xl mb-6">
+            <div class="card-body">
+                <div class="flex flex-col md:flex-row justify-between items-center gap-6">
+                    <div class="flex-1 text-center md:text-left">
+                        <div class="flex items-center gap-3 mb-2">
+                            
+                            <div>
+                                <p class="text-sm text-gray-500 font-medium">Monto disponible para solicitar</p>
+                                <h2 class="text-4xl font-bold text-violet-600">{{totalAvailable() | currency:'ARS':'symbol-narrow':'1.0-0'}}</h2>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2 flex align-center">
+                            <icon name="info" class="text-blue-500 text-sm inline"></icon>
+                            Suma de todas las donaciones aprobadas pendientes de pago
+                        </p>
+                    </div>
+                    <div>
+                        <app-button-component 
+                            label="Solicitar Recaudación" 
+                            icon="add"
+                            variant="violet" 
+                            size="lg"
+                            [rounded]="true"
+                            (onClick)="openModal()">
+                        </app-button-component>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Tabla de historial -->
+        <div class="card bg-white shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title text-2xl mb-6 flex items-center gap-2">
+                    <div class="w-1 h-8 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
+                    Historial de Solicitudes
+                </h2>
+                
+                @if(isLoading()) {
+                <div class="flex justify-center items-center py-20">
+                    <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                </div>
+                } @else {
+                <div class="overflow-x-auto">
+                    <table class="table table-zebra">
+                        <thead class="bg-gradient-to-r from-violet-500 to-purple-500 text-white">
+                            <tr>
+                                <th class="text-white">
+                                    <div class="flex items-center gap-2">
+                                        <icon name="bar-chart-4-bars" [size]="'sm'"></icon>
+                                        Monto
+                                    </div>
+                                </th>
+                                <th class="text-white">
+                                    <div class="flex items-center gap-2">
+                                        <icon name="schedule" [size]="'sm'"></icon>
+                                        Fecha de Solicitud
+                                    </div>
+                                </th>
+                                <th class="text-white">
+                                    <div class="flex items-center gap-2">
+                                        <icon name="info" [size]="'sm'"></icon>
+                                        Estado
+                                    </div>
+                                </th>
+                                <th class="text-white">
+                                    <div class="flex items-center gap-2">
+                                        <icon name="description" [size]="'sm'"></icon>
+                                        Comprobante
+                                    </div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (pay of payouts(); track pay.payout_request_id) {
+                            <tr class="hover">
+                                <td class="font-bold text-violet-600">
+                                    {{pay.amount | currency:'ARS':'symbol-narrow':'1.0-0'}}
+                                </td>
+                                <td>
+                                    <div class="flex items-center gap-2">
+                                        <icon name="calendar-today" [size]="'sm'" class="text-gray-400"></icon>
+                                        <span>{{pay.request_datetime | date:'dd/MM/yyyy HH:mm'}}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="flex flex-col gap-1">
+                                        <div class="badge badge-lg" [ngClass]="pay.status | payColor">
+                                            {{pay.status | payStatus}}
+                                        </div>
+                                        @if(pay.approval_datetime) {
+                                        <div class="text-xs text-gray-500 flex items-center gap-1">
+                                            <icon name="check" [size]="'sm'" class="text-green-500"></icon>
+                                            {{ pay.approval_datetime | date:'shortDate'}}
+                                        </div>
+                                        }
+                                    </div>
+                                </td>
+                                <td>
+                                    @if(pay.proof_file_id) {
+                                    <app-button-component 
+                                        icon="download" 
+                                        variant="violet"
+                                        size="sm"
+                                        [outline]="true"
+                                        tooltip="Descargar comprobante"
+                                        tooltipPosition="left"
+                                        (onClick)="downloadProofFile(pay.proof_file_id)">
+                                    </app-button-component>
+                                    } @else {
+                                    <div class="badge badge-primary">
+                                        Sin comprobante
+                                    </div>
+                                    }
+                                </td>
+                            </tr>
+                            }
+                            @empty {
+                            <tr>
+                                <td colspan="4">
+                                    <div class="alert alert-info shadow-sm">
+                                        <icon name="info" class="text-blue-500"></icon>
+                                        <span>No hay solicitudes de pago registradas</span>
+                                    </div>
+                                </td>
+                            </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Modal de confirmación -->
+<app-reusable-modal-component #requestPayoutModal>
+    <div class="p-6">
+        <!-- Icono de advertencia -->
+        <div class="flex justify-center mb-6">
+            <div class="bg-orange-100 p-4 rounded-full">
+                <icon name="warning" class="text-orange-500 text-5xl"></icon>
+            </div>
+        </div>
+        
+        <!-- Título -->
+        <h3 class="text-2xl font-bold text-center mb-4 text-gray-800">
+            Confirmar Solicitud de Pago
+        </h3>
+        
+        <!-- Contenido -->
+        <div class="bg-orange-50 border-l-4 border-orange-500 p-4 mb-6 rounded-lg">
+            <div class="flex items-start gap-3">
+                <icon name="info" class="text-orange-600 flex-shrink-0 mt-1"></icon>
+                <div>
+                    <p class="font-semibold text-orange-800 mb-2">Importante:</p>
+                    <p class="text-orange-700 text-sm">
+                        La acreditación de las recaudaciones <strong>NO es instantánea</strong>. 
+                        Tu solicitud será revisada por el equipo administrativo y recibirás una 
+                        notificación cuando se haya procesado.
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Monto a solicitar -->
+        <div class="bg-violet-50 p-4 rounded-lg mb-6">
+            <div class="flex items-center justify-between">
+                <span class="text-gray-600 font-medium">Monto a solicitar:</span>
+                <span class="text-3xl font-bold text-violet-600">
+                    {{totalAvailable() | currency:'ARS':'symbol-narrow':'1.0-0'}}
+                </span>
+            </div>
+        </div>
+        
+        <!-- Botones de acción -->
+        <div class="flex gap-3 justify-end">
+            <app-button-component 
+                label="Cancelar" 
+                icon="close"
+                variant="error"
+                [outline]="true"
+                [rounded]="true"
+                (onClick)="closeModal()">
+            </app-button-component>
+            
+            <app-button-component 
+                label="Confirmar Solicitud"
+                icon="check"
+                variant="violet" 
+                [rounded]="true"
+                [isLoading]="isRequestingPayout()"
+                (onClick)="confirmPayoutRequest()">
+            </app-button-component>
+        </div>
+    </div>
+</app-reusable-modal-component>
