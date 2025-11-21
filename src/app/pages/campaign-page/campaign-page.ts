@@ -41,6 +41,7 @@ export class CampaignPage implements OnInit, OnDestroy {
   imagesToKeep = signal<string[]>([]);
   categories = signal<CategoryDto[]>([]);
   editTags = signal<string[]>([]);
+  ngoProfileImage = signal<SafeUrl | null>(null);
   
   // Cache de imágenes para edición
   imageCache = new Map<string, SafeUrl>();
@@ -118,6 +119,11 @@ export class CampaignPage implements OnInit, OnDestroy {
         this.campaign = campaign;
         console.log('Campaign loaded:', campaign);
         
+        // Cargar foto de perfil de la organización
+        if (campaign.ngo.profileFileId) {
+          this.loadNgoProfileImage(campaign.ngo.profileFileId);
+        }
+        
         // Inicializar imagesToKeep con las imágenes actuales
         if (campaign.images) {
           this.imagesToKeep.set([...campaign.images]);
@@ -165,6 +171,19 @@ export class CampaignPage implements OnInit, OnDestroy {
       },
       error: (err) => {
         console.error('Error al cargar imagen de campaña:', err);
+      }
+    });
+  }
+
+  loadNgoProfileImage(fileId: string): void {
+    this.fileService.getFile(fileId).subscribe({
+      next: (blob) => {
+        const objectUrl = URL.createObjectURL(blob);
+        const safeUrl = this.sanitizer.bypassSecurityTrustUrl(objectUrl);
+        this.ngoProfileImage.set(safeUrl);
+      },
+      error: (err) => {
+        console.error('Error al cargar imagen de perfil de la organización:', err);
       }
     });
   }
