@@ -1,5 +1,5 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
-import { CommonModule, NgClass } from '@angular/common';
+import { CommonModule, DatePipe, NgClass } from '@angular/common';
 import { ButtonComponent } from '../../components/button-component/button-component';
 import { IconComponent } from '../../components/icon-component/icon-component';
 import { GetDonationDto } from '../../models/api/donation';
@@ -22,7 +22,7 @@ interface DonationDto {
 
 @Component({
   selector: 'app-my-donations',
-  imports: [CommonModule, ButtonComponent, IconComponent, NgClass],
+  imports: [CommonModule, ButtonComponent, IconComponent, NgClass, DatePipe],
   templateUrl: './my-donations.html',
   styleUrl: './my-donations.scss'
 })
@@ -37,10 +37,6 @@ export class MyDonations implements OnInit {
 
   ngOnInit(): void {
     this.loadDonations();
-  }
-
-  get todayDate(){
-    return new Date();
   }
 
   loadDonations() {
@@ -66,7 +62,8 @@ export class MyDonations implements OnInit {
     const classes = {
       'CONFIRMED': 'badge badge-success',
       'PENDING': 'badge badge-warning',
-      'CANCELLED': 'badge badge-error'
+      'CANCELLED': 'badge badge-error',
+      'PAID': 'badge badge-primary'
     };
     return classes[status as keyof typeof classes] || '';
   }
@@ -75,7 +72,8 @@ export class MyDonations implements OnInit {
     const texts = {
       'CONFIRMED': 'Completada',
       'PENDING': 'Pendiente',
-      'CANCELLED': 'Fallida'
+      'CANCELLED': 'Cancelada',
+      'PAID': 'Paga'
     };
     return texts[status as keyof typeof texts] || status;
   }
@@ -88,12 +86,22 @@ export class MyDonations implements OnInit {
     }).format(amount);
   }
 
-  formatDate(date: Date): string {
-    return new Intl.DateTimeFormat('es-AR', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric'
-    }).format(new Date(date));
+  /**
+   * Convierte el array de fecha que viene del backend [año, mes, día, hora, minuto, segundo]
+   * a un objeto Date válido
+   */
+  convertArrayToDate(dateArray: number[] | null): Date | null {
+    if (!dateArray || !Array.isArray(dateArray) || dateArray.length < 3) return null;
+    
+    // El mes en JavaScript es 0-indexed, por eso restamos 1
+    return new Date(
+      dateArray[0], // año
+      dateArray[1] - 1, // mes (0-indexed)
+      dateArray[2], // día
+      dateArray[3] || 0, // hora
+      dateArray[4] || 0, // minuto
+      dateArray[5] || 0  // segundo
+    );
   }
 
   /**
