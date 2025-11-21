@@ -58,6 +58,11 @@
                                         <icon name="verified" class="text-blue-500 text-2xl"></icon>
                                     </div>
                                     }
+                                    @else if(organization()!.status === 'DENIED') {
+                                    <div class="tooltip" data-tip="Organización rechazada, vuelva a subir la documentación">
+                                        <icon name="unverified" class="text-red-500 text-2xl"></icon>
+                                    </div>
+                                    }
                                     @else {
                                     <div class="tooltip" data-tip="Esta organización está pendiente de verificación">
                                         <icon name="warning" class="text-yellow-400 text-2xl"></icon>
@@ -463,7 +468,6 @@
                 </div>
                 } @else {
                 <div class="text-center py-20 text-gray-500 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl">
-                    <icon name="search-insights" [size]="'xl'" class="text-gray-300 mb-4"></icon>
                     <p class="text-lg">Esta organización no tiene campañas activas en este momento.</p>
                 </div>
                 }

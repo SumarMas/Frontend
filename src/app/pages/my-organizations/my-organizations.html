@@ -71,10 +71,25 @@
                 <div class="mb-6">
                     <h2 class="text-3xl font-bold text-gray-800 mb-3 flex items-center gap-2">
                         {{ organization()!.name }}
-                        @if(organization()!.status === 'ACTIVE') {
-                        <svg xmlns="http://www.w3.org/2000/svg" class="w-7 h-7 text-blue-500" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                        @if(organization()!.status === 'VERIFIED' || organization()!.status === 'ACTIVE') {
+                        <div class="tooltip" data-tip="Organización verificada">
+                            <icon name="verified" class="text-blue-500 text-2xl"></icon>
+                        </div>
+                        }
+                        @else if(organization()!.status === 'DENIED') {
+                        <div class="tooltip" data-tip="Organización rechazada">
+                            <icon name="unverified" class="text-red-500 text-2xl"></icon>
+                        </div>
+                        }
+                        @else if(organization()!.status === 'PENDING') {
+                        <div class="tooltip" data-tip="Pendiente de verificación">
+                            <icon name="warning" class="text-yellow-400 text-2xl"></icon>
+                        </div>
+                        }
+                        @else {
+                        <div class="tooltip" data-tip="No verificada">
+                            <icon name="info" class="text-gray-400 text-2xl"></icon>
+                        </div>
                         }
                     </h2>
                     <p class="text-gray-600 leading-relaxed">
