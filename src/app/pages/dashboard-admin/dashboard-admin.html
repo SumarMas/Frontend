@@ -1,15 +1,5 @@
 <section class="min-h-screen pt-24 pb-16 bg-sumar-light">
     <div class="container mx-auto px-4 max-w-7xl">
-        
-        <!-- Loading Overlay -->
-        @if(isLoading()) {
-        <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div class="bg-white rounded-2xl p-8 flex flex-col items-center gap-4 shadow-2xl">
-                <span class="loading loading-spinner loading-lg text-violet-600"></span>
-                <p class="text-gray-700 font-semibold">Cargando datos del dashboard...</p>
-            </div>
-        </div>
-        }
 
         <!-- Header -->
         <div class="text-center mb-8">
@@ -53,6 +43,11 @@
             <!-- Total ONGs -->
             <div class="card bg-white shadow-xl hover:shadow-2xl transition-shadow">
                 <div class="card-body">
+                    @if(isLoading()) {
+                    <div class="flex items-center justify-center h-24">
+                        <span class="loading loading-spinner loading-md text-violet-600"></span>
+                    </div>
+                    } @else {
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm text-gray-500 font-medium">Organizaciones</p>
@@ -60,23 +55,29 @@
                             @if(stats().newNGOsWeek > 0) {
                             <div class="flex items-center gap-1 mt-2">
                                 <icon name="arrow-drop-up" [size]="'sm'" class="text-green-500"></icon>
-                                <span class="text-xs text-green-600 font-semibold">+{{ stats().newNGOsWeek }}</span>
-                                <span class="text-xs text-gray-500">esta semana</span>
+                                <span class="text-xs text-green-600 font-semibold">{{ stats().newNGOsWeek }}</span>
+                                <span class="text-xs text-gray-500">en el período</span>
                             </div>
                             } @else {
-                            <p class="text-xs text-gray-500 mt-2">Datos disponibles</p>
+                            <p class="text-xs text-gray-500 mt-2">No hay datos en el período</p>
                             }
                         </div>
                         <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
                             <icon name="diversity-1" class="text-purple-600 text-2xl"></icon>
                         </div>
                     </div>
+                    }
                 </div>
             </div>
 
             <!-- Monto Total -->
             <div class="card bg-white shadow-xl hover:shadow-2xl transition-shadow">
                 <div class="card-body">
+                    @if(isLoading()) {
+                    <div class="flex items-center justify-center h-24">
+                        <span class="loading loading-spinner loading-md text-violet-600"></span>
+                    </div>
+                    } @else {
                     <div class="flex items-center justify-between">
                         <div>
                             <p class="text-sm text-gray-500 font-medium">Recaudado</p>
@@ -87,6 +88,7 @@
                             <icon name="bar-chart-4-bars" class="text-green-600 text-2xl"></icon>
                         </div>
                     </div>
+                    }
                 </div>
             </div>
         </div>
@@ -98,6 +100,11 @@
                     <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
                     ONGs por Estado
                 </h2>
+                @if(isLoading()) {
+                <div class="h-80 flex items-center justify-center">
+                    <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                </div>
+                } @else {
                 <div class="h-80 flex items-center justify-center">
                     <canvas id="ngosChart"></canvas>
                 </div>
@@ -115,6 +122,7 @@
                         <p class="text-sm text-gray-400">N/A</p>
                     </div>
                 </div>
+                }
             </div>
         </div>
 
@@ -125,9 +133,15 @@
                     <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
                     Recaudación por Categoría
                 </h2>
+                @if(isLoading()) {
+                <div class="h-96 flex items-center justify-center">
+                    <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                </div>
+                } @else {
                 <div class="h-96 flex items-center justify-center">
                     <canvas id="donationsChart"></canvas>
                 </div>
+                }
             </div>
         </div>
 
@@ -140,6 +154,11 @@
                         <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
                         Top 5 ONGs - Campañas Activas
                     </h2>
+                    @if(isLoading()) {
+                    <div class="flex items-center justify-center h-64">
+                        <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                    </div>
+                    } @else {
                     <div class="overflow-x-auto">
                         <table class="table table-sm">
                             <thead>
@@ -163,9 +182,15 @@
                                     </td>
                                 </tr>
                                 }
+                                @empty {
+                                <tr>
+                                    <td colspan="3" class="text-center text-gray-400 py-8">No hay datos disponibles</td>
+                                </tr>
+                                }
                             </tbody>
                         </table>
                     </div>
+                    }
                 </div>
             </div>
 
@@ -176,6 +201,11 @@
                         <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
                         Top 5 ONGs - Volumen de Donaciones
                     </h2>
+                    @if(isLoading()) {
+                    <div class="flex items-center justify-center h-64">
+                        <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                    </div>
+                    } @else {
                     <div class="overflow-x-auto">
                         <table class="table table-sm">
                             <thead>
@@ -199,9 +229,15 @@
                                     </td>
                                 </tr>
                                 }
+                                @empty {
+                                <tr>
+                                    <td colspan="3" class="text-center text-gray-400 py-8">No hay datos disponibles</td>
+                                </tr>
+                                }
                             </tbody>
                         </table>
                     </div>
+                    }
                 </div>
             </div>
         </div>

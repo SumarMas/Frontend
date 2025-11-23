@@ -39,7 +39,7 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
   private donationsChart?: Chart;
 
   // Filtros
-  selectedDateFilter = signal<DateFilter>('30d');
+  selectedDateFilter = signal<DateFilter>('1y');
   
   dateFilterOptions = [
     { value: '7d' as DateFilter, label: 'Últimos 7 días' },
@@ -122,6 +122,42 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
     this.loadDashboardData();
   }
 
+  onFilterChange(filter: DateFilter): void {
+    this.selectedDateFilter.set(filter);
+  }
+
+  private getDateLimitForFilter(filter: DateFilter): Date {
+    const now = new Date();
+    const limit = new Date(now);
+    
+    switch (filter) {
+      case '7d':
+        limit.setDate(now.getDate() - 7);
+        break;
+      case '30d':
+        limit.setDate(now.getDate() - 30);
+        break;
+      case '3m':
+        limit.setMonth(now.getMonth() - 3);
+        break;
+      case '1y':
+        limit.setFullYear(now.getFullYear() - 1);
+        break;
+    }
+    
+    return limit;
+  }
+
+  private isWithinDateFilter(dateString: string | undefined): boolean {
+    // Si no hay fecha, incluir el item (puede ser dato antiguo sin fecha)
+    if (!dateString) return true;
+    
+    const itemDate = new Date(dateString);
+    const dateLimit = this.getDateLimitForFilter(this.selectedDateFilter());
+    
+    return itemDate >= dateLimit;
+  }
+
   ngAfterViewInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       setTimeout(() => {
@@ -142,35 +178,49 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
       categories: this.categoryService.getAllCategories()
     }).subscribe({
       next: (data) => {
-        // Total de organizaciones (solo aprobadas y pendientes disponibles)
-        const totalNGOs = data.approvedNGOs.length + data.pendingNGOs.length;
+        // Filtrar datos por fecha seleccionada
+        const filteredApprovedNGOs = data.approvedNGOs.filter(ngo => 
+          this.isWithinDateFilter(ngo.createdDateTime)
+        );
+        const filteredPendingNGOs = data.pendingNGOs.filter(ngo => 
+          this.isWithinDateFilter(ngo.createdDateTime)
+        );
+        const filteredClosedCampaigns = data.closedCampaigns.filter(campaign => 
+          this.isWithinDateFilter(campaign.createDateTime as string)
+        );
+        const filteredActiveCampaigns = data.activeCampaigns.filter(campaign => 
+          this.isWithinDateFilter(campaign.createDateTime as string)
+        );
         
-        // ONGs por estado
+        // Total de organizaciones en el período filtrado
+        const totalNGOs = filteredApprovedNGOs.length + filteredPendingNGOs.length;
+        
+        // ONGs por estado (en el período)
         this.ngosData.total = totalNGOs;
-        this.ngosData.byStatus.APPROVED = data.approvedNGOs.length;
-        this.ngosData.byStatus.PENDING = data.pendingNGOs.length;
+        this.ngosData.byStatus.APPROVED = filteredApprovedNGOs.length;
+        this.ngosData.byStatus.PENDING = filteredPendingNGOs.length;
         this.ngosData.byStatus.REJECTED = 0; // No hay endpoint para rechazadas
 
-        // Calcular recaudación total de campañas cerradas
-        const totalRecaudado = data.closedCampaigns.reduce((sum, campaign) => 
+        // Calcular recaudación total de campañas cerradas en el período
+        const totalRecaudado = filteredClosedCampaigns.reduce((sum, campaign) => 
           sum + (campaign.current_amount || 0), 0
         );
 
-        // Top 5 ONGs por cantidad de campañas activas
-        this.calculateTop5ByCampaigns(data.approvedNGOs, data.activeCampaigns);
+        // Top 5 ONGs por cantidad de campañas activas (todas las ONGs, campañas filtradas)
+        this.calculateTop5ByCampaigns(data.approvedNGOs, filteredActiveCampaigns);
 
-        // Top 5 ONGs por volumen de donaciones
-        this.calculateTop5ByDonations(data.approvedNGOs);
+        // Top 5 ONGs por volumen de donaciones (todas las ONGs, con filtro de fecha)
+        this.calculateTop5ByDonations(data.approvedNGOs, this.getDateLimitForFilter(this.selectedDateFilter()));
 
-        // Recaudación por categoría
-        this.calculateRecaudacionByCategory(data.categories, data.closedCampaigns);
+        // Recaudación por categoría (campañas cerradas filtradas)
+        this.calculateRecaudacionByCategory(data.categories, filteredClosedCampaigns);
 
         // Actualizar stats
         this.stats.set({
           totalUsers: 0, // No hay endpoint
           newUsersWeek: 0, // No hay endpoint
           totalNGOs: totalNGOs,
-          newNGOsWeek: 0, // No hay endpoint para calcular nuevas de la semana
+          newNGOsWeek: totalNGOs, // ONGs en el período seleccionado
           totalDonations: 0, // Se calculará con donaciones
           totalAmount: totalRecaudado,
           pendingPayouts: 0, // Se puede calcular si hay endpoint
@@ -209,14 +259,21 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
     this.ngosData.topByCampaigns = ngosWithCampaigns;
   }
 
-  private calculateTop5ByDonations(ngos: GetOrganizationDto[]): void {
+  private calculateTop5ByDonations(ngos: GetOrganizationDto[], dateLimit: Date): void {
     // Para cada NGO, obtener sus campañas y sumar el current_amount
     // Esto evita llamar al endpoint de donaciones que está fallando con error 500
     const ngoObservables = ngos.map(ngo => 
       this.campaignService.filter(undefined, undefined, undefined, ngo.ngoId).pipe(
         map(campaigns => {
-          // Sumar el current_amount de todas las campañas de esta NGO
-          const total = campaigns.reduce((sum, campaign) => sum + (campaign.current_amount || 0), 0);
+          // Filtrar campañas por fecha y sumar el current_amount
+          const filteredCampaigns = campaigns.filter(campaign => {
+            // Incluir campañas sin fecha
+            if (!campaign.createDateTime) return true;
+            const campaignDate = new Date(campaign.createDateTime);
+            return campaignDate >= dateLimit;
+          });
+          
+          const total = filteredCampaigns.reduce((sum, campaign) => sum + (campaign.current_amount || 0), 0);
           return {
             ngo,
             totalDonations: total
@@ -264,10 +321,6 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
     });
 
     this.donationsData.byCategory = recaudacionByCategory;
-  }
-
-  onFilterChange(filter: DateFilter): void {
-    this.selectedDateFilter.set(filter);
   }
 
   private recreateCharts(): void {
