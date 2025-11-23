@@ -18,4 +18,12 @@ export class DonationService {
   getDonationsByUser(): Observable<GetDonationDto[]> {
     return this.http.get<GetDonationDto[]>(`${this.apiUrl}/get-my-donations`);
   }
+
+  getDonationsByCampaign(campaignId: string, status?: 'CONFIRMED' | 'PENDING' | 'REJECTED'): Observable<GetDonationDto[]> {
+    let params: any = {};
+    if (status) {
+      params.status = status;
+    }
+    return this.http.get<GetDonationDto[]>(`${this.apiUrl}/campaign/${campaignId}`, status ? { params } : {});
+  }
 }

@@ -1,13 +1,26 @@
-import { Component, OnInit, signal, AfterViewInit, PLATFORM_ID, inject, effect } from '@angular/core';
+import { Component, OnInit, signal, AfterViewInit, PLATFORM_ID, inject, effect, OnDestroy } from '@angular/core';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { IconComponent } from '../../components/icon-component/icon-component';
 import { ButtonComponent } from '../../components/button-component/button-component';
 import { CurrencyPipe } from '@angular/common';
 import { isPlatformBrowser } from '@angular/common';
+import { OrganizationService } from '../../services/api/organization-service';
+import { CampaignService } from '../../services/api/campaign-service';
+import { CategoryService } from '../../services/api/category-service';
+import { forkJoin, map, of, catchError } from 'rxjs';
+import { GetOrganizationDto } from '../../models/api/organization';
+import { GetCampaignDto } from '../../models/api/campaign';
+import { CategoryDto } from '../../models/api/category';
 
 Chart.register(...registerables);
 
 type DateFilter = '7d' | '30d' | '3m' | '1y';
+
+interface NGOWithCampaigns {
+  ngo: GetOrganizationDto;
+  campaignCount: number;
+  totalDonations: number;
+}
 
 @Component({
   selector: 'app-dashboard-admin',
@@ -15,11 +28,13 @@ type DateFilter = '7d' | '30d' | '3m' | '1y';
   templateUrl: './dashboard-admin.html',
   styleUrl: './dashboard-admin.scss'
 })
-export class DashboardAdmin implements OnInit, AfterViewInit {
+export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
   private platformId = inject(PLATFORM_ID);
+  private organizationService = inject(OrganizationService);
+  private campaignService = inject(CampaignService);
+  private categoryService = inject(CategoryService);
   
   // Charts instances
-  private usersChart?: Chart;
   private ngosChart?: Chart;
   private donationsChart?: Chart;
 
@@ -35,249 +50,240 @@ export class DashboardAdmin implements OnInit, AfterViewInit {
 
   // Estadísticas generales
   stats = signal({
-    totalUsers: 1245,
-    newUsersWeek: 89,
-    totalNGOs: 156,
-    newNGOsWeek: 12,
-    totalDonations: 3456,
-    totalAmount: 45680000,
-    pendingPayouts: 23,
-    approvedPayouts: 134
+    totalUsers: 0,
+    newUsersWeek: 0,
+    totalNGOs: 0,
+    newNGOsWeek: 0,
+    totalDonations: 0,
+    totalAmount: 0,
+    pendingPayouts: 0,
+    approvedPayouts: 0
   });
+
+  // Datos reales
+  usersData = {
+    total: 0,
+    byRole: {
+      USER: 0,
+      NGO: 0,
+      ADMIN: 0
+    },
+    newThisWeek: 0
+  };
+
+  ngosData = {
+    total: 0,
+    byStatus: {
+      APPROVED: 0,
+      PENDING: 0,
+      REJECTED: 0
+    },
+    topByCampaigns: [] as { name: string; campaigns: number }[],
+    topByDonations: [] as { name: string; amount: number }[]
+  };
+
+  donationsData = {
+    total: 0,
+    byStatus: {
+      APPROVED: 0,
+      PENDING: 0,
+      REJECTED: 0
+    },
+    byCategory: {} as Record<string, number>,
+    byPaymentMethod: {
+      'Tarjeta de Crédito': 0,
+      'Tarjeta de Débito': 0,
+      Transferencia: 0
+    },
+    totalAmount: 0,
+    payoutRequests: {
+      PENDING: 0,
+      APPROVED: 0
+    },
+    payoutAmounts: {
+      PENDING: 0,
+      APPROVED: 0
+    }
+  };
+
+  isLoading = signal(true);
 
   constructor() {
     // Effect para reaccionar a cambios en el filtro
     effect(() => {
       const filter = this.selectedDateFilter();
       if (isPlatformBrowser(this.platformId)) {
-        this.updateDataByFilter(filter);
+        this.loadDashboardData();
       }
     });
   }
 
-  // Mock data para usuarios
-  usersData = {
-    total: 1245,
-    byRole: {
-      USER: 1050,
-      NGO: 180,
-      ADMIN: 15
-    },
-    newThisWeek: 89
-  };
-
-  // Mock data para NGOs
-  ngosData = {
-    total: 156,
-    byStatus: {
-      APPROVED: 142,
-      PENDING: 12,
-      REJECTED: 2
-    },
-    topByCampaigns: [
-      { name: 'Fundación Esperanza', campaigns: 8 },
-      { name: 'Ayuda Solidaria', campaigns: 6 },
-      { name: 'Manos Unidas', campaigns: 5 },
-      { name: 'Corazón Solidario', campaigns: 4 },
-      { name: 'Juntos por el Cambio', campaigns: 4 }
-    ],
-    topByDonations: [
-      { name: 'Fundación Esperanza', amount: 8500000 },
-      { name: 'Ayuda Solidaria', amount: 7200000 },
-      { name: 'Manos Unidas', amount: 6800000 },
-      { name: 'Corazón Solidario', amount: 5900000 },
-      { name: 'Juntos por el Cambio', amount: 4500000 }
-    ]
-  };
-
-  // Mock data para donaciones
-  donationsData = {
-    total: 3456,
-    byStatus: {
-      APPROVED: 3120,
-      PENDING: 280,
-      REJECTED: 56
-    },
-    byCategory: {
-      Educación: 8900000,
-      Salud: 7500000,
-      Alimentación: 6800000,
-      Vivienda: 5200000,
-      Medio_Ambiente: 4100000,
-      Otros: 3180000
-    },
-    byPaymentMethod: {
-      'Tarjeta de Crédito': 25000000,
-      'Tarjeta de Débito': 12000000,
-      Transferencia: 8680000
-    },
-    totalAmount: 45680000,
-    payoutRequests: {
-      PENDING: 23,
-      APPROVED: 134
-    },
-    payoutAmounts: {
-      PENDING: 5800000,
-      APPROVED: 32000000
-    }
-  };
-
   ngOnInit(): void {
-    // Inicializar estadísticas
+    this.loadDashboardData();
   }
 
   ngAfterViewInit(): void {
     if (isPlatformBrowser(this.platformId)) {
       setTimeout(() => {
-        this.createUsersChart();
         this.createNGOsChart();
         this.createDonationsChart();
       }, 100);
     }
   }
 
+  private loadDashboardData(): void {
+    this.isLoading.set(true);
+
+    forkJoin({
+      approvedNGOs: this.organizationService.getAllOrganizationsApproved(),
+      pendingNGOs: this.organizationService.getAllOrganizationsPending(),
+      closedCampaigns: this.campaignService.filter('CLOSED'),
+      activeCampaigns: this.campaignService.filter('ACTIVE'),
+      categories: this.categoryService.getAllCategories()
+    }).subscribe({
+      next: (data) => {
+        // Total de organizaciones (solo aprobadas y pendientes disponibles)
+        const totalNGOs = data.approvedNGOs.length + data.pendingNGOs.length;
+        
+        // ONGs por estado
+        this.ngosData.total = totalNGOs;
+        this.ngosData.byStatus.APPROVED = data.approvedNGOs.length;
+        this.ngosData.byStatus.PENDING = data.pendingNGOs.length;
+        this.ngosData.byStatus.REJECTED = 0; // No hay endpoint para rechazadas
+
+        // Calcular recaudación total de campañas cerradas
+        const totalRecaudado = data.closedCampaigns.reduce((sum, campaign) => 
+          sum + (campaign.current_amount || 0), 0
+        );
+
+        // Top 5 ONGs por cantidad de campañas activas
+        this.calculateTop5ByCampaigns(data.approvedNGOs, data.activeCampaigns);
+
+        // Top 5 ONGs por volumen de donaciones
+        this.calculateTop5ByDonations(data.approvedNGOs);
+
+        // Recaudación por categoría
+        this.calculateRecaudacionByCategory(data.categories, data.closedCampaigns);
+
+        // Actualizar stats
+        this.stats.set({
+          totalUsers: 0, // No hay endpoint
+          newUsersWeek: 0, // No hay endpoint
+          totalNGOs: totalNGOs,
+          newNGOsWeek: 0, // No hay endpoint para calcular nuevas de la semana
+          totalDonations: 0, // Se calculará con donaciones
+          totalAmount: totalRecaudado,
+          pendingPayouts: 0, // Se puede calcular si hay endpoint
+          approvedPayouts: 0 // Se puede calcular si hay endpoint
+        });
+
+        this.isLoading.set(false);
+        this.recreateCharts();
+      },
+      error: (error) => {
+        console.error('Error al cargar datos del dashboard:', error);
+        this.isLoading.set(false);
+      }
+    });
+  }
+
+  private calculateTop5ByCampaigns(ngos: GetOrganizationDto[], activeCampaigns: GetCampaignDto[]): void {
+    // Contar campañas por NGO
+    const campaignsByNGO = new Map<string, number>();
+    
+    activeCampaigns.forEach(campaign => {
+      const ngoId = campaign.ngo.ngoId;
+      campaignsByNGO.set(ngoId, (campaignsByNGO.get(ngoId) || 0) + 1);
+    });
+
+    // Crear lista con nombre y cantidad de campañas
+    const ngosWithCampaigns = ngos
+      .map(ngo => ({
+        name: ngo.name,
+        campaigns: campaignsByNGO.get(ngo.ngoId) || 0
+      }))
+      .filter(item => item.campaigns > 0)
+      .sort((a, b) => b.campaigns - a.campaigns)
+      .slice(0, 5);
+
+    this.ngosData.topByCampaigns = ngosWithCampaigns;
+  }
+
+  private calculateTop5ByDonations(ngos: GetOrganizationDto[]): void {
+    // Para cada NGO, obtener sus campañas y sumar el current_amount
+    // Esto evita llamar al endpoint de donaciones que está fallando con error 500
+    const ngoObservables = ngos.map(ngo => 
+      this.campaignService.filter(undefined, undefined, undefined, ngo.ngoId).pipe(
+        map(campaigns => {
+          // Sumar el current_amount de todas las campañas de esta NGO
+          const total = campaigns.reduce((sum, campaign) => sum + (campaign.current_amount || 0), 0);
+          return {
+            ngo,
+            totalDonations: total
+          };
+        }),
+        catchError(error => {
+          console.error(`Error obteniendo campañas de NGO ${ngo.ngoId}:`, error);
+          return of({ ngo, totalDonations: 0 });
+        })
+      )
+    );
+
+    // Procesar todas las ONGs aprobadas
+    forkJoin(ngoObservables).subscribe({
+      next: (results) => {
+        this.ngosData.topByDonations = results
+          .filter(r => r.totalDonations > 0)
+          .sort((a, b) => b.totalDonations - a.totalDonations)
+          .slice(0, 5)
+          .map(r => ({
+            name: r.ngo.name,
+            amount: r.totalDonations
+          }));
+      },
+      error: (error) => {
+        console.error('Error al calcular top 5 por donaciones:', error);
+        this.ngosData.topByDonations = [];
+      }
+    });
+  }
+
+  private calculateRecaudacionByCategory(categories: CategoryDto[], closedCampaigns: GetCampaignDto[]): void {
+    const recaudacionByCategory: Record<string, number> = {};
+
+    categories.forEach(category => {
+      const campaignsInCategory = closedCampaigns.filter(campaign =>
+        campaign.categories.some(cat => cat.id === category.id)
+      );
+
+      const total = campaignsInCategory.reduce((sum, campaign) => 
+        sum + (campaign.current_amount || 0), 0
+      );
+
+      recaudacionByCategory[category.name] = total;
+    });
+
+    this.donationsData.byCategory = recaudacionByCategory;
+  }
+
   onFilterChange(filter: DateFilter): void {
     this.selectedDateFilter.set(filter);
   }
 
-  private updateDataByFilter(filter: DateFilter): void {
-    // Simular actualización de datos según el filtro
-    const multiplier = this.getMultiplier(filter);
-    
-    // Actualizar stats
-    this.stats.set({
-      totalUsers: Math.floor(1245 * multiplier),
-      newUsersWeek: Math.floor(89 * multiplier),
-      totalNGOs: Math.floor(156 * multiplier),
-      newNGOsWeek: Math.floor(12 * multiplier),
-      totalDonations: Math.floor(3456 * multiplier),
-      totalAmount: Math.floor(45680000 * multiplier),
-      pendingPayouts: Math.floor(23 * multiplier),
-      approvedPayouts: Math.floor(134 * multiplier)
-    });
-
-    // Actualizar datos de usuarios
-    this.usersData = {
-      total: Math.floor(1245 * multiplier),
-      byRole: {
-        USER: Math.floor(1050 * multiplier),
-        NGO: Math.floor(180 * multiplier),
-        ADMIN: 15
-      },
-      newThisWeek: Math.floor(89 * multiplier)
-    };
-
-    // Actualizar datos de NGOs
-    this.ngosData.byStatus = {
-      APPROVED: Math.floor(142 * multiplier),
-      PENDING: Math.floor(12 * multiplier),
-      REJECTED: Math.floor(2 * multiplier)
-    };
-
-    // Actualizar datos de donaciones
-    const categoryMultiplier = this.getCategoryMultiplier(filter);
-    this.donationsData.byCategory = {
-      Educación: Math.floor(8900000 * categoryMultiplier),
-      Salud: Math.floor(7500000 * categoryMultiplier),
-      Alimentación: Math.floor(6800000 * categoryMultiplier),
-      Vivienda: Math.floor(5200000 * categoryMultiplier),
-      Medio_Ambiente: Math.floor(4100000 * categoryMultiplier),
-      Otros: Math.floor(3180000 * categoryMultiplier)
-    };
-
-    // Recrear gráficos con nuevos datos
-    this.recreateCharts();
-  }
-
-  private getMultiplier(filter: DateFilter): number {
-    switch(filter) {
-      case '7d': return 0.2;
-      case '30d': return 1;
-      case '3m': return 2.5;
-      case '1y': return 4;
-      default: return 1;
-    }
-  }
-
-  private getCategoryMultiplier(filter: DateFilter): number {
-    switch(filter) {
-      case '7d': return 0.15;
-      case '30d': return 1;
-      case '3m': return 3;
-      case '1y': return 5;
-      default: return 1;
-    }
-  }
-
   private recreateCharts(): void {
     // Destruir gráficos existentes
-    this.usersChart?.destroy();
     this.ngosChart?.destroy();
     this.donationsChart?.destroy();
 
     // Recrear con nuevos datos
     setTimeout(() => {
-      this.createUsersChart();
       this.createNGOsChart();
       this.createDonationsChart();
     }, 50);
   }
 
   private createUsersChart(): void {
-    const canvas = document.getElementById('usersChart') as HTMLCanvasElement;
-    if (!canvas) return;
-
-    const config: ChartConfiguration = {
-      type: 'doughnut',
-      data: {
-        labels: ['Usuarios', 'ONGs', 'Administradores'],
-        datasets: [{
-          label: 'Usuarios por Rol',
-          data: [
-            this.usersData.byRole.USER,
-            this.usersData.byRole.NGO,
-            this.usersData.byRole.ADMIN
-          ],
-          backgroundColor: [
-            'rgba(139, 92, 246, 0.8)',  // violet
-            'rgba(168, 85, 247, 0.8)',  // purple
-            'rgba(192, 132, 252, 0.8)'  // light purple
-          ],
-          borderColor: [
-            'rgb(139, 92, 246)',
-            'rgb(168, 85, 247)',
-            'rgb(192, 132, 252)'
-          ],
-          borderWidth: 2
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'bottom',
-            labels: {
-              padding: 15,
-              font: { size: 12 }
-            }
-          },
-          tooltip: {
-            callbacks: {
-              label: (context) => {
-                const label = context.label || '';
-                const value = context.parsed || 0;
-                const total = this.usersData.total;
-                const percentage = ((value / total) * 100).toFixed(1);
-                return `${label}: ${value} (${percentage}%)`;
-              }
-            }
-          }
-        }
-      }
-    };
-
-    this.usersChart = new Chart(canvas, config);
+    // Chart removido - no hay datos disponibles
   }
 
   private createNGOsChart(): void {
@@ -287,23 +293,20 @@ export class DashboardAdmin implements OnInit, AfterViewInit {
     const config: ChartConfiguration = {
       type: 'bar',
       data: {
-        labels: ['Aprobadas', 'Pendientes', 'Rechazadas'],
+        labels: ['Aprobadas', 'Pendientes'],
         datasets: [{
           label: 'ONGs por Estado',
           data: [
             this.ngosData.byStatus.APPROVED,
-            this.ngosData.byStatus.PENDING,
-            this.ngosData.byStatus.REJECTED
+            this.ngosData.byStatus.PENDING
           ],
           backgroundColor: [
             'rgba(34, 197, 94, 0.8)',   // green
-            'rgba(251, 191, 36, 0.8)',  // yellow
-            'rgba(239, 68, 68, 0.8)'    // red
+            'rgba(251, 191, 36, 0.8)'   // yellow
           ],
           borderColor: [
             'rgb(34, 197, 94)',
-            'rgb(251, 191, 36)',
-            'rgb(239, 68, 68)'
+            'rgb(251, 191, 36)'
           ],
           borderWidth: 2,
           borderRadius: 8
@@ -388,8 +391,8 @@ export class DashboardAdmin implements OnInit, AfterViewInit {
           tooltip: {
             callbacks: {
               label: (context) => {
-                const value = context.parsed.x || 1;
-                return `$${(value! / 1000000).toFixed(1)}M`;
+                const value = context.parsed.x || 0;
+                return `$${(value / 1000).toFixed(1)}K`;
               }
             }
           }
@@ -399,8 +402,9 @@ export class DashboardAdmin implements OnInit, AfterViewInit {
             beginAtZero: true,
             ticks: {
               callback: (value) => {
-                return `$${(Number(value) / 1000000).toFixed(0)}M`;
-              }
+                return `$${(Number(value) / 1000).toFixed(0)}K`;
+              },
+              stepSize: 500000
             },
             grid: {
               color: 'rgba(0, 0, 0, 0.05)'
@@ -419,7 +423,6 @@ export class DashboardAdmin implements OnInit, AfterViewInit {
   }
 
   ngOnDestroy(): void {
-    this.usersChart?.destroy();
     this.ngosChart?.destroy();
     this.donationsChart?.destroy();
   }
