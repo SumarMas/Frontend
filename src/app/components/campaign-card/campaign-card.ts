@@ -61,7 +61,7 @@ export class CampaignCard implements OnInit {
   }
 
   daysLeftText(): string {
-    const endDate = this.campaign?.endDateTime || this.campaign?.end_date_time;
+    const endDate = this.campaign?.end_date_time;
     const days = this.daysLeft(endDate);
     if (days === 'N/A') return 'Fecha no disponible';
     if (days === 0) return 'Último día';
@@ -69,7 +69,7 @@ export class CampaignCard implements OnInit {
   }
 
   getDaysLeftClass(): string {
-    const endDate = this.campaign?.endDateTime || this.campaign?.end_date_time;
+    const endDate = this.campaign?.end_date_time;
     const days = this.daysLeft(endDate);
     if (days === 'N/A' || days === 0) return 'badge-error';
     if (Number(days) <= 7) return 'badge-warning';
@@ -77,7 +77,7 @@ export class CampaignCard implements OnInit {
   }
 
   getDaysLeftIcon(): string {
-    const endDate = this.campaign?.endDateTime || this.campaign?.end_date_time;
+    const endDate = this.campaign?.end_date_time;
     const days = this.daysLeft(endDate);
     if (days === 'N/A' || days === 0) return 'warning';
     if (Number(days) <= 7) return 'warning';

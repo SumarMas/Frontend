@@ -87,22 +87,52 @@ export class MyDonations implements OnInit {
   }
 
   /**
+   * Obtiene la fecha de donación manejando diferentes formatos:
+   * - Array de números [año, mes, día, hora, minuto, segundo]
+   * - String ISO "2025-11-21T22:31:53"
+   * - Date object
+   * - null
+   */
+  getDonationDate(donation: GetDonationDto): Date | null {
+    const dateValue = donation.payment_datetime || donation.created_at;
+    
+    if (!dateValue) return null;
+    
+    // Si es un array de números, convertirlo
+    if (Array.isArray(dateValue)) {
+      if (dateValue.length < 3) return null;
+      return new Date(
+        dateValue[0], // año
+        dateValue[1] - 1, // mes (0-indexed)
+        dateValue[2], // día
+        dateValue[3] || 0, // hora
+        dateValue[4] || 0, // minuto
+        dateValue[5] || 0  // segundo
+      );
+    }
+    
+    // Si es string o Date, dejarlo que Angular lo maneje
+    return dateValue as Date;
+  }
+
+  /**
+   * DEPRECATED - Ya no se usa porque payment_datetime viene como Date | string | null, no como array
    * Convierte el array de fecha que viene del backend [año, mes, día, hora, minuto, segundo]
    * a un objeto Date válido
    */
-  convertArrayToDate(dateArray: number[] | null): Date | null {
-    if (!dateArray || !Array.isArray(dateArray) || dateArray.length < 3) return null;
-    
-    // El mes en JavaScript es 0-indexed, por eso restamos 1
-    return new Date(
-      dateArray[0], // año
-      dateArray[1] - 1, // mes (0-indexed)
-      dateArray[2], // día
-      dateArray[3] || 0, // hora
-      dateArray[4] || 0, // minuto
-      dateArray[5] || 0  // segundo
-    );
-  }
+  // convertArrayToDate(dateArray: number[] | null): Date | null {
+  //   if (!dateArray || !Array.isArray(dateArray) || dateArray.length < 3) return null;
+  //   
+  //   // El mes en JavaScript es 0-indexed, por eso restamos 1
+  //   return new Date(
+  //     dateArray[0], // año
+  //     dateArray[1] - 1, // mes (0-indexed)
+  //     dateArray[2], // día
+  //     dateArray[3] || 0, // hora
+  //     dateArray[4] || 0, // minuto
+  //     dateArray[5] || 0  // segundo
+  //   );
+  // }
 
   /**
    * Navega a una URL con parámetros opcionales.

@@ -49,7 +49,7 @@
                             [value]="selectedCampaign()"
                             (change)="onCampaignChange($event)">
                             @for(campaign of campaigns(); track campaign.id) {
-                            <option [value]="campaign.id">{{ campaign.name }}</option>
+                            <option [value]="campaign.id" [disabled]="campaign.id === ''">{{ campaign.name }}</option>
                             }
                         </select>
                     </div>
@@ -58,7 +58,7 @@
         </div>
 
         <!-- Stats Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
             <!-- Total Donaciones -->
             <div class="card bg-white shadow-xl hover:shadow-2xl transition-shadow">
                 <div class="card-body">
@@ -85,7 +85,7 @@
                             <p class="text-sm text-gray-500 font-medium">Total Recaudado</p>
                             <h3 class="text-2xl font-bold text-green-600">{{ stats().totalAmount | currency:'ARS':'symbol-narrow':'1.0-0' }}</h3>
                             <p class="text-xs text-gray-500 mt-2">
-                                En {{ stats().activeCampaigns }} campaña(s)
+                                En {{ stats().campaignsWithDonations }} campaña(s)
                             </p>
                         </div>
                         <div class="w-12 h-12 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
@@ -95,34 +95,16 @@
                 </div>
             </div>
 
-            <!-- Mayor Donante -->
-            <div class="card bg-white shadow-xl hover:shadow-2xl transition-shadow">
-                <div class="card-body">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500 font-medium">Mayor Donante</p>
-                            <h3 class="text-lg font-bold text-blue-600">{{ stats().topDonor }}</h3>
-                            <p class="text-xs text-gray-500 mt-2">
-                                {{ stats().topDonorAmount | currency:'ARS':'symbol-narrow':'1.0-0' }}
-                            </p>
-                        </div>
-                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-100 to-cyan-100 flex items-center justify-center">
-                            <icon name="person" class="text-blue-600 text-2xl"></icon>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Órdenes de Pago -->
             <div class="card bg-white shadow-xl hover:shadow-2xl transition-shadow">
                 <div class="card-body">
                     <div class="flex items-center justify-between">
-                        <div>
+                        <div class="flex-1">
                             <p class="text-sm text-gray-500 font-medium">Órdenes de Pago</p>
-                            <h3 class="text-3xl font-bold text-purple-600">{{ stats().approvedPayouts }}</h3>
-                            <div class="flex items-center gap-2 mt-2">
-                                <div class="badge badge-sm badge-warning">{{ stats().pendingPayouts }} pendientes</div>
-                            </div>
+                            <h3 class="text-3xl font-bold text-purple-600">{{ stats().approvedPayouts + stats().pendingPayouts }}</h3>
+                            @if(stats().pendingPayouts > 0) {
+                                <div class="badge badge-sm badge-warning mt-2">{{ stats().pendingPayouts }} pendiente(s)</div>
+                            }
                         </div>
                         <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
                             <icon name="search-insights" class="text-purple-600 text-2xl"></icon>
@@ -173,109 +155,6 @@
                     <div class="flex flex-col items-center justify-center">
                         <div class="h-48 w-48">
                             <canvas id="campaignProgressChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Recaudación Diaria -->
-        <div class="card bg-white shadow-xl mb-8">
-            <div class="card-body">
-                <h2 class="card-title text-xl mb-4 flex items-center gap-2">
-                    <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
-                    Recaudación por Día
-                </h2>
-                <div class="h-80">
-                    <canvas id="dailyDonationsChart"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Gráficos Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-            <!-- Donaciones por Categoría -->
-            <div class="card bg-white shadow-xl">
-                <div class="card-body">
-                    <h2 class="card-title text-xl mb-4 flex items-center gap-2">
-                        <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
-                        Recaudación por Categoría
-                    </h2>
-                    <div class="h-80">
-                        <canvas id="donationsByCategoryChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Donaciones por Estado -->
-            <div class="card bg-white shadow-xl">
-                <div class="card-body">
-                    <h2 class="card-title text-xl mb-4 flex items-center gap-2">
-                        <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
-                        Donaciones por Estado
-                    </h2>
-                    <div class="h-80 flex items-center justify-center">
-                        <canvas id="donationsByStatusChart"></canvas>
-                    </div>
-                    <div class="mt-4 grid grid-cols-3 gap-4 text-center">
-                        <div>
-                            <p class="text-xs text-gray-500">Aprobadas</p>
-                            <p class="text-lg font-bold text-green-600">{{ donationsByStatusData.APPROVED }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500">Pendientes</p>
-                            <p class="text-lg font-bold text-yellow-600">{{ donationsByStatusData.PENDING }}</p>
-                        </div>
-                        <div>
-                            <p class="text-xs text-gray-500">Rechazadas</p>
-                            <p class="text-lg font-bold text-red-600">{{ donationsByStatusData.REJECTED }}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Medios de Pago y Órdenes -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <!-- Medios de Pago -->
-            <div class="card bg-white shadow-xl">
-                <div class="card-body">
-                    <h2 class="card-title text-xl mb-4 flex items-center gap-2">
-                        <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
-                        Recaudación por Medio de Pago
-                    </h2>
-                    <div class="h-64">
-                        <canvas id="paymentMethodChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Órdenes de Pago Detalle -->
-            <div class="card bg-white shadow-xl">
-                <div class="card-body">
-                    <h2 class="card-title text-xl mb-4 flex items-center gap-2">
-                        <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
-                        Órdenes de Pago - Detalle
-                    </h2>
-                    <div class="space-y-4">
-                        <!-- Pendientes -->
-                        <div class="stat bg-yellow-50 rounded-lg">
-                            <div class="stat-figure text-yellow-600">
-                                <icon name="pending" class="text-4xl"></icon>
-                            </div>
-                            <div class="stat-title text-yellow-700">Pendientes</div>
-                            <div class="stat-value text-yellow-600">{{ payoutData.byStatus.PENDING }}</div>
-                            <div class="stat-desc text-yellow-700">Monto: {{ payoutData.byAmount.PENDING | currency:'ARS':'symbol-narrow':'1.0-0' }}</div>
-                        </div>
-
-                        <!-- Aprobadas -->
-                        <div class="stat bg-green-50 rounded-lg">
-                            <div class="stat-figure text-green-600">
-                                <icon name="check-circle" class="text-4xl"></icon>
-                            </div>
-                            <div class="stat-title text-green-700">Aprobadas</div>
-                            <div class="stat-value text-green-600">{{ payoutData.byStatus.APPROVED }}</div>
-                            <div class="stat-desc text-green-700">Monto: {{ payoutData.byAmount.APPROVED | currency:'ARS':'symbol-narrow':'1.0-0' }}</div>
                         </div>
                     </div>
                 </div>

@@ -76,8 +76,8 @@
                         <div class="flex justify-between">
                             <span class="text-gray-600">Fecha:</span>
                             <span class="font-semibold text-gray-800">
-                                @if(convertArrayToDate(donation.payment_datetime)) {
-                                    {{ convertArrayToDate(donation.payment_datetime) | date:'dd/MM/yyyy HH:mm' }}
+                                @if(getDonationDate(donation)) {
+                                    {{ getDonationDate(donation) | date:'dd/MM/yyyy HH:mm' }}
                                 } @else {
                                     Fecha no disponible
                                 }

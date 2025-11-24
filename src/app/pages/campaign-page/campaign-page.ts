@@ -205,7 +205,7 @@ export class CampaignPage implements OnInit, OnDestroy {
    */
   getRemainingDays(): number {
     if (!this.campaign) return 0;
-    const endDate = this.campaign.endDateTime || this.campaign.end_date_time;
+    const endDate = this.campaign.end_date_time;
     if (!endDate) return 0;
     
     // Crear fechas sin considerar la hora para comparación de días completos
@@ -334,7 +334,7 @@ export class CampaignPage implements OnInit, OnDestroy {
     
     if (newEditMode && this.campaign) {
       // Al activar el modo edición, cargar valores actuales
-      const endDate = this.campaign.endDateTime || this.campaign.end_date_time;
+      const endDate = this.campaign.end_date_time;
       const endDateString = endDate ? new Date(endDate).toISOString().split('T')[0] : '';
       
       this.editForm.patchValue({

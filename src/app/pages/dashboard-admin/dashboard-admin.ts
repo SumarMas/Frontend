@@ -186,10 +186,10 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
           this.isWithinDateFilter(ngo.createdDateTime)
         );
         const filteredClosedCampaigns = data.closedCampaigns.filter(campaign => 
-          this.isWithinDateFilter(campaign.createDateTime as string)
+          this.isWithinDateFilter(campaign.create_date_time as string)
         );
         const filteredActiveCampaigns = data.activeCampaigns.filter(campaign => 
-          this.isWithinDateFilter(campaign.createDateTime as string)
+          this.isWithinDateFilter(campaign.create_date_time as string)
         );
         
         // Total de organizaciones en el período filtrado
@@ -268,8 +268,8 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
           // Filtrar campañas por fecha y sumar el current_amount
           const filteredCampaigns = campaigns.filter(campaign => {
             // Incluir campañas sin fecha
-            if (!campaign.createDateTime) return true;
-            const campaignDate = new Date(campaign.createDateTime);
+            if (!campaign.create_date_time) return true;
+            const campaignDate = new Date(campaign.create_date_time);
             return campaignDate >= dateLimit;
           });
           

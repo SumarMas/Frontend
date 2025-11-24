@@ -18,10 +18,8 @@ export interface GetCampaignDto {
     goal_amount?: number;
     current_amount?: number;
     description: string;
-    endDateTime: Date | string;
-    createDateTime: Date | string;
-    end_date_time?: Date | string;
     create_date_time?: Date | string;
+    end_date_time?: Date | string;
     campaign_state: 'ACTIVE' | 'CLOSED';
     categories: CategoryDto[];
     tags: string[];

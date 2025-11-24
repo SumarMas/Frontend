@@ -14,7 +14,8 @@ export interface GetDonationDto {
     currency:         string;
     status:           string;
     payment_method:   string;
-    payment_datetime: null;
+    payment_datetime: Date | string | number[] | null;
+    created_at:       Date | string | number[];
     campaign_data:    CampaignData;
 }
 
