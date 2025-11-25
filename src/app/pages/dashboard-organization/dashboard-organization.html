@@ -101,7 +101,8 @@
                     <div class="flex items-center justify-between">
                         <div class="flex-1">
                             <p class="text-sm text-gray-500 font-medium">Órdenes de Pago</p>
-                            <h3 class="text-3xl font-bold text-purple-600">{{ stats().approvedPayouts + stats().pendingPayouts }}</h3>
+                            <h3 class="text-3xl font-bold text-purple-600">{{ stats().approvedPayouts }}</h3>
+                            <p class="text-xs text-gray-500 mt-1">Confirmadas</p>
                             @if(stats().pendingPayouts > 0) {
                                 <div class="badge badge-sm badge-warning mt-2">{{ stats().pendingPayouts }} pendiente(s)</div>
                             }

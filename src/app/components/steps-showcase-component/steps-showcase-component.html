@@ -1,41 +1,47 @@
-<section class="py-10">
-    <div class="max-w-5xl mx-auto grid gap-8 grid-cols-1 lg:grid-cols-2 px-4">
+<section class="py-12">
+    <div class="max-w-6xl mx-auto grid gap-10 grid-cols-1 lg:grid-cols-2 px-4">
         <!-- izquierda -> pasos -->
-        <div class="flex justify-center ">
-            <ul class="steps steps-vertical">
+        <div class="flex justify-center lg:justify-end overflow-hidden">
+            <ul class="steps steps-vertical gap-2">
                 @for (step of steps; track $index; let i = $index) {
-                <li class="step cursor-pointer" [ngClass]="i <= selected ? activeStepClass : ''"
+                <li class="step cursor-pointer transition-colors duration-300" 
+                    [ngClass]="i <= selected ? activeStepClass : ''"
                     (click)="changeStep(i)">
-                    {{ step.title }}
+                    <span class="font-medium">{{ step.title }}</span>
                 </li>
                 }
             </ul>
         </div>
 
         <!-- derecha -> imagen, progreso y texto -->
-        <div>
+        <div class="space-y-4">
             <!-- imagen -->
-            <div class="rounded-xl overflow-hidden  flex items-center justify-center">
+            <div class="rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 bg-base-100">
                 @if (steps[selected]?.img) {
                 <img [src]="steps[selected].img" alt=""
-                    class="max-h-72 max-w-md object-cover mx-auto rounded-lg transition-all duration-300"
+                    class="w-full h-80 object-cover transition-all duration-500 ease-in-out"
+                    [class.opacity-50]="animating"
                     (mouseenter)="pause()" (mouseleave)="resume()">
                 } @else {
-                <div class="p-10 text-center opacity-70">Sin imagen</div>
+                <div class="h-80 flex items-center justify-center text-base-content/50">
+                    <span class="text-lg">Sin imagen</span>
+                </div>
                 }
             </div>
 
             <!-- barra de progreso -->
-            <div class="">
-                <progress class="progress w-full" [ngClass]="progressClass" [value]="progress" max="100"></progress>
+            <div class="px-1">
+                <progress class="progress w-full h-1.5 transition-all" [ngClass]="progressClass" [value]="progress" max="100"></progress>
             </div>
 
             <!-- texto -->
             @if (steps[selected]?.subtitle || steps[selected]?.body) {
-            <div class="card bg-base-200 shadow-sm mt-3">
+            <div class="card bg-base-200 shadow-md hover:shadow-lg transition-shadow duration-300">
                 <div class="card-body">
-                    <h3 class="card-title">{{ steps[selected].subtitle || steps[selected].title }}</h3>
-                    @if (steps[selected]?.body) { <p class="leading-relaxed">{{ steps[selected].body }}</p> }
+                    <h3 class="card-title text-xl font-bold">{{ steps[selected].subtitle || steps[selected].title }}</h3>
+                    @if (steps[selected]?.body) { 
+                        <p class="leading-relaxed text-base-content/80">{{ steps[selected].body }}</p> 
+                    }
                 </div>
             </div>
             }

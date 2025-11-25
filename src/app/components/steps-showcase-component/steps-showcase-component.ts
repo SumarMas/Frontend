@@ -22,11 +22,13 @@ export class StepsShowcaseComponent {
   //animación y progreso
   animating = false;
   progress = 0;
-  private tickId?: number;
-  private nextId?: number;
+  private animationFrameId?: number;
+  private startTime?: number;
+  private isPaused = false;
+  private pausedProgress = 0;
 
   ngOnInit() { this.startAutoStep(); }
-  ngOnDestroy() { this.clearTimers(); }
+  ngOnDestroy() { this.clearAnimation(); }
 
   changeStep(index: number) {
     if (index === this.selected) return;
@@ -35,43 +37,63 @@ export class StepsShowcaseComponent {
   }
 
   get progressClass() {
-  const m: Record<Accent,string> = {
-    primary:'progress-primary', secondary:'progress-secondary', neutral:'progress-neutral',
-    info:'progress-info', success:'progress-success', warning:'progress-warning', error:'progress-error'
-  };
-  return m[this.accent];
-}
+    const m: Record<Accent,string> = {
+      primary:'progress-primary', secondary:'progress-secondary', neutral:'progress-neutral',
+      info:'progress-info', success:'progress-success', warning:'progress-warning', error:'progress-error'
+    };
+    return m[this.accent];
+  }
 
-  //auto avance
+  //auto avance con requestAnimationFrame (más suave)
   private startAutoStep() {
-    this.clearTimers();
+    this.clearAnimation();
+    this.isPaused = false;
+    this.startTime = performance.now();
     
-    const step = 16;
-    const inc = (100 / (this.intervalMs / step));
-    this.tickId = window.setInterval(() => {
-      this.progress = Math.min(100, this.progress + inc);
-    }, step);
-
-    this.nextId = window.setInterval(() => {
-      this.fadeTo((this.selected + 1) % this.steps.length);
-      this.progress = 0;
-    }, this.intervalMs);
+    const animate = (currentTime: number) => {
+      if (this.isPaused) return;
+      
+      const elapsed = currentTime - (this.startTime || currentTime);
+      this.progress = Math.min(100, (elapsed / this.intervalMs) * 100);
+      
+      if (this.progress >= 100) {
+        this.fadeTo((this.selected + 1) % this.steps.length);
+        this.startTime = currentTime;
+        this.progress = 0;
+      }
+      
+      this.animationFrameId = requestAnimationFrame(animate);
+    };
+    
+    this.animationFrameId = requestAnimationFrame(animate);
   }
 
   private restartProgress() {
     this.progress = 0;
+    this.pausedProgress = 0;
     this.startAutoStep();
   }
 
-  //no resetea el profreso
-  pause() { this.clearTimers(false); }
+  //pausar sin resetear el progreso
+  pause() {
+    this.isPaused = true;
+    this.pausedProgress = this.progress;
+    this.clearAnimation();
+  }
 
-  resume() { this.startAutoStep(); }
+  resume() {
+    if (this.isPaused) {
+      this.isPaused = false;
+      this.startTime = performance.now() - (this.pausedProgress / 100) * this.intervalMs;
+      this.startAutoStep();
+    }
+  }
 
-  private clearTimers(resetProgress = false) {
-    if (this.tickId) { clearInterval(this.tickId); this.tickId = undefined; }
-    if (this.nextId) { clearInterval(this.nextId); this.nextId = undefined; }
-    if (resetProgress) this.progress = 0;
+  private clearAnimation() {
+    if (this.animationFrameId) {
+      cancelAnimationFrame(this.animationFrameId);
+      this.animationFrameId = undefined;
+    }
   }
 
   //animacion cambio imagen
