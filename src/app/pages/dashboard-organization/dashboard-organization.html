@@ -58,57 +58,65 @@
         </div>
 
         <!-- Stats Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            <!-- Total Donaciones -->
-            <div class="card bg-white shadow-xl hover:shadow-2xl transition-shadow">
-                <div class="card-body">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500 font-medium">Total Donaciones</p>
-                            <h3 class="text-3xl font-bold text-violet-600">{{ stats().totalDonations }}</h3>
-                            <p class="text-xs text-gray-500 mt-2">
-                                Promedio: {{ stats().avgDonation | currency:'ARS':'symbol-narrow':'1.0-0' }}
-                            </p>
-                        </div>
-                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-violet-100 to-purple-100 flex items-center justify-center">
-                            <icon name="volunteer-activism" class="text-violet-600 text-2xl"></icon>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Total Recaudado -->
-            <div class="card bg-white shadow-xl hover:shadow-2xl transition-shadow">
-                <div class="card-body">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-500 font-medium">Total Recaudado</p>
-                            <h3 class="text-2xl font-bold text-green-600">{{ stats().totalAmount | currency:'ARS':'symbol-narrow':'1.0-0' }}</h3>
-                            <p class="text-xs text-gray-500 mt-2">
-                                En {{ stats().campaignsWithDonations }} campaña(s)
-                            </p>
-                        </div>
-                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
-                            <icon name="bar-chart-4-bars" class="text-green-600 text-2xl"></icon>
+        <div class="card bg-white shadow-xl mb-8">
+            <div class="card-body">
+                <h2 class="card-title text-xl mb-4 flex items-center gap-2">
+                    <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
+                    Datos de {{ organizationName() }}
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Total Donaciones -->
+                    <div class="card bg-base-100 shadow-md hover:shadow-lg transition-shadow">
+                        <div class="card-body">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500 font-medium">Total Donaciones</p>
+                                    <h3 class="text-3xl font-bold text-violet-600">{{ stats().totalDonations }}</h3>
+                                    <p class="text-xs text-gray-500 mt-2">
+                                        Promedio: {{ stats().avgDonation | currency:'ARS':'symbol-narrow':'1.0-0' }}
+                                    </p>
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-violet-100 to-purple-100 flex items-center justify-center">
+                                    <icon name="volunteer-activism" class="text-violet-600 text-2xl"></icon>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- Órdenes de Pago -->
-            <div class="card bg-white shadow-xl hover:shadow-2xl transition-shadow">
-                <div class="card-body">
-                    <div class="flex items-center justify-between">
-                        <div class="flex-1">
-                            <p class="text-sm text-gray-500 font-medium">Órdenes de Pago</p>
-                            <h3 class="text-3xl font-bold text-purple-600">{{ stats().approvedPayouts }}</h3>
-                            <p class="text-xs text-gray-500 mt-1">Confirmadas</p>
-                            @if(stats().pendingPayouts > 0) {
-                                <div class="badge badge-sm badge-warning mt-2">{{ stats().pendingPayouts }} pendiente(s)</div>
-                            }
+                    <!-- Total Recaudado -->
+                    <div class="card bg-base-100 shadow-md hover:shadow-lg transition-shadow">
+                        <div class="card-body">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-sm text-gray-500 font-medium">Total Recaudado</p>
+                                    <h3 class="text-2xl font-bold text-green-600">{{ stats().totalAmount | currency:'ARS':'symbol-narrow':'1.0-0' }}</h3>
+                                    <p class="text-xs text-gray-500 mt-2">
+                                        En {{ stats().campaignsWithDonations }} campaña(s)
+                                    </p>
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+                                    <icon name="bar-chart-4-bars" class="text-green-600 text-2xl"></icon>
+                                </div>
+                            </div>
                         </div>
-                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                            <icon name="search-insights" class="text-purple-600 text-2xl"></icon>
+                    </div>
+
+                    <!-- Órdenes de Pago -->
+                    <div class="card bg-base-100 shadow-md hover:shadow-lg transition-shadow">
+                        <div class="card-body">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <p class="text-sm text-gray-500 font-medium">Órdenes de Pago</p>
+                                    <h3 class="text-3xl font-bold text-purple-600">{{ stats().approvedPayouts }}</h3>
+                                    <p class="text-xs text-gray-500 mt-1">Confirmadas</p>
+                                    @if(stats().pendingPayouts > 0) {
+                                        <div class="badge badge-sm badge-warning mt-2">{{ stats().pendingPayouts }} pendiente(s)</div>
+                                    }
+                                </div>
+                                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                                    <icon name="search-insights" class="text-purple-600 text-2xl"></icon>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>

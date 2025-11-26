@@ -44,6 +44,7 @@ export class DashboardOrganization implements OnInit, AfterViewInit {
   private allPayouts: PayoutDto[] = []; // Todos los payouts de la organización
   
   isLoading = signal<boolean>(true);
+  organizationName = signal<string>('Mi Organización'); // Nombre de la organización
   
   // Charts instances
   private campaignProgressChart?: Chart;
@@ -112,8 +113,9 @@ export class DashboardOrganization implements OnInit, AfterViewInit {
       }),
       switchMap(organization => {
         this.myOrganization = organization;
+        this.organizationName.set(organization.name); // Actualizar nombre de la organización
         
-        // 2. Obtener todas las campañas de la NGO
+        // 2. Obtener todas las campañas de la NGO (sin filtro de estado)
         return this.campaignService.filter(undefined, undefined, undefined, organization.ngoId).pipe(
           catchError(error => {
             console.error('Error getting campaigns:', error);
@@ -299,7 +301,7 @@ export class DashboardOrganization implements OnInit, AfterViewInit {
       goal: campaign.goal_amount || 0,
       raised: campaign.current_amount || 0,
       daysActive: this.calculateDaysActive(campaign.create_date_time),
-      daysLimit: this.calculateDaysLimit(campaign.end_date_time),
+      daysLimit: this.calculateDaysLimit(campaign.end_date_time, campaign.create_date_time),
       donationsCount: donationsCount,
       progress: Math.min(Math.floor(((campaign.current_amount || 0) / (campaign.goal_amount || 1)) * 100), 100)
     };
@@ -309,8 +311,9 @@ export class DashboardOrganization implements OnInit, AfterViewInit {
   
   
   private calculateDaysActive(create_date_time: Date | string | null | undefined): number {
+    // Calcula cuántos días han pasado desde la creación de la campaña hasta hoy
     if (!create_date_time) {
-      return 0; // Silencioso: si no hay fecha, retornar 0
+      return 0;
     }
     const created = new Date(create_date_time);
     if (isNaN(created.getTime())) {
@@ -320,23 +323,24 @@ export class DashboardOrganization implements OnInit, AfterViewInit {
     const now = new Date();
     const diff = now.getTime() - created.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    return Math.max(0, days); // Asegurar que no sea negativo
+    return Math.max(0, days);
   }
   
-  private calculateDaysLimit(end_date_time: Date | string | null | undefined): number {
-    if (!end_date_time) {
-      return 0; // Silencioso: si no hay fecha, retornar 0
-    }
-    const end = new Date(end_date_time);
-    if (isNaN(end.getTime())) {
-      console.warn('Invalid end_date_time:', end_date_time);
+  private calculateDaysLimit(end_date_time: Date | string | null | undefined, create_date_time?: Date | string | null | undefined): number {
+    // Calcula el total de días que la campaña estaba programada para estar activa
+    // (desde create_date_time hasta end_date_time)
+    if (!end_date_time || !create_date_time) {
       return 0;
     }
-    const now = new Date();
-    const diff = end.getTime() - now.getTime();
+    const created = new Date(create_date_time);
+    const end = new Date(end_date_time);
+    if (isNaN(created.getTime()) || isNaN(end.getTime())) {
+      console.warn('Invalid dates:', { create_date_time, end_date_time });
+      return 0;
+    }
+    const diff = end.getTime() - created.getTime();
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    // Si es negativo, la campaña ya terminó (mostrar 0)
-    return Math.max(0, days);
+    return Math.max(0, days); // Total de días programados
   }
   
   ngAfterViewInit(): void {
@@ -487,7 +491,7 @@ export class DashboardOrganization implements OnInit, AfterViewInit {
       goal: campaign.goal_amount || 0,
       raised: raised,
       daysActive: this.calculateDaysActive(campaign.create_date_time),
-      daysLimit: this.calculateDaysLimit(campaign.end_date_time),
+      daysLimit: this.calculateDaysLimit(campaign.end_date_time, campaign.create_date_time),
       donationsCount: donationsCount,
       progress: Math.min(Math.floor((raised / (campaign.goal_amount || 1)) * 100), 100)
     };

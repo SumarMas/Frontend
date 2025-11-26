@@ -174,7 +174,7 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
       approvedNGOs: this.organizationService.getAllOrganizationsApproved(),
       pendingNGOs: this.organizationService.getAllOrganizationsPending(),
       closedCampaigns: this.campaignService.filter('CLOSED'),
-      activeCampaigns: this.campaignService.filter('ACTIVE'),
+      allCampaigns: this.campaignService.filter(), // Todas las campañas sin filtro de estado
       categories: this.categoryService.getAllCategories()
     }).subscribe({
       next: (data) => {
@@ -188,7 +188,7 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
         const filteredClosedCampaigns = data.closedCampaigns.filter(campaign => 
           this.isWithinDateFilter(campaign.create_date_time as string)
         );
-        const filteredActiveCampaigns = data.activeCampaigns.filter(campaign => 
+        const filteredAllCampaigns = data.allCampaigns.filter(campaign => 
           this.isWithinDateFilter(campaign.create_date_time as string)
         );
         
@@ -206,8 +206,8 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
           sum + (campaign.current_amount || 0), 0
         );
 
-        // Top 5 ONGs por cantidad de campañas activas (todas las ONGs, campañas filtradas)
-        this.calculateTop5ByCampaigns(data.approvedNGOs, filteredActiveCampaigns);
+        // Top 5 ONGs por cantidad de campañas (todas las ONGs, todas las campañas filtradas por fecha)
+        this.calculateTop5ByCampaigns(data.approvedNGOs, filteredAllCampaigns);
 
         // Top 5 ONGs por volumen de donaciones (todas las ONGs, con filtro de fecha)
         this.calculateTop5ByDonations(data.approvedNGOs, this.getDateLimitForFilter(this.selectedDateFilter()));

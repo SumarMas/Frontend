@@ -67,10 +67,16 @@ export class Register {
           },
           error: (err) => {
             this.isLoading.set(false);
-            this.toastService.open('Error al crear cuenta', 'error', 3000, 'bottom-right');
+            this.registerForm.enable();
+            
+            // Manejar error 409 (Conflict - usuario ya existe)
+            if (err.status === 409) {
+              this.toastService.open('El usuario o email ya están registrados', 'warning', 4000, 'bottom-right');
+            } else {
+              this.toastService.open('Error al crear cuenta', 'error', 3000, 'bottom-right');
+            }
           }
         })
-        this.registerForm.enable();
     }
   }
 }
