@@ -3,6 +3,7 @@ import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
 import { catchError, delay, map, mapTo, Observable, of, tap, throwError } from 'rxjs';
+import { GetUserDto } from '../../models/api/user';
 
 interface JwtPayload {
   user_id?: string; //usuario
@@ -15,6 +16,7 @@ interface JwtPayload {
 })
 export class AuthService {
   private apiUrl = 'http://sumar-mas.dynns.com:9080/auth/api/v1/auth';
+  private userUrl = 'http://sumar-mas.dynns.com:9080/users/api/v1/users';
 
   //contiene Camila Lopez, [ 'DONOR', 'ORGANIZATION' ], exp: 9999999999
   private fakeToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJqZWN0IjoiQ2FtaWxhIExvcGV6Iiwicm9sZXMiOlsiRE9OT1IiLCJPUkdBTklaQVRJT04iXSwiZXhwIjo5OTk5OTk5OTk5fQ.signature';
@@ -35,6 +37,23 @@ export class AuthService {
     window.addEventListener('storage', (event) => {
       if (event.key === 'token') {
         this._token.set(event.newValue);
+      }
+    });
+
+    // Cargar el nombre del usuario cuando se autentica
+    effect(() => {
+      const userId = this.userId();
+      
+      // Solo hacer la petición si hay un userId válido y no tenemos ya el nombre
+      if (userId && !this._userName()) {
+        this.http.get<GetUserDto>(`${this.userUrl}/my-profile`).subscribe({
+          next: (response) => {
+            this._userName.set(response.firstName + ' ' + response.lastName);
+          },
+          error: (err) => {
+            console.error('Error al cargar perfil de usuario:', err);
+          }
+        });
       }
     });
   }
@@ -127,6 +146,7 @@ export class AuthService {
   clearToken() {
     this._token.set(null);
     this._tokenExpTs.set(null);
+    this._userName.set(null);
     localStorage.removeItem('token');
     localStorage.removeItem('token_exp_ts');
   }
