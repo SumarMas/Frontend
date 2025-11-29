@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
-import { catchError, delay, map, mapTo, Observable, of, tap, throwError } from 'rxjs';
+import { catchError, delay, map, Observable, of, switchMap, tap, throwError } from 'rxjs';
 import { GetUserDto } from '../../models/api/user';
 
 interface JwtPayload {
@@ -26,7 +26,7 @@ export class AuthService {
 
   //busco el token en el localStorage
   _token = signal<string | null>(localStorage.getItem('token'));
-  _userName = signal<string | null>(null);
+  _userName = signal<string | null>(localStorage.getItem('user_name'));
 
   private _tokenExpTs = signal<number | null>(
     localStorage.getItem('token_exp_ts') ? Number(localStorage.getItem('token_exp_ts')) : null
@@ -40,18 +40,21 @@ export class AuthService {
       }
     });
 
-    // Cargar el nombre del usuario cuando se autentica
+    // Recuperar el nombre del usuario si hay token pero no hay nombre
     effect(() => {
       const userId = this.userId();
+      const userName = this._userName();
       
-      // Solo hacer la petición si hay un userId válido y no tenemos ya el nombre
-      if (userId && !this._userName()) {
+      // Si hay token válido pero no hay nombre, cargar el perfil
+      if (userId && !userName) {
         this.http.get<GetUserDto>(`${this.userUrl}/my-profile`).subscribe({
-          next: (response) => {
-            this._userName.set(response.firstName + ' ' + response.lastName);
+          next: (user) => {
+            const fullName = user.firstName + ' ' + user.lastName;
+            this._userName.set(fullName);
+            localStorage.setItem('user_name', fullName);
           },
           error: (err) => {
-            console.error('Error al cargar perfil de usuario:', err);
+            console.error('Error al recuperar nombre de usuario:', err);
           }
         });
       }
@@ -78,6 +81,13 @@ export class AuthService {
   login(userName: string, password: string) {
     return this.http.post<{ token: string; expiresIn?: number }>(`${this.apiUrl}/login`, { userName, password }).pipe(
       tap(res => this.setToken(res.token, res.expiresIn)),
+      // Encadenar la carga del perfil del usuario
+      switchMap(() => this.http.get<GetUserDto>(`${this.userUrl}/my-profile`)),
+      tap((user: GetUserDto) => {
+        const fullName = user.firstName + ' ' + user.lastName;
+        this._userName.set(fullName);
+        localStorage.setItem('user_name', fullName);
+      }),
       map(() => void 0),
       catchError((err: HttpErrorResponse) => {
         this.clearToken();
@@ -149,6 +159,7 @@ export class AuthService {
     this._userName.set(null);
     localStorage.removeItem('token');
     localStorage.removeItem('token_exp_ts');
+    localStorage.removeItem('user_name');
   }
 
 

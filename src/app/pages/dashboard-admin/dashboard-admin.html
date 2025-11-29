@@ -108,18 +108,15 @@
                 <div class="h-80 flex items-center justify-center">
                     <canvas id="ngosChart"></canvas>
                 </div>
-                <div class="mt-4 grid grid-cols-3 gap-4 text-center">
+                <div class="mt-2 grid grid-cols-3 gap-4 text-center">
                     <div>
-                        <p class="text-xs text-gray-500">Aprobadas</p>
-                        <p class="text-lg font-bold text-green-600">{{ ngosData.byStatus.APPROVED }}</p>
+                        <p class="text-2xl font-bold text-green-600">{{ ngosData.byStatus.APPROVED }}</p>
                     </div>
                     <div>
-                        <p class="text-xs text-gray-500">Pendientes</p>
-                        <p class="text-lg font-bold text-yellow-600">{{ ngosData.byStatus.PENDING }}</p>
+                        <p class="text-2xl font-bold text-yellow-600">{{ ngosData.byStatus.PENDING }}</p>
                     </div>
                     <div>
-                        <p class="text-xs text-gray-500">Rechazadas</p>
-                        <p class="text-sm text-gray-400">N/A</p>
+                        <p class="text-2xl font-bold text-red-600">{{ ngosData.byStatus.REJECTED }}</p>
                     </div>
                 </div>
                 }

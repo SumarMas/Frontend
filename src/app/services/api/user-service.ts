@@ -1,7 +1,7 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { PostUserDto, GetUserDto, PutUserDto } from '../../models/api/user';
-import { catchError, delay, map, Observable, of, tap } from 'rxjs';
+import { catchError, delay, map, Observable, of, switchMap, tap } from 'rxjs';
 import { AuthService } from './auth-service';
 
 @Injectable({
@@ -16,6 +16,13 @@ export class UserService {
   register(userData: PostUserDto) {
     return this.http.post<{ token: string; expiresIn?: number }>(`${this.apiUrl}/register`, userData).pipe(
       tap(res => this.authService.setToken(res.token, res.expiresIn)),
+      // Encadenar la carga del perfil del usuario
+      switchMap(() => this.getById()),
+      tap((user: GetUserDto) => {
+        const fullName = user.firstName + ' ' + user.lastName;
+        this.authService._userName.set(fullName);
+        localStorage.setItem('user_name', fullName);
+      }),
       map(() => void 0)
     );
   }

@@ -171,20 +171,23 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
     this.isLoading.set(true);
 
     forkJoin({
-      approvedNGOs: this.organizationService.getAllOrganizationsApproved(),
-      pendingNGOs: this.organizationService.getAllOrganizationsPending(),
+      allNGOs: this.organizationService.getAllOrganizations(),
       closedCampaigns: this.campaignService.filter('CLOSED'),
       allCampaigns: this.campaignService.filter(), // Todas las campañas sin filtro de estado
       categories: this.categoryService.getAllCategories()
     }).subscribe({
       next: (data) => {
-        // Filtrar datos por fecha seleccionada
-        const filteredApprovedNGOs = data.approvedNGOs.filter(ngo => 
+        // Filtrar organizaciones por fecha seleccionada
+        const filteredNGOs = data.allNGOs.filter(ngo => 
           this.isWithinDateFilter(ngo.createdDateTime)
         );
-        const filteredPendingNGOs = data.pendingNGOs.filter(ngo => 
-          this.isWithinDateFilter(ngo.createdDateTime)
-        );
+        
+        // Separar ONGs por estado (dentro del período filtrado)
+        const approvedNGOs = filteredNGOs.filter(ngo => ngo.status === 'VERIFIED');
+        const pendingNGOs = filteredNGOs.filter(ngo => ngo.status === 'PENDING');
+        const deniedNGOs = filteredNGOs.filter(ngo => ngo.status === 'DENIED');
+        
+        // Filtrar campañas por fecha
         const filteredClosedCampaigns = data.closedCampaigns.filter(campaign => 
           this.isWithinDateFilter(campaign.create_date_time as string)
         );
@@ -193,24 +196,24 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
         );
         
         // Total de organizaciones en el período filtrado
-        const totalNGOs = filteredApprovedNGOs.length + filteredPendingNGOs.length;
+        const totalNGOs = filteredNGOs.length;
         
         // ONGs por estado (en el período)
         this.ngosData.total = totalNGOs;
-        this.ngosData.byStatus.APPROVED = filteredApprovedNGOs.length;
-        this.ngosData.byStatus.PENDING = filteredPendingNGOs.length;
-        this.ngosData.byStatus.REJECTED = 0; // No hay endpoint para rechazadas
+        this.ngosData.byStatus.APPROVED = approvedNGOs.length;
+        this.ngosData.byStatus.PENDING = pendingNGOs.length;
+        this.ngosData.byStatus.REJECTED = deniedNGOs.length;
 
         // Calcular recaudación total de campañas cerradas en el período
         const totalRecaudado = filteredClosedCampaigns.reduce((sum, campaign) => 
           sum + (campaign.current_amount || 0), 0
         );
 
-        // Top 5 ONGs por cantidad de campañas (todas las ONGs, todas las campañas filtradas por fecha)
-        this.calculateTop5ByCampaigns(data.approvedNGOs, filteredAllCampaigns);
+        // Top 5 ONGs por cantidad de campañas (solo ONGs aprobadas, campañas filtradas por fecha)
+        this.calculateTop5ByCampaigns(data.allNGOs.filter(ngo => ngo.status === 'VERIFIED'), filteredAllCampaigns);
 
-        // Top 5 ONGs por volumen de donaciones (todas las ONGs, con filtro de fecha)
-        this.calculateTop5ByDonations(data.approvedNGOs, this.getDateLimitForFilter(this.selectedDateFilter()));
+        // Top 5 ONGs por volumen de donaciones (solo ONGs aprobadas, con filtro de fecha)
+        this.calculateTop5ByDonations(data.allNGOs.filter(ngo => ngo.status === 'VERIFIED'), this.getDateLimitForFilter(this.selectedDateFilter()));
 
         // Recaudación por categoría (campañas cerradas filtradas)
         this.calculateRecaudacionByCategory(data.categories, filteredClosedCampaigns);
@@ -346,20 +349,23 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
     const config: ChartConfiguration = {
       type: 'bar',
       data: {
-        labels: ['Aprobadas', 'Pendientes'],
+        labels: ['Verificadas', 'Pendientes', 'Denegadas'],
         datasets: [{
           label: 'ONGs por Estado',
           data: [
             this.ngosData.byStatus.APPROVED,
-            this.ngosData.byStatus.PENDING
+            this.ngosData.byStatus.PENDING,
+            this.ngosData.byStatus.REJECTED
           ],
           backgroundColor: [
-            'rgba(34, 197, 94, 0.8)',   // green
-            'rgba(251, 191, 36, 0.8)'   // yellow
+            'rgba(34, 197, 94, 0.8)',   // green - Verificadas
+            'rgba(251, 191, 36, 0.8)',  // yellow - Pendientes
+            'rgba(239, 68, 68, 0.8)'    // red - Denegadas
           ],
           borderColor: [
             'rgb(34, 197, 94)',
-            'rgb(251, 191, 36)'
+            'rgb(251, 191, 36)',
+            'rgb(239, 68, 68)'
           ],
           borderWidth: 2,
           borderRadius: 8

@@ -58,7 +58,7 @@ export const routes: Routes = [
                 path: 'my-organizations', title: 'Mis organización', 
                 loadComponent: () => import('./pages/my-organizations/my-organizations').then(m => m.MyOrganizations),
                 canActivate: [authGuard, roleGuard],
-                data: { roles: ['ORGANIZATION'] }
+                data: { roles: ['DONOR','ORGANIZATION'] }
             },
             {
                 path: ':ngoId', title: 'Organización', children: [

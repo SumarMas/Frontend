@@ -15,6 +15,10 @@ export class OrganizationService {
     return this.http.post(this.apiUrl + '/register', organizationData);
   }
 
+  getAllOrganizations(): Observable<GetOrganizationDto[]> {
+    return this.http.get<GetOrganizationDto[]>(this.apiUrl + '/all');
+  }
+
   getMyOrganizations() : Observable<GetOrganizationDto> {
     return this.http.get<GetOrganizationDto>(this.apiUrl + '/my-ngo');
   }
