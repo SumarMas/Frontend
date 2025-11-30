@@ -1,0 +1,32 @@
+@if(!showRedirectMessage()){
+<h1 class="text-4xl font-bold pb-4 logo text-center">Donando a {{campaignName()}}</h1>
+<p class="italic text-gray-400 text-center">Con tu donación, estás contribuyendo a una causa noble y ayudando a quienes
+    más
+    lo necesitan.</p>
+
+<div class="flex gap-4 align-center justify-center my-8">
+    @for (value of commonValues; track $index) {
+    <app-button-component [label]="'$' +value + ''"
+        [variant]="((amount == value) && !isCustomAmount() ? 'violet': 'white')" size="xl" [rounded]="true"
+        (onClick)="setAmount = value"></app-button-component>
+    }
+    <app-button-component label="Otro" [variant]="(isCustomAmount() ? 'violet': 'white')" size="xl" [rounded]="true"
+        (onClick)="isCustomAmount.set(true)"></app-button-component>
+</div>
+<p class="text-center italic text-gray-400 mb-8">- o -</p>
+
+<input type="number" class="input mx-auto block w-full max-w-md mb-8 text-center" placeholder="Ingrese un monto..."
+    [disabled]="!isCustomAmount()" [(ngModel)]="amount" pattern="[0-9]*" min="0">
+
+<app-button-component [label]="'Donar'" [block]="true" variant="violet" [rounded]="true" [disabled]="disable()"
+    [isLoading]="isLoading()" (onClick)="onDonate()"></app-button-component>
+}
+@else {
+<div class="text-center m-6">
+    <h1 class="text-4xl font-bold mb-4 logo text-violet-600">¡Gracias por tu donación!</h1>
+    <p class="italic text-gray-400">Serás redirigido en {{counter()}} segundos...</p>
+    <p class="italic text-gray-400">O hacé <a class="link-text" [href]="redirectUrl()">click aqui</a> para ir
+        directamente al sitio</p>
+</div>
+
+}

@@ -2,7 +2,7 @@
 <section class="hero h-170 flex flex-col items-center justify-center text-white bg-sumar">
     <h1 class="text-6xl font-bold drop-shadow-xl">Bienvenido a Sumar+</h1>
     <p class="text-2xl mt-4">Tu plataforma para la gestión de campañas y organizaciones.</p>
-    <app-button-component class="mt-8" label="Comenzar" variant="white" size="xl"
+    <app-button-component class="mt-8" label="Comenzar" variant="white" size="xl" (onClick)="navigate('/register')"
         [rounded]="true"></app-button-component>
 </section>
 
@@ -49,12 +49,13 @@
                 [activeTextColor]="'#fff'">
             </app-collapse-component>
         </div>
+        <p class="text-base mt-6">¿Tienes más dudas? <a href="/terms-and-conditions" class="link-text">Consulta nuestros Términos y Condiciones</a></p>
     </div>
 </section>
 
 <!-- como funciona -->
 <section class="bg-base-200 py-16">
-    <h2 class="text-3xl text-center md:text-4xl font-bold">¿Cómo funciona?</h2>
+    <h2 class="text-3xl text-center md:text-4xl font-bold mb-8">¿Cómo funciona?</h2>
     <app-steps-showcase-component [steps]="steps" title="Cómo funciona" accent="primary"></app-steps-showcase-component>
 </section>
 

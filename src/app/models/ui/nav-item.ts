@@ -10,19 +10,31 @@ export interface NavItem {
 }
 
 export const Sidebuttons: NavItem[] = [
+    //PERFIL
     { title: 'Mi perfil', route: '/profile', roles: ['DONOR', 'ORGANIZATION', 'ADMIN'], icon: 'person' },
-    { title: 'Organizaciones', roles: ['DONOR', 'ORGANIZATION'], icon: 'group', children:[
-        { title: 'Registrar organización', route: '/organizations/register', roles: ['DONOR', 'ORGANIZATION'], icon: 'add' },
-        { title: 'Mis organizaciones', route: '/organizations/my-organizations', roles: ['DONOR', 'ORGANIZATION'], icon: 'diversity-1' },
-    ] },
-    { title: 'Campañas', roles: ['ADMIN'], icon: 'volunteer-activism', children: [
-        { title: 'Crear campaña', route: '/campaigns/create', roles: ['ADMIN'], icon: 'add' },
-        { title: 'Descubrir campañas', route: '/campaigns/all', roles: ['ADMIN'], icon: 'search' },
-    ] },
-    { title: 'Donaciones', roles: ['DONOR'], icon: 'volunteer-activism', open: false, children: [
-        { title: 'Mis donaciones', route: '/donations', roles: ['DONOR'], icon: 'chat' },
-        { title: 'Realizar donación', route: '/donate', roles: ['DONOR'], icon: 'check' },
-    ]},
-    { title: 'Dashboards', route: '/dashboards', roles: ['ADMIN', 'ORGANIZATION'], icon: 'bar-chart-4-bars'
+
+    //ORGANIZACIONES
+    { title: 'Mi organización', route: '/organizations/my-organizations', roles: ['DONOR', 'ORGANIZATION'], icon: 'diversity-1' },
+    { title: 'ONGs pendientes', route: '/organizations/pending', roles: ['ADMIN'], icon: 'admin' },
+
+    //CAMPAÑAS
+
+    { title: 'Crear campaña', route: '/campaigns/create', roles: ['ORGANIZATION'], icon: 'add' },
+
+
+    //DONACIONES
+    { title: 'Mis donaciones', roles: ['DONOR'], route: '/donations/all', icon: 'volunteer-activism' }
+    ,
+
+    //PAYOUTS
+    { title: 'Mis pagos', roles: ['ORGANIZATION'], route: '/payouts/my-payouts', icon: 'payment' },
+    { title: 'Solicitudes de pago', roles: ['ADMIN'], route: '/payouts/pending-payouts', icon: 'payment' },
+
+    //GRAFICOS
+    {
+        title: 'Dashboards', route: '/dashboards/admin', roles: ['ADMIN'], icon: 'bar-chart-4-bars'
+    },
+    {
+        title: 'Dashboards', route: '/dashboards/organization', roles: ['ORGANIZATION'], icon: 'bar-chart-4-bars'
     },
 ];

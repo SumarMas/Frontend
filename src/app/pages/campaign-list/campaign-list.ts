@@ -1,78 +1,86 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { IconComponent } from "../../components/icon-component/icon-component";
 import { ButtonComponent } from "../../components/button-component/button-component";
 import { CampaignCard } from "../../components/campaign-card/campaign-card";
 import { CampaignState, GetCampaignDto } from '../../models/api/campaign';
-import { GetOrganizationDto } from '../../models/api/organization';
-import { CategoryDto } from '../../models/api/category';
 import { FormsModule } from "@angular/forms";
-import { CommonModule } from '@angular/common';
+import { CommonModule, DecimalPipe } from '@angular/common';
 import { CategoryFilterDisplay } from "../../components/category-filter-display/category-filter-display";
+import { CampaignService } from '../../services/api/campaign-service';
+import { ToastService } from '../../services/ui/toast-service';
 
 @Component({
   selector: 'app-campaign-list',
-  imports: [IconComponent, ButtonComponent, CampaignCard, CommonModule, FormsModule, CategoryFilterDisplay],
+  imports: [IconComponent, ButtonComponent, CampaignCard, CommonModule, FormsModule, CategoryFilterDisplay, DecimalPipe],
   templateUrl: './campaign-list.html',
   styleUrl: './campaign-list.scss'
 })
 export class CampaignList implements OnInit {
-  campaignsCopy: GetCampaignDto[] = []
-  campaigns: GetCampaignDto[] = []
-  selectedCategoryIds: string[] = [];
+  campaignsCopy: GetCampaignDto[] = [];
+  campaigns: GetCampaignDto[] = [];
+  isLoading = signal<boolean>(true);
+  filterByClosed = signal<boolean>(false);
+  activeOrClosed = computed(() => { return this.filterByClosed() ? 'CLOSED' : 'ACTIVE'})
+
+  constructor(){
+    effect(() => {
+      this.fetchCampaigns();
+    })
+  }
+  
+  private campaignService = inject(CampaignService);
+  private toastService = inject(ToastService);
+  
+  private _selectedCategoryIds: string[] = [];
+  
+  get selectedCategoryIds(): string[] {
+    return this._selectedCategoryIds;
+  }
+  
+  set selectedCategoryIds(value: string[]) {
+    this._selectedCategoryIds = value;
+    this.applyAllFilters();
+  }
 
   _searchInput: string = '';
-
-  organization: GetOrganizationDto = {
-    ngoId: '4dbb8d30-5483-499c-a498-b0883b46dc87',
-    name: 'Manos abiertas',
-    description: 'Somos una organización que ayuda a personas en situación de calle proporcionando alimentos, ropa y apoyo emocional. Nuestra misión es brindar un refugio seguro y digno para aquellos que más lo necesitan, promoviendo la inclusión social y el respeto por los derechos humanos. Trabajamos con voluntarios comprometidos y colaboramos con otras entidades para maximizar nuestro impacto y llegar a más personas. Juntos, podemos construir una comunidad más solidaria y justa.',
-    status: 'PENDING',
-    userCreator: { userId: '11111111-1111-1111-1111-111111111111', firstName: 'Pablo', lastName: 'Diaz', email: 'pablo@tesxt.com', roles: ['ORGANIZATION', 'DONOR'] },
-    images: [{ imageId: 'fdask', orderIndex: 2 }],
-    createdDateTime: '2023-10-01T10:00:00Z'
-  };
-
-  mockCampaigns: GetCampaignDto[] = [
-    {
-      id: '11111',
-      ngo: this.organization,
-      title: 'Campaña de Invierno',
-      description: 'Recaudación de fondos para proveer ropa y refugio a personas en situación de calle durante el invierno.',
-      goalAmount: 5000,
-      currentAmount: 3200,
-      endDateTime: new Date('2025-10-20T16:52:10'),
-      createDateTime: new Date('2024-10-01T10:00:00Z'),
-      categories: [{ id: '1', name: 'Ropa', description: 'Campañas relacionadas con la recolección y distribución de ropa.' }],
-      tags: ['invierno', 'refugio', 'ropa'],
-      campaignState: CampaignState.ACTIVE,
-    },
-  ]
-
-  categories: CategoryDto[] = [
-    { id: '1', name: 'Ropa', description: 'Campañas relacionadas con la recolección y distribución de ropa.' },
-    { id: '2', name: 'Alimentos', description: 'Campañas enfocadas en la provisión de alimentos a comunidades necesitadas.' },
-    { id: '3', name: 'Educación', description: 'Iniciativas para apoyar la educación y el acceso a recursos educativos.' },
-    { id: '4', name: 'Salud', description: 'Proyectos destinados a mejorar la salud y el bienestar de las personas.' }
-  ]
 
   ngOnInit(): void {
     this.fetchCampaigns();
   }
 
   fetchCampaigns() {
-    //llamar al servicio para obtener las campañas
-    this.campaigns = this.mockCampaigns;
-    this.campaignsCopy = this.campaigns;
+    this.isLoading.set(true);
+    
+    // Obtener campañas activas del backend
+    this.campaignService.filter(this.activeOrClosed()).subscribe({
+      next: (campaigns) => {
+        console.log('Campañas recibidas del backend:', campaigns);
+        console.log('Cantidad de campañas:', campaigns.length);
+        
+        // Verificar si hay duplicados por ID
+        const uniqueCampaigns = campaigns.filter((campaign, index, self) =>
+          index === self.findIndex((c) => c.id === campaign.id)
+        );
+        
+        if (uniqueCampaigns.length !== campaigns.length) {
+          console.warn('Se encontraron campañas duplicadas. Filtrando...');
+        }
+        
+        this.campaigns = uniqueCampaigns;
+        this.campaignsCopy = uniqueCampaigns;
+        this.isLoading.set(false);
+        this.selectedCategoryIds = []; // Resetear filtros al cargar nuevas campañas
+      },
+      error: (error) => {
+        console.error('Error al cargar campañas:', error);
+        this.toastService.open('Error al cargar las campañas', 'error', 3000);
+        this.isLoading.set(false);
+      }
+    });
   }
 
   get searchInput(): string {
     return this._searchInput;
-  }
-
-
-  filterByCategories(selectedIds: string[]) {
-    this.selectedCategoryIds = selectedIds;
-    this.applyAllFilters();
   }
 
   set searchInput(newValue: string) {
@@ -84,11 +92,12 @@ export class CampaignList implements OnInit {
     //limpiar lista antes de aplicar filtros
     let filtered = [...this.campaignsCopy];
 
-    //filtro para busqueda por texto
+    //filtro para busqueda por texto (nombre, descripción y tags)
     const searchTerm = this._searchInput.toLowerCase().trim();
     if (searchTerm.length > 0) {
       filtered = filtered.filter(c =>
         c.title.toLowerCase().includes(searchTerm) ||
+        c.description.toLowerCase().includes(searchTerm) ||
         c.tags.some(tag => tag.toLowerCase().includes(searchTerm))
       );
     }
@@ -103,5 +112,26 @@ export class CampaignList implements OnInit {
     }
 
     this.campaigns = filtered;
+  }
+
+  clearFilters() {
+    this._searchInput = '';
+    this.selectedCategoryIds = []; // Con banana in a box, esto automáticamente resetea los chips
+    this.campaigns = [...this.campaignsCopy];
+  }
+
+  getTotalRaised(): number {
+    if (this.campaigns.length === 0) return 0;
+    return this.campaigns.reduce((sum, campaign) => sum + (campaign.current_amount || 0), 0);
+  }
+
+  getAverageProgress(): number {
+    if (this.campaigns.length === 0) return 0;
+    const totalProgress = this.campaigns.reduce((sum, campaign) => {
+      if (!campaign.goal_amount || campaign.goal_amount === 0) return sum;
+      const progress = ((campaign.current_amount ?? 0) / campaign.goal_amount) * 100;
+      return sum + progress;
+    }, 0);
+    return Math.round(totalProgress / this.campaigns.length);
   }
 }

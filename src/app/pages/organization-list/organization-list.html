@@ -1,0 +1,167 @@
+<section class="min-h-screen pt-24 pb-16 bg-sumar-light">
+    <div class="container mx-auto px-4 max-w-7xl">
+        
+        <!-- Encabezado mejorado -->
+        <div class="text-center mb-10">
+            <h1 class="text-5xl font-bold pb-4 bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+                Descubre Organizaciones
+            </h1>
+            <p class="text-gray-600 text-lg max-w-2xl mx-auto">
+                Conoce las ONGs que están haciendo la diferencia en nuestra comunidad
+            </p>
+        </div>
+
+        <!-- Barra de búsqueda -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div class="flex flex-col md:flex-row gap-4 items-center">
+                <!-- Búsqueda -->
+                <div class="flex-1 w-full">
+                    <label class="input input-bordered flex items-center gap-2 w-full">
+                        <icon name="search" class="text-gray-400"></icon>
+                        <input 
+                            type="search" 
+                            placeholder="Buscar organizaciones por nombre o descripción..." 
+                            class="grow"
+                            [(ngModel)]="searchInput"
+                            (input)="onSearch()" />
+                    </label>
+                </div>
+
+                <!-- Contador de resultados -->
+                <div class="flex items-center gap-2 px-4 py-2 bg-violet-50 rounded-lg">
+                    <icon name="group" class="text-violet-600"></icon>
+                    <span class="text-sm font-semibold text-violet-700">
+                        {{ filteredOrganizations().length }} {{ filteredOrganizations().length === 1 ? 'organización' : 'organizaciones' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading state -->
+        @if(isLoading()) {
+        <div class="flex justify-center items-center py-20">
+            <span class="loading loading-spinner loading-lg text-violet-600"></span>
+        </div>
+        }
+
+        <!-- Empty state -->
+        @else if(filteredOrganizations().length === 0) {
+        <div class="flex flex-col items-center justify-center py-16">
+            <div class="bg-white rounded-2xl shadow-lg p-8 max-w-md text-center">
+                <icon name="search-insights" class="text-gray-300 text-6xl mb-4"></icon>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">No se encontraron organizaciones</h3>
+                <p class="text-gray-600 mb-4">
+                    No hay organizaciones que coincidan con tu búsqueda. Intenta con otros términos.
+                </p>
+                <app-button-component 
+                    label="Limpiar búsqueda" 
+                    variant="violet" 
+                    [rounded]="true"
+                    (onClick)="clearSearch()">
+                </app-button-component>
+            </div>
+        </div>
+        }
+
+        <!-- Lista de organizaciones -->
+        @else {
+        <div class="space-y-6">
+            @for (org of filteredOrganizations(); track org.ngoId) {
+            <div class="card lg:card-side bg-base-100 shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-violet-400 overflow-hidden group">
+                
+                <!-- Imagen de la organización con overlay -->
+                <figure class="lg:w-80 h-72 lg:h-auto bg-gradient-to-br from-violet-100 to-purple-200 relative overflow-hidden">
+                    @if(getImageUrl(org.profileFileId)) {
+                    <img
+                        [src]="getImageUrl(org.profileFileId)"
+                        [alt]="org.name"
+                        class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <!-- Overlay con gradiente -->
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                    } @else {
+                    <div class="w-full h-full flex items-center justify-center bg-gradient-to-br from-violet-200 via-purple-200 to-pink-200">
+                        @if(org.profileFileId) {
+                        <!-- Mostrar spinner mientras carga la imagen -->
+                        <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                        } @else {
+                        <!-- Placeholder cuando no hay imagen -->
+                        <icon name="group" [size]="'xl'" class="text-white opacity-40"></icon>
+                        }
+                    </div>
+                    }
+                </figure>
+                
+                <!-- Contenido de la card -->
+                <div class="card-body flex-1 p-6 lg:p-8">
+                    <!-- Encabezado con efecto -->
+                    <div class="mb-3">
+                        <div class="flex items-center gap-2 mb-2">
+                            <h2 class="card-title text-2xl lg:text-3xl font-bold text-gray-800 group-hover:text-violet-600 transition-colors duration-300">
+                                {{ org.name }}
+                            </h2>
+                            
+                            <!-- Badge verificado al lado del nombre -->
+                            @if(org.status === 'VERIFIED' || org.status === 'ACTIVE') {
+                            <div class="tooltip" data-tip="Organización verificada">
+                                <icon name="verified" class="text-blue-500"></icon>
+                            </div>
+                            } @else {
+                            <div class="tooltip" data-tip="Pendiente de verificación">
+                                <icon name="warning" class="text-yellow-400"></icon>
+                            </div>
+                            }
+                        </div>
+                        
+                        <!-- Barra decorativa animada -->
+                        <div class="h-1 w-20 bg-gradient-to-r from-violet-500 to-purple-500 rounded-full group-hover:w-32 transition-all duration-300"></div>
+                    </div>
+                    
+                    <!-- Descripción con mejor formato -->
+                    <p class="text-gray-600 text-base leading-relaxed line-clamp-3 mb-6">
+                        {{ org.description }}
+                    </p>
+                    
+                    <!-- Metadata con íconos destacados -->
+                    <div class="flex flex-wrap gap-4 mb-6">
+                        <div class="flex items-center gap-2 bg-violet-50 px-3 py-2 rounded-lg">
+                            <div class="bg-violet-500 p-1.5 rounded-full">
+                                <icon name="person" [size]="'sm'" class="text-white"></icon>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-xs text-gray-500">Fundador</span>
+                                <span class="text-sm font-semibold text-gray-800">{{ org.userCreator.firstName }} {{ org.userCreator.lastName }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center gap-2 bg-purple-50 px-3 py-2 rounded-lg">
+                            <div class="bg-purple-500 p-1.5 rounded-full">
+                                <icon name="schedule" [size]="'sm'" class="text-white"></icon>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-xs text-gray-500">Activa desde</span>
+                                <span class="text-sm font-semibold text-gray-800">{{ formatDate(org.createdDateTime) }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Call to action mejorado -->
+                    <div class="card-actions justify-end items-center mt-auto pt-4 border-t border-gray-200">
+                        <!-- <p class="text-sm text-gray-500 italic">
+                            "Haciendo la diferencia cada día"
+                        </p> -->
+                        <app-button-component 
+                            label="Conocer más" 
+                            variant="violet" 
+                            [rounded]="true"
+                            icon="arrow-forward"
+                            (onClick)="viewOrganization(org.ngoId)">
+                        </app-button-component>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+        }
+
+    </div>
+</section>

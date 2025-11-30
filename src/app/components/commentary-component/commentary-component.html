@@ -6,10 +6,13 @@
     </div>
     <div class="flex-1">
         <div class="flex items-center gap-2 mb-1">
-            <p class="font-semibold">{{ comment?.userName + ' ' + comment?.lastName }}</p>
-            <span class="text-xs text-base-content/60">{{ comment?.createDateTime | date: 'fullDate' }}</span>
-            @if(authService.roles().includes('ADMIN')) {<app-button-component icon="delete" size="sm" variant="error" (click)="ask()"></app-button-component>}
+            <!-- <p class="font-semibold">{{ comment?.userName + ' ' + comment?.lastName }}</p> -->
+            <p class="font-semibold">Anónimo</p>
+            <span class="text-xs text-base-content/60">{{  comment?.create_date_time | date:
+                'fullDate' }}</span>
+            @if(authService.roles().includes('ADMIN')) {<app-button-component icon="delete" size="sm" variant="error"
+                (onClick)="ask()"></app-button-component>}
         </div>
-        <p class="text-base-content/80">{{ comment?.comment }}</p>
+        <p class="text-base-content/80">{{ comment?.comment || comment?.content }}</p>
     </div>
 </div>

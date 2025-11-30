@@ -53,6 +53,8 @@ export class FormValidatorService {
         return `Máximo ${e['max']?.max}.`;
       case 'emailTaken':
         return 'El correo electrónico ya está en uso.';
+      case 'dateNotValid':
+        return 'La fecha no puede ser anterior o igual a hoy.';
       default:
         return `Error desconocido: ${key} en ${controlName}.`;
     }
@@ -87,5 +89,18 @@ export class FormValidatorService {
 
     //si son diferentes retorno el error
     return { passwordMismatch: true };
+  }
+
+  dateMayorThanTodayValidator(control: AbstractControl): ValidationErrors | null {
+    if (!control.value) return null;
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const selected = new Date(control.value);
+    selected.setHours(0, 0, 0, 0);
+
+    // permitir hoy o fechas futuras
+    return selected >= today ? null : { dateNotValid: true };
   }
 }

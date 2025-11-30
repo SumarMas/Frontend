@@ -1,12 +1,19 @@
 @if(isLoading()) {
-<app-skeleton-component [container]="'grid grid-cols-5'" [skeletons]="skeletonArray"></app-skeleton-component>
+<app-skeleton-component [container]="'flex justify-between'" [skeletons]="skeletonArray"></app-skeleton-component>
 }
 @else {
-<div class="grid grid-cols-5">
+<div class="flex justify-between">
     @for (c of categories; track $index) {
-    <app-category-filter-chip [category]="c" (selectionChange)="changeList($event)"></app-category-filter-chip>
+    <div class="mx-auto">
+        <app-category-filter-chip [category]="c" [isSelectedFromParent]="isSelected(c.id)"
+            (selectionChange)="changeList($event)">
+        </app-category-filter-chip>
+    </div>
+    }
+    @empty {
+    <div role="alert" class="alert alert-error alert-outline text-center justify-center w-full">
+        <span class="w-full">No hay categorias disponibles</span>
+    </div>
     }
 </div>
-
-
 }

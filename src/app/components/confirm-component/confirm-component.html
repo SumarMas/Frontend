@@ -21,11 +21,11 @@
         <div class="flex justify-end gap-2 mt-6">
             @if (dismissible) {
                 <app-button-component [label]="cancelText" variant="error" [rounded]="true"
-                    (click)="onCancel()">
+                    (onClick)="onCancel()">
                 </app-button-component>
             }
 
-            <app-button-component [label]="confirmText" variant="success" [rounded]="true" (click)="onConfirm()">
+            <app-button-component [label]="confirmText" variant="success" [rounded]="true" (onClick)="onConfirm()">
             </app-button-component>
         </div>
     </div>

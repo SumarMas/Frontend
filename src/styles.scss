@@ -4,6 +4,10 @@
     background: linear-gradient(135deg, rgba(102, 126, 234, 0.9), rgba(118, 75, 162, 0.9))
 }
 
+.bg-sumar-light{
+    @apply bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50;
+}
+
 .logo { @apply font-bold bg-gradient-to-bl from-violet-500 to-fuchsia-500 bg-clip-text text-transparent; }
 
 .error-label {

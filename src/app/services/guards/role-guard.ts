@@ -16,7 +16,7 @@ export const roleGuard: CanActivateFn & CanMatchFn = (route, state) => {
   const ok = authService.isAuthenticated() && (!requiredRoles || requiredRoles.some(role => userRoles.includes(role)));
   
   if (!ok) {
-    router.navigate(['/login']);
+    router.navigate(['/401']);
     return false;
   }
   return true;

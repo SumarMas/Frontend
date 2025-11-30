@@ -3,7 +3,7 @@
     @if (isOpen()) {
     @for (message of messages; track message.messageCampaignId; let i = $index; let last = $last) {
 
-    <app-message-component [message]="message"></app-message-component>
+    <app-message-component [message]="message" (messageDeleted)="fetchMessages()"></app-message-component>
 
     <!-- @if (!last) {
     <div class="h-12 flex justify-center w-full relative">

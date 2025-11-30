@@ -4,10 +4,11 @@ import { RouterLinkActive, RouterLink, Router } from '@angular/router';
 import { SidebarService } from '../../services/ui/sidebar-service';
 import { IconComponent } from "../icon-component/icon-component";
 import { AuthService } from '../../services/api/auth-service';
+import { NotificationComponent } from '../notification-component/notification-component';
 
 @Component({
   selector: 'app-navbar-component',
-  imports: [ButtonComponent, RouterLinkActive, RouterLink, IconComponent],
+  imports: [ButtonComponent, RouterLinkActive, RouterLink, IconComponent, NotificationComponent],
   templateUrl: './navbar-component.html',
   styleUrl: './navbar-component.scss'
 })

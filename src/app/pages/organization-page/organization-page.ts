@@ -1,69 +1,264 @@
-import { Component, inject, OnInit, ViewChild } from '@angular/core';
-import { GetOrganizationDto } from '../../models/api/organization';
+import { Component, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { GetOrganizationDto, PutOrganizationDto } from '../../models/api/organization';
 import { IconComponent } from '../../components/icon-component/icon-component';
 import { CommonModule } from '@angular/common';
 import { ButtonComponent } from "../../components/button-component/button-component";
 import { AuthService } from '../../services/api/auth-service';
 import { ApprovalDetailsComponent } from "../../components/approval-details-component/approval-details-component";
 import { ReusableModalComponent } from '../../components/reusable-modal-component/reusable-modal-component';
-import { ActivatedRoute, RouterOutlet } from '@angular/router';
-import { Title } from '@angular/platform-browser';
+import { ActivatedRoute, Router } from '@angular/router';
+import { Title, DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { ToastService } from '../../services/ui/toast-service';
+import { OrganizationService } from '../../services/api/organization-service';
+import { FileService, FileBase64 } from '../../services/api/file-service';
+import { CampaignCard } from "../../components/campaign-card/campaign-card";
+import { GetCampaignDto } from '../../models/api/campaign';
+import { CampaignService } from '../../services/api/campaign-service';
+import { InputComponent } from '../../components/input-component/input-component';
 
 @Component({
   selector: 'app-organization-page',
-  imports: [IconComponent, CommonModule, ButtonComponent, ReusableModalComponent, ApprovalDetailsComponent, RouterOutlet],
+  imports: [IconComponent, CommonModule, ButtonComponent, ReusableModalComponent, 
+    ApprovalDetailsComponent, ReactiveFormsModule, CampaignCard, InputComponent],
   templateUrl: './organization-page.html',
   styleUrl: './organization-page.scss'
 })
 export class OrganizationPage implements OnInit {
   ngoId: string | null = null;
+  isEditMode = signal<boolean>(false);
+  isSaving = signal<boolean>(false);
+  isLoading = signal<boolean>(true);
+  campaigns = signal<GetCampaignDto[]>([]);
+  currentSlideIndex = signal<number>(0);
+  
+  // Signals para rastrear qué archivos mantener
+  documentsToKeep = signal<string[]>([]);
+  imagesToKeep = signal<string[]>([]);
 
-  organization: GetOrganizationDto = {
-    ngoId: '4dbb8d30-5483-499c-a498-b0883b46dc87',
-    name: 'Manos abiertas',
-    description: 'Somos una organización que ayuda a personas en situación de calle proporcionando alimentos, ropa y apoyo emocional. Nuestra misión es brindar un refugio seguro y digno para aquellos que más lo necesitan, promoviendo la inclusión social y el respeto por los derechos humanos. Trabajamos con voluntarios comprometidos y colaboramos con otras entidades para maximizar nuestro impacto y llegar a más personas. Juntos, podemos construir una comunidad más solidaria y justa.',
-    status: 'PENDING',
-    userCreator: { userId: '11111111-1111-1111-1111-111111111111', firstName: 'Pablo', lastName: 'Diaz', email: 'pablo@tesxt.com', roles: ['ORGANIZATION', 'DONOR'] },
-    images: [],
-    createdDateTime: ''
-  };
+  editForm: FormGroup<{
+    name: FormControl<string | null>,
+    description: FormControl<string | null>,
+    profileFileId: FormControl<FileList | null>,
+    bannerFileId: FormControl<FileList | null>,
+    documentsId: FormControl<FileList | null>,
+    images: FormControl<FileList | null>
+  }>;
 
-  view: string = ''
+  organization = signal<GetOrganizationDto | null>(null);
+
+  // Cache de imágenes y documentos
+  imageCache = new Map<string, SafeUrl>();
+  documentCache = new Map<string, FileBase64>();
+
+  view: string = '';
 
   @ViewChild('approvalModal') approvalModalRef!: ReusableModalComponent;
   @ViewChild('approvalDetails') approvalDetailsRef!: ApprovalDetailsComponent;
 
   authService = inject(AuthService);
+  organizationService = inject(OrganizationService);
+  fileService = inject(FileService);
+  sanitizer = inject(DomSanitizer);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private titleService = inject(Title);
+  private fb = inject(FormBuilder);
+  private toastService = inject(ToastService);
+  private campaignService = inject(CampaignService);
 
-  ngOnInit(): void {
-    //obtener el ngoId de la ruta
-    this.ngoId = this.route.snapshot.paramMap.get('ngoId')?.toString() || null;
-
-    //configurar el título de la página
-    const baseTitle = this.route.snapshot.data['title'] || 'Organización';
-
-    if (this.organization.name) {
-      const newTitle = `${baseTitle} - ${this.organization.name}`;
-      this.titleService.setTitle(newTitle);
-    } else {
-      //si no hay nombre, usar el título base
-      this.titleService.setTitle(baseTitle);
-    }
+  constructor() {
+    this.editForm = this.fb.group({
+      name: new FormControl<string | null>(null),
+      description: new FormControl<string | null>(null),
+      profileFileId: new FormControl<FileList | null>(null),
+      bannerFileId: new FormControl<FileList | null>(null),
+      documentsId: new FormControl<FileList | null>(null),
+      images: new FormControl<FileList | null>(null)
+    });
   }
 
-  images: { url: string, alt: string }[] = [
-    { url: 'https://www.shutterstock.com/image-photo/bali-indonesia-april-24th-2020-600nw-1737786149.jpg', alt: 'Actividad 1' },
-    { url: 'https://img.daisyui.com/images/stock/photo-1609621838510-5ad474b7d25d.webp', alt: 'Actividad 2' },
-    { url: 'https://img.daisyui.com/images/stock/photo-1414694762283-acccc27bca85.webp', alt: 'Actividad 3' }
-  ];
+  ngOnInit(): void {
+    // Obtener el ngoId de la ruta
+    this.ngoId = this.route.snapshot.paramMap.get('ngoId')?.toString() || null;
 
-  documents: { name: string, url: string }[] = [
-    { name: 'Documento Legal 1', url: '/example/documentoPrueba.txt' },
-    { name: 'Informe Anual 2023', url: '/example/documentoPrueba.txt' },
-    { name: 'Certificado de Registro', url: '/example/documentoPrueba.txt' }
-  ];
+    if (this.ngoId) {
+      this.loadOrganization(this.ngoId);
+    } else {
+      this.toastService.open('ID de organización no válido', 'error', 3000);
+      this.router.navigate(['/organizations/all']);
+    }
+
+    console.log(this.authService.roles());
+    
+  }
+
+  loadOrganization(ngoId: string) {
+    this.isLoading.set(true);
+    this.organizationService.getOrganizationById(ngoId).subscribe({
+      next: (org) => {
+        this.organization.set(org);
+        this.isLoading.set(false);
+
+        // Configurar el título de la página
+        const baseTitle = this.route.snapshot.data['title'] || 'Organización';
+        const newTitle = `${baseTitle} - ${org.name}`;
+        this.titleService.setTitle(newTitle);
+
+        // Cargar imágenes del carrusel
+        if (org.images && org.images.length > 0) {
+          org.images.forEach(img => {
+            if (img.imageId) {
+              this.loadImage(img.imageId);
+            }
+          });
+        }
+
+        // Cargar imagen de perfil y banner
+        if (org.profileFileId) {
+          this.loadImage(org.profileFileId);
+        }
+        if (org.bannerFileId) {
+          this.loadImage(org.bannerFileId);
+        }
+
+        // Cargar documentos
+        if (org.documentsId && org.documentsId.length > 0) {
+          org.documentsId.forEach(docId => {
+            this.loadDocument(docId);
+          });
+        }
+
+        // Cargar campañas de la organización
+        this.loadCampaigns();
+        
+        // Inicializar listas de archivos a mantener
+        if (org.documentsId) {
+          this.documentsToKeep.set([...org.documentsId]);
+        }
+        if (org.images) {
+          this.imagesToKeep.set(org.images.map(img => img.imageId));
+        }
+      },
+      error: (error) => {
+        console.error('Error al cargar organización:', error);
+        this.isLoading.set(false);
+        this.toastService.open('Error al cargar la organización', 'error', 3000);
+        this.router.navigate(['/organizations/all']);
+      }
+    });
+  }
+
+  loadCampaigns() {
+    if (!this.ngoId) return;
+    
+    this.campaignService.filter(undefined, undefined, undefined, this.ngoId).subscribe({
+      next: (campaigns) => {
+        this.campaigns.set(campaigns);
+        console.log(`Campañas cargadas: ${campaigns.length}`);
+      },
+      error: (error) => {
+        console.error('Error al cargar campañas:', error);
+        this.toastService.open('Error al cargar las campañas de la organización', 'error', 3000);
+      }
+    });
+  }
+
+  loadImage(fileId: string) {
+    if (this.imageCache.has(fileId)) return;
+
+    this.fileService.getFile(fileId).subscribe({
+      next: (blob) => {
+        const objectURL = URL.createObjectURL(blob);
+        const safeUrl = this.sanitizer.bypassSecurityTrustUrl(objectURL);
+        this.imageCache.set(fileId, safeUrl);
+      },
+      error: (error) => {
+        console.error('Error al cargar imagen:', error);
+      }
+    });
+  }
+
+  loadDocument(fileId: string) {
+    if (this.documentCache.has(fileId)) return;
+
+    this.fileService.getFileBase64(fileId).subscribe({
+      next: (fileData) => {
+        // Almacenar el objeto completo con toda la información
+        this.documentCache.set(fileId, fileData);
+      },
+      error: (error) => {
+        console.error('Error al cargar documento:', error);
+      }
+    });
+  }
+
+  getImageUrl(fileId: string | undefined): SafeUrl | null {
+    if (!fileId) return null;
+    return this.imageCache.get(fileId) || null;
+  }
+
+  getDocumentUrl(fileId: string | undefined): SafeUrl | null {
+    if (!fileId) return null;
+    const fileData = this.documentCache.get(fileId);
+    if (!fileData) return null;
+    
+    // Convertir base64 a SafeUrl
+    const dataUrl = `data:${fileData.mimeType};base64,${fileData.base64}`;
+    return this.sanitizer.bypassSecurityTrustUrl(dataUrl);
+  }
+
+  // Obtener imágenes del carrusel
+  getCarouselImages(): { url: SafeUrl | null, alt: string, imageId: string }[] {
+    const org = this.organization();
+    if (!org || !org.images || org.images.length === 0) return [];
+    
+    return org.images
+      .sort((a, b) => a.orderIndex - b.orderIndex)
+      .map(img => ({
+        url: this.getImageUrl(img.imageId),
+        alt: `${org.name} - Imagen ${img.orderIndex}`,
+        imageId: img.imageId
+      }));
+  }
+
+  // Obtener documentos con nombres y tipos
+  getDocuments(): { name: string, url: SafeUrl | null, fileId: string, type: string, icon: string }[] {
+    const org = this.organization();
+    if (!org || !org.documentsId || org.documentsId.length === 0) return [];
+    
+    return org.documentsId.map((docId) => {
+      const fileData = this.documentCache.get(docId);
+      let type = 'Archivo';
+      let icon = 'description';
+      let name = 'Documento';
+      
+      if (fileData) {
+        // Usar el nombre real del archivo
+        name = fileData.fileName;
+        
+        // Determinar tipo basado en mimeType
+        if (fileData.mimeType.includes('pdf')) {
+          type = 'PDF';
+          icon = 'picture_as_pdf';
+        } else if (fileData.mimeType.includes('image')) {
+          type = 'Imagen';
+          icon = 'image';
+        } else if (fileData.mimeType.includes('word') || fileData.mimeType.includes('document')) {
+          type = 'Word';
+          icon = 'description';
+        }
+      }
+      
+      return {
+        name: name,
+        url: this.getDocumentUrl(docId),
+        fileId: docId,
+        type: type,
+        icon: icon
+      };
+    });
+  }
 
   //------------------------------------Métodos para el carrusel------------------------------------
 
@@ -79,7 +274,40 @@ export class OrganizationPage implements OnInit {
 
   goToSlide(index: number) {
     const slideId = `slide${index}`;
-    document.getElementById(slideId)?.scrollIntoView({ behavior: 'smooth' });
+    const slideElement = document.getElementById(slideId);
+    if (slideElement) {
+      // Actualizar el índice actual
+      this.currentSlideIndex.set(index - 1);
+      
+      // Usar scrollIntoView con block: 'nearest' para evitar scroll de toda la página
+      slideElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'nearest',
+        inline: 'start'
+      });
+    }
+  }
+
+  //------------------------------------Métodos auxiliares para preview de archivos------------------------------------
+
+  // Convertir FileList a Array para usar en @for
+  getFileListAsArray(fileList: FileList | null): File[] {
+    if (!fileList) return [];
+    return Array.from(fileList);
+  }
+
+  // Formatear tamaño de archivo
+  formatFileSize(bytes: number): string {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  }
+
+  // Obtener preview de imagen
+  getImagePreview(file: File): string {
+    return URL.createObjectURL(file);
   }
 
   //------------------------------------Métodos para los modales------------------------------------
@@ -97,17 +325,188 @@ export class OrganizationPage implements OnInit {
 
   //------------------------------------Files para descargar------------------------------------
 
-  downloadFile(file: { name: string; url: string }) {
-    fetch(file.url)
+  downloadFile(file: { name: string; url: SafeUrl | null; fileId: string; type: string }) {
+    if (!file.url) {
+      this.toastService.open('El archivo no está disponible', 'error', 3000);
+      return;
+    }
+
+    // Convertir SafeUrl de vuelta a string para descargar
+    const url = (file.url as any).changingThisBreaksApplicationSecurity || file.url.toString();
+    
+    fetch(url)
       .then(response => response.blob())
       .then(blob => {
-        const url = window.URL.createObjectURL(blob);
+        const objectUrl = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = file.name; // nombre del archivo
+        a.href = objectUrl;
+        
+        // Usar el nombre del archivo que ya incluye la extensión
+        a.download = file.name;
+        
+        document.body.appendChild(a);
         a.click();
-        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        // Limpiar la URL después de un tiempo
+        setTimeout(() => window.URL.revokeObjectURL(objectUrl), 100);
+        
+        this.toastService.open(`Descargando ${file.type}...`, 'success', 2000);
       })
-      .catch(err => console.error('Error al descargar', err));
+      .catch(err => {
+        console.error('Error al descargar', err);
+        this.toastService.open('Error al descargar el archivo', 'error', 3000);
+      });
+  }
+
+  //------------------------------------Edición de organización------------------------------------
+
+  toggleEditMode() {
+    const newEditMode = !this.isEditMode();
+    this.isEditMode.set(newEditMode);
+    
+    if (newEditMode) {
+      // Al activar el modo edición, cargar valores actuales
+      const org = this.organization();
+      if (org) {
+        this.editForm.patchValue({
+          name: org.name,
+          description: org.description
+        });
+      }
+    } else {
+      // Si se cancela, resetear el formulario y restaurar listas originales
+      this.editForm.reset();
+      const org = this.organization();
+      if (org?.documentsId) {
+        this.documentsToKeep.set([...org.documentsId]);
+      }
+      if (org?.images) {
+        this.imagesToKeep.set(org.images.map(img => img.imageId));
+      }
+    }
+  }
+
+  removeDocument(fileId: string) {
+    const current = this.documentsToKeep();
+    this.documentsToKeep.set(current.filter(id => id !== fileId));
+  }
+
+  removeImage(fileId: string) {
+    const current = this.imagesToKeep();
+    this.imagesToKeep.set(current.filter(id => id !== fileId));
+  }
+
+  // Obtener solo los documentos que se van a mantener
+  getDocumentsToEdit(): { name: string, url: SafeUrl | null, fileId: string, type: string, icon: string }[] {
+    return this.getDocuments().filter(doc => this.documentsToKeep().includes(doc.fileId));
+  }
+
+  // Obtener solo las imágenes que se van a mantener
+  getImagesToEdit(): { url: SafeUrl | null, alt: string, imageId: string }[] {
+    return this.getCarouselImages().filter(img => this.imagesToKeep().includes(img.imageId));
+  }
+
+  async saveChanges() {
+    if (this.ngoId) {
+      this.isSaving.set(true);
+
+      try {
+        const formValue = this.editForm.value;
+        
+        // Arrays para almacenar los IDs finales
+        let finalDocumentIds: string[] = [...this.documentsToKeep()];
+        let finalImageIds: string[] = [...this.imagesToKeep()];
+        let newProfileFileId: string | undefined;
+        let newBannerFileId: string | undefined;
+
+        // Subir nueva foto de perfil si hay
+        if (formValue.profileFileId && formValue.profileFileId.length > 0) {
+          const profileFile = formValue.profileFileId[0];
+          newProfileFileId = await this.fileService.uploadFile(profileFile).toPromise();
+          this.toastService.open('Foto de perfil actualizada', 'success', 2000);
+        }
+
+        // Subir nuevo banner si hay
+        if (formValue.bannerFileId && formValue.bannerFileId.length > 0) {
+          const bannerFile = formValue.bannerFileId[0];
+          newBannerFileId = await this.fileService.uploadFile(bannerFile).toPromise();
+          this.toastService.open('Banner actualizado', 'success', 2000);
+        }
+
+        // Subir nuevos documentos si hay
+        if (formValue.documentsId && formValue.documentsId.length > 0) {
+          const docFiles = Array.from(formValue.documentsId);
+          const docUploadPromises = docFiles.map(file => 
+            this.fileService.uploadFile(file).toPromise()
+          );
+          
+          const newDocIds = await Promise.all(docUploadPromises);
+          finalDocumentIds = [...finalDocumentIds, ...newDocIds.filter(id => id !== undefined) as string[]];
+          
+          this.toastService.open(`${docFiles.length} documento(s) subido(s) exitosamente`, 'success', 2000);
+        }
+
+        // Subir nuevas imágenes si hay
+        if (formValue.images && formValue.images.length > 0) {
+          const imageFiles = Array.from(formValue.images);
+          const imageUploadPromises = imageFiles.map(file => 
+            this.fileService.uploadFile(file).toPromise()
+          );
+          
+          const newImageIds = await Promise.all(imageUploadPromises);
+          finalImageIds = [...finalImageIds, ...newImageIds.filter(id => id !== undefined) as string[]];
+          
+          this.toastService.open(`${imageFiles.length} imagen(es) subida(s) exitosamente`, 'success', 2000);
+        }
+
+        console.log('IDs finales de documentos:', finalDocumentIds);
+        console.log('IDs finales de imágenes:', finalImageIds);
+
+        // Actualizar organización con los nuevos IDs y campos editables
+        const updateDto: PutOrganizationDto = {
+          documentsId: finalDocumentIds,
+          images: finalImageIds.map((imageId, index) => ({
+            imageId,
+            orderIndex: index
+          }))
+        };
+
+        // Agregar name y description solo si fueron modificados
+        if (formValue.name && formValue.name.trim() !== '') {
+          updateDto.name = formValue.name.trim();
+        }
+        if (formValue.description && formValue.description.trim() !== '') {
+          updateDto.description = formValue.description.trim();
+        }
+        
+        // Agregar profileFileId y bannerFileId si fueron subidos
+        if (newProfileFileId) {
+          updateDto.profileFileId = newProfileFileId;
+        }
+        if (newBannerFileId) {
+          updateDto.bannerFileId = newBannerFileId;
+        }
+
+        await this.organizationService.updateNgo(this.ngoId, updateDto).toPromise();
+
+        this.toastService.open('Organización actualizada exitosamente', 'success', 3000);
+        this.isEditMode.set(false);
+        this.editForm.reset();
+        
+        // Recargar la organización para ver los cambios
+        this.loadOrganization(this.ngoId);
+        
+      } catch (error) {
+        console.error('Error al guardar cambios:', error);
+        this.toastService.open('Error al subir los archivos', 'error', 3000);
+      } finally {
+        this.isSaving.set(false);
+      }
+    }
+  }
+
+  navigate(url: string){
+    this.router.navigate([url]);
   }
 }

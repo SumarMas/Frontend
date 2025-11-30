@@ -1,43 +1,48 @@
 <aside class="sidebar fixed left-0 top-0 z-40 shadow-[4px_0_8px_-2px_rgba(0,0,0,0.1)] flex flex-col"
     [ngClass]="sidebarService.isOpen() ? 'sidebar menu-toggle' : ''">
     <ul class="space-y-2">
-        @for (item of getButtonsForRoles(); track $index) {
+        @for (item of filteredButtons(); track item.title) {
         @if (item.children) {
         <li>
-            <!-- padre, solo toggle-->
-            <button type="button" class="side-button violet-variant" (click)="item.open = !item.open"
-                [attr.aria-expanded]="item.open">
+            <!-- padre con children, solo toggle-->
+            <button type="button" class="side-button violet-variant" (click)="toggleItem(item.title)"
+                [attr.aria-expanded]="isOpen(item.title)">
                 <icon [name]="item.icon ?? ''" class="text-white" />
                 <span class="truncate">{{ item.title }}</span>
-                <icon name="arrow-drop-down" class="caret text-white" [ngClass]="{ 'rotate-180': item.open }" />
+                <icon name="arrow-drop-down" class="caret text-white" [ngClass]="{ 'rotate-180': isOpen(item.title) }" />
             </button>
 
             <!-- childs -->
-            <ul class="collapse-box submenu" [class.is-open]="item.open">
-                @for (child of item.children; track $index) {
+            <ul class="collapse-box submenu" 
+                [class.is-open]="isOpen(item.title)"
+                [attr.data-open]="isOpen(item.title)"
+                [style.max-height]="isOpen(item.title) ? '1000px' : '0'"
+                [style.opacity]="isOpen(item.title) ? '1' : '0'"
+                [style.pointer-events]="isOpen(item.title) ? 'auto' : 'none'">
+                @for (child of item.children; track child.title) {
                 <li>
-                    <a class="side-button white-variant" [routerLink]="child.route">
+                    <button type="button" class="side-button white-variant" (click)="navigateTo(child.route)">
                         <icon [name]="child.icon ?? ''" class="text-violet-500" />
                         <span class="truncate">{{ child.title }}</span>
-                    </a>
+                    </button>
                 </li>
                 }
             </ul>
         </li>
         } @else {
         <li>
-            <!-- botn padre sin childs -->
-            <a class="side-button violet-variant" [routerLink]="item.route">
+            <!-- padre sin children, navega directamente -->
+            <button type="button" class="side-button violet-variant" (click)="navigateTo(item.route)">
                 <icon [name]="item.icon ?? ''" class="text-white" />
                 <span class="truncate">{{ item.title }}</span>
-            </a>
+            </button>
         </li>
         }
         }
     </ul>
 
     <div class="mt-auto">
-        <button class="side-button violet-variant" (click)="onLogout()">
+        <button type="button" class="side-button violet-variant" (click)="onLogout()">
             <icon name="logout" class="text-white" />
             <span>Cerrar sesión</span>
         </button>

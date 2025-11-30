@@ -1,0 +1,243 @@
+<section class="min-h-screen pt-24 pb-16 bg-sumar-light">
+    <div class="container mx-auto px-4 max-w-7xl">
+
+        <!-- Header -->
+        <div class="text-center mb-8">
+            <div class="inline-block p-4 bg-gradient-to-br from-violet-100 to-purple-100 rounded-2xl mb-4">
+                <icon name="bar-chart-4-bars" class="text-violet-600 text-5xl"></icon>
+            </div>
+            <h1 class="text-4xl font-bold pb-4 bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+                Dashboard de Administración
+            </h1>
+            <p class="text-gray-600 text-lg">
+                Análisis y estadísticas de la plataforma
+            </p>
+        </div>
+
+        <!-- Filtros -->
+        <div class="card bg-white shadow-xl mb-6">
+            <div class="card-body py-4">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-2">
+                        <icon name="schedule" class="text-violet-600"></icon>
+                        <span class="font-semibold text-gray-700">Período:</span>
+                    </div>
+                    <div class="flex flex-wrap gap-2 justify-center">
+                        @for(option of dateFilterOptions; track option.value) {
+                        <app-button-component
+                            [label]="option.label"
+                            [icon]="selectedDateFilter() === option.value ? 'check' : undefined"
+                            [variant]="selectedDateFilter() === option.value ? 'violet' : 'white'"
+                            size="sm"
+                            [outline]="selectedDateFilter() !== option.value"
+                            (onClick)="onFilterChange(option.value)">
+                        </app-button-component>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <!-- Total ONGs -->
+            <div class="card bg-white shadow-xl hover:shadow-2xl transition-shadow">
+                <div class="card-body">
+                    @if(isLoading()) {
+                    <div class="flex items-center justify-center h-24">
+                        <span class="loading loading-spinner loading-md text-violet-600"></span>
+                    </div>
+                    } @else {
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Organizaciones</p>
+                            <h3 class="text-3xl font-bold text-purple-600">{{ stats().totalNGOs }}</h3>
+                            @if(stats().newNGOsWeek > 0) {
+                            <div class="flex items-center gap-1 mt-2">
+                                <icon name="arrow-drop-up" [size]="'sm'" class="text-green-500"></icon>
+                                <span class="text-xs text-green-600 font-semibold">{{ stats().newNGOsWeek }}</span>
+                                <span class="text-xs text-gray-500">en el período</span>
+                            </div>
+                            } @else {
+                            <p class="text-xs text-gray-500 mt-2">No hay datos en el período</p>
+                            }
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
+                            <icon name="diversity-1" class="text-purple-600 text-2xl"></icon>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Monto Total -->
+            <div class="card bg-white shadow-xl hover:shadow-2xl transition-shadow">
+                <div class="card-body">
+                    @if(isLoading()) {
+                    <div class="flex items-center justify-center h-24">
+                        <span class="loading loading-spinner loading-md text-violet-600"></span>
+                    </div>
+                    } @else {
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Recaudado</p>
+                            <h3 class="text-2xl font-bold text-green-600">{{ stats().totalAmount | currency:'ARS':'symbol-narrow':'1.0-0' }}</h3>
+                            <p class="text-xs text-gray-500 mt-2">Campañas cerradas</p>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+                            <icon name="bar-chart-4-bars" class="text-green-600 text-2xl"></icon>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- ONGs por Estado (Full Width) -->
+        <div class="card bg-white shadow-xl mb-8">
+            <div class="card-body">
+                <h2 class="card-title text-xl mb-4 flex items-center gap-2">
+                    <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
+                    ONGs por Estado
+                </h2>
+                @if(isLoading()) {
+                <div class="h-80 flex items-center justify-center">
+                    <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                </div>
+                } @else {
+                <div class="h-80 flex items-center justify-center">
+                    <canvas id="ngosChart"></canvas>
+                </div>
+                <div class="mt-2 grid grid-cols-3 gap-4 text-center">
+                    <div>
+                        <p class="text-2xl font-bold text-green-600">{{ ngosData.byStatus.APPROVED }}</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-yellow-600">{{ ngosData.byStatus.PENDING }}</p>
+                    </div>
+                    <div>
+                        <p class="text-2xl font-bold text-red-600">{{ ngosData.byStatus.REJECTED }}</p>
+                    </div>
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Donaciones por Categoría (Full Width) -->
+        <div class="card bg-white shadow-xl mb-8">
+            <div class="card-body">
+                <h2 class="card-title text-xl mb-4 flex items-center gap-2">
+                    <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
+                    Recaudación por Categoría
+                </h2>
+                @if(isLoading()) {
+                <div class="h-96 flex items-center justify-center">
+                    <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                </div>
+                } @else {
+                <div class="h-96 flex items-center justify-center">
+                    <canvas id="donationsChart"></canvas>
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Top 5 Tables Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Top ONGs por Campañas -->
+            <div class="card bg-white shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-xl mb-4 flex items-center gap-2">
+                        <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
+                        Top 5 ONGs con más campañas
+                    </h2>
+                    @if(isLoading()) {
+                    <div class="flex items-center justify-center h-64">
+                        <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                    </div>
+                    } @else {
+                    <div class="overflow-x-auto">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th class="text-gray-500">#</th>
+                                    <th class="text-gray-500">Organización</th>
+                                    <th class="text-gray-500 text-right">Campañas</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for(ngo of ngosData.topByCampaigns; track $index) {
+                                <tr class="hover">
+                                    <td>
+                                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-violet-400 to-purple-400 flex items-center justify-center text-white font-bold text-sm">
+                                            {{ $index + 1 }}
+                                        </div>
+                                    </td>
+                                    <td class="font-medium">{{ ngo.name }}</td>
+                                    <td class="text-right">
+                                        <div class="badge badge-violet badge-lg">{{ ngo.campaigns }}</div>
+                                    </td>
+                                </tr>
+                                }
+                                @empty {
+                                <tr>
+                                    <td colspan="3" class="text-center text-gray-400 py-8">No hay datos disponibles</td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Top ONGs por Donaciones -->
+            <div class="card bg-white shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-xl mb-4 flex items-center gap-2">
+                        <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
+                        Top 5 ONGs - Volumen de Donaciones
+                    </h2>
+                    @if(isLoading()) {
+                    <div class="flex items-center justify-center h-64">
+                        <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                    </div>
+                    } @else {
+                    <div class="overflow-x-auto">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th class="text-gray-500">#</th>
+                                    <th class="text-gray-500">Organización</th>
+                                    <th class="text-gray-500 text-right">Recaudado</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for(ngo of ngosData.topByDonations; track $index) {
+                                <tr class="hover">
+                                    <td>
+                                        <div class="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-emerald-400 flex items-center justify-center text-white font-bold text-sm">
+                                            {{ $index + 1 }}
+                                        </div>
+                                    </td>
+                                    <td class="font-medium">{{ ngo.name }}</td>
+                                    <td class="text-right font-bold text-green-600">
+                                        {{ ngo.amount | currency:'ARS':'symbol-narrow':'1.0-0' }}
+                                    </td>
+                                </tr>
+                                }
+                                @empty {
+                                <tr>
+                                    <td colspan="3" class="text-center text-gray-400 py-8">No hay datos disponibles</td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+    </div>
+</section>

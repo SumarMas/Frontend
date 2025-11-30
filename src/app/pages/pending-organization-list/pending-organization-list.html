@@ -1,0 +1,202 @@
+<section class="min-h-screen pt-24 pb-16 bg-gradient-to-br from-violet-50 via-purple-50 to-pink-50">
+    <div class="container mx-auto px-4 max-w-7xl">
+        
+        <!-- Encabezado -->
+        <div class="text-center mb-10">
+            <div class="flex items-center justify-center gap-3 mb-4">
+                <h1 class="text-5xl pb-2 font-bold bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
+                    Organizaciones Pendientes
+                </h1>
+            </div>
+            <p class="text-gray-600 text-lg max-w-2xl mx-auto">
+                Panel de administración para revisar y aprobar solicitudes de registro
+            </p>
+        </div>
+
+        <!-- Barra de búsqueda y estadísticas -->
+        <div class="bg-white rounded-2xl shadow-lg p-6 mb-8">
+            <div class="flex flex-col md:flex-row gap-4 items-center">
+                <!-- Búsqueda -->
+                <div class="flex-1 w-full">
+                    <label class="input input-bordered flex items-center gap-2 w-full">
+                        <icon name="search" class="text-gray-400"></icon>
+                        <input 
+                            type="search" 
+                            placeholder="Buscar por nombre o descripción..." 
+                            class="grow"
+                            [value]="searchInput()"
+                            (input)="onSearch($event)" />
+                    </label>
+                </div>
+
+                <!-- Contador de resultados -->
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2 px-4 py-2 bg-violet-50 rounded-lg">
+                        <icon name="group" class="text-violet-600"></icon>
+                        <span class="text-sm font-semibold text-violet-700">
+                            {{ filteredOrganizations().length }} {{ filteredOrganizations().length === 1 ? 'pendiente' : 'pendientes' }}
+                        </span>
+                    </div>
+
+                    @if(searchInput()) {
+                    <app-button-component 
+                        label="Limpiar" 
+                        variant="violet" 
+                        [rounded]="true"
+                        (onClick)="clearSearch()">
+                    </app-button-component>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading state -->
+        @if(isLoading()) {
+        <div class="flex justify-center items-center py-20">
+            <span class="loading loading-spinner loading-lg text-violet-600"></span>
+        </div>
+        }
+
+        <!-- Empty state -->
+        @else if(filteredOrganizations().length === 0) {
+        <div class="flex flex-col items-center justify-center py-16">
+            <div class="bg-white rounded-2xl shadow-lg p-8 max-w-md text-center">
+                @if(searchInput()) {
+                <icon name="search-insights" class="text-gray-300 text-6xl mb-4"></icon>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">No se encontraron organizaciones</h3>
+                <p class="text-gray-600 mb-4">
+                    No hay organizaciones pendientes que coincidan con tu búsqueda.
+                </p>
+                <app-button-component 
+                    label="Limpiar búsqueda" 
+                    variant="violet" 
+                    [rounded]="true"
+                    (onClick)="clearSearch()">
+                </app-button-component>
+                } @else {
+                <icon name="check" class="text-green-300 text-6xl mb-4"></icon>
+                <h3 class="text-xl font-bold text-gray-800 mb-2">¡Todo al día!</h3>
+                <p class="text-gray-600">
+                    No hay organizaciones pendientes de aprobación en este momento.
+                </p>
+                }
+            </div>
+        </div>
+        }
+
+        <!-- Lista de organizaciones pendientes -->
+        @else {
+        <div class="space-y-6">
+            @for (org of filteredOrganizations(); track org.ngoId) {
+            <div class="card bg-white shadow-lg hover:shadow-2xl transition-all duration-300 border-2 border-transparent hover:border-violet-400">
+                <div class="card-body">
+                    <div class="flex flex-col lg:flex-row gap-6">
+                        
+                        <!-- Imagen de la organización -->
+                        <div class="flex-shrink-0">
+                            <figure class="w-full lg:w-48 h-48 rounded-xl overflow-hidden bg-gradient-to-br from-violet-100 to-purple-200">
+                                @if(org.profileFileId && getImageUrl(org.profileFileId)) {
+                                <img
+                                    [src]="getImageUrl(org.profileFileId)"
+                                    [alt]="org.name"
+                                    class="w-full h-full object-cover" />
+                                } @else {
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <icon name="group" class="text-violet-300 text-6xl"></icon>
+                                </div>
+                                }
+                            </figure>
+                        </div>
+
+                        <!-- Información principal -->
+                        <div class="flex-1 min-w-0">
+                            <!-- Header con nombre y estado -->
+                            <div class="flex items-start justify-between gap-4 mb-4">
+                                <div class="flex-1">
+                                    <h2 class="text-2xl font-bold text-gray-800 mb-2 line-clamp-1">
+                                        {{ org.name }}
+                                    </h2>
+                                    
+                                    <div class="flex flex-wrap items-center gap-3">
+                                        <!-- Badge de estado -->
+                                        <span class="badge badge-warning gap-2">
+                                            <icon name="warning" [size]="'sm'"></icon>
+                                            Pendiente de aprobación
+                                        </span>
+                                        
+                                        <!-- Días esperando -->
+                                        <span [class]="'px-3 py-1 rounded-full text-xs font-semibold ' + getWaitingClass(getDaysWaiting(org.createdDateTime))">
+                                            {{ getDaysWaiting(org.createdDateTime) }} {{ getDaysWaiting(org.createdDateTime) === 1 ? 'día' : 'días' }} esperando
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Descripción -->
+                            <p class="text-gray-600 mb-4 line-clamp-3">
+                                {{ org.description || 'Sin descripción' }}
+                            </p>
+
+                            <!-- Información adicional -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <!-- Creador -->
+                                @if(org.userCreator) {
+                                <div class="flex items-center gap-2 bg-blue-50 px-3 py-2 rounded-lg">
+                                    <div class="bg-blue-500 p-1.5 rounded-full">
+                                        <icon name="person" [size]="'sm'" class="text-white"></icon>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-xs text-gray-500">Creada por</span>
+                                        <span class="text-sm font-semibold text-gray-800">{{ org.userCreator.firstName }} {{ org.userCreator.lastName }}</span>
+                                    </div>
+                                </div>
+                                }
+
+                                <!-- Fecha de solicitud -->
+                                <div class="flex items-center gap-2 bg-purple-50 px-3 py-2 rounded-lg">
+                                    <div class="bg-purple-500 p-1.5 rounded-full">
+                                        <icon name="schedule" [size]="'sm'" class="text-white"></icon>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-xs text-gray-500">Fecha de solicitud</span>
+                                        <span class="text-sm font-semibold text-gray-800">{{ formatDate(org.createdDateTime) }}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Alerta de documentos -->
+                            @if(org.documentsId && org.documentsId.length > 0) {
+                            <div role="alert" class="alert alert-info alert-soft mb-4">
+                                <icon name="info"></icon>
+                                <span class="text-sm">
+                                    <span class="font-bold">{{ org.documentsId.length }}</span> 
+                                    {{ org.documentsId.length === 1 ? 'documento adjunto' : 'documentos adjuntos' }} para revisión
+                                </span>
+                            </div>
+                            }
+
+                            <!-- Acciones -->
+                            <div class="flex flex-wrap gap-3">
+                                <app-button-component 
+                                    label="Revisar organización" 
+                                    variant="violet" 
+                                    [rounded]="true"
+                                    icon="visibility"
+                                    (onClick)="viewOrganization(org.ngoId)">
+                                </app-button-component>
+                                
+                                <div class="text-sm text-gray-500 flex items-center gap-2">
+                                    <icon name="info" [size]="'sm'"></icon>
+                                    <span>Click para ver detalles completos y aprobar/rechazar</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            }
+        </div>
+        }
+
+    </div>
+</section>

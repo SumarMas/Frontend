@@ -1,0 +1,40 @@
+// Animación para hover suave (solo sombra, sin movimiento)
+.card {
+    transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s ease;
+}
+
+// Truncamiento de texto con líneas limitadas
+.line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+// Efecto de zoom sutil en imagen al hover (deshabilitado para evitar movimiento)
+figure {
+    img {
+        transition: none;
+    }
+}
+
+// Animación de badges
+.badge {
+    transition: all 0.2s ease;
+}
+
+// Progreso bar personalizado
+.progress {
+    &::-webkit-progress-value {
+        transition: width 0.5s ease;
+    }
+}

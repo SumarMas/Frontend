@@ -1,8 +1,9 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { computed, inject, Injectable, signal } from '@angular/core';
+import { computed, effect, inject, Injectable, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
-import { catchError, delay, map, mapTo, Observable, of, tap, throwError } from 'rxjs';
+import { catchError, delay, map, Observable, of, switchMap, tap, throwError } from 'rxjs';
+import { GetUserDto } from '../../models/api/user';
 
 interface JwtPayload {
   user_id?: string; //usuario
@@ -15,6 +16,7 @@ interface JwtPayload {
 })
 export class AuthService {
   private apiUrl = 'http://sumar-mas.dynns.com:9080/auth/api/v1/auth';
+  private userUrl = 'http://sumar-mas.dynns.com:9080/users/api/v1/users';
 
   //contiene Camila Lopez, [ 'DONOR', 'ORGANIZATION' ], exp: 9999999999
   private fakeToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJqZWN0IjoiQ2FtaWxhIExvcGV6Iiwicm9sZXMiOlsiRE9OT1IiLCJPUkdBTklaQVRJT04iXSwiZXhwIjo5OTk5OTk5OTk5fQ.signature';
@@ -24,6 +26,7 @@ export class AuthService {
 
   //busco el token en el localStorage
   _token = signal<string | null>(localStorage.getItem('token'));
+  _userName = signal<string | null>(localStorage.getItem('user_name'));
 
   private _tokenExpTs = signal<number | null>(
     localStorage.getItem('token_exp_ts') ? Number(localStorage.getItem('token_exp_ts')) : null
@@ -34,6 +37,26 @@ export class AuthService {
     window.addEventListener('storage', (event) => {
       if (event.key === 'token') {
         this._token.set(event.newValue);
+      }
+    });
+
+    // Recuperar el nombre del usuario si hay token pero no hay nombre
+    effect(() => {
+      const userId = this.userId();
+      const userName = this._userName();
+      
+      // Si hay token válido pero no hay nombre, cargar el perfil
+      if (userId && !userName) {
+        this.http.get<GetUserDto>(`${this.userUrl}/my-profile`).subscribe({
+          next: (user) => {
+            const fullName = user.firstName + ' ' + user.lastName;
+            this._userName.set(fullName);
+            localStorage.setItem('user_name', fullName);
+          },
+          error: (err) => {
+            console.error('Error al recuperar nombre de usuario:', err);
+          }
+        });
       }
     });
   }
@@ -58,6 +81,13 @@ export class AuthService {
   login(userName: string, password: string) {
     return this.http.post<{ token: string; expiresIn?: number }>(`${this.apiUrl}/login`, { userName, password }).pipe(
       tap(res => this.setToken(res.token, res.expiresIn)),
+      // Encadenar la carga del perfil del usuario
+      switchMap(() => this.http.get<GetUserDto>(`${this.userUrl}/my-profile`)),
+      tap((user: GetUserDto) => {
+        const fullName = user.firstName + ' ' + user.lastName;
+        this._userName.set(fullName);
+        localStorage.setItem('user_name', fullName);
+      }),
       map(() => void 0),
       catchError((err: HttpErrorResponse) => {
         this.clearToken();
@@ -126,8 +156,10 @@ export class AuthService {
   clearToken() {
     this._token.set(null);
     this._tokenExpTs.set(null);
+    this._userName.set(null);
     localStorage.removeItem('token');
     localStorage.removeItem('token_exp_ts');
+    localStorage.removeItem('user_name');
   }
 
 

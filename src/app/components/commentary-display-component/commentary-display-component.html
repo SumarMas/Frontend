@@ -5,6 +5,8 @@
                             [label]="showCommentInput ? 'Cancelar' : 'Agregar comentario'" 
                             variant="violet" 
                             size="sm"
+                            [tooltip]="authService.isAuthenticated() ? '' : 'Debes iniciar sesión para agregar un comentario'"
+                            [disabled]="!authService.isAuthenticated()"
                             (click)="toggleCommentInput()">
                         </app-button-component>
                     </div>
@@ -30,6 +32,7 @@
                                     label="Publicar comentario" 
                                     variant="violet" 
                                     size="sm"
+                                    [isLoading]="isLoading()"
                                     [disabled]="!newComment.trim()"
                                     (click)="submitComment()">
                                 </app-button-component>
@@ -45,7 +48,10 @@
                             </div>
                         }
                         @for (comment of comments; track $index) {
-                            <app-commentary-component [comment]="comment"></app-commentary-component>
+                            <app-commentary-component 
+                                [comment]="comment"
+                                (commentDeleted)="fetchAllComments()">
+                            </app-commentary-component>
                         }
                     </div>
                 </div>

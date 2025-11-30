@@ -1,6 +1,6 @@
 <app-navbar-component></app-navbar-component>
 @if(sidebarService.isLoggedIn()) {
-    <app-sidebar-component></app-sidebar-component>
+    <app-sidebar-component [roles]="getUserRoles()"></app-sidebar-component>
 }
 
 <router-outlet />

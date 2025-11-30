@@ -7,7 +7,7 @@ import { Observable } from 'rxjs';
   providedIn: 'root'
 })
 export class CommentService {
-    private apiUrl = 'http://sumar-mas.dynns.com:9080/campaigns/api/v1/categories/api/v1/comments';
+    private apiUrl = 'http://sumar-mas.dynns.com:9080/campaigns/api/v1/comments';
 
   http = inject(HttpClient);
 

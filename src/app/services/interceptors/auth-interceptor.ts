@@ -24,7 +24,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
         //no navego si es de login
         if (!isLoginRequest) {
           //para otras peticiones
-          auth.clearToken();
+          //auth.clearToken();
           router.navigate(['/401']);
         }
       }

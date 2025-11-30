@@ -11,6 +11,7 @@ export interface GetOrganizationDto {
     images: CarrouselImage[];
     status?: string;
     createdDateTime: string;
+    reasonDenied?: string;
 }
 
 export interface PostOrganizationDto {
@@ -22,9 +23,8 @@ export interface PostOrganizationDto {
     images: CarrouselImage[];
 }
 
-export interface PutOrganizationDto {
-    documentsId?: string[];
-    images?: CarrouselImage[];
+export interface PutOrganizationDto extends Partial<PostOrganizationDto> {
+
 }
 
 export interface ValidateOrganizationDto {

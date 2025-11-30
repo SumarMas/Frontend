@@ -7,7 +7,8 @@ import { CarrouselImage, PostOrganizationDto } from '../../models/api/organizati
 import { OrganizationService } from '../../services/api/organization-service';
 import { ToastService } from '../../services/ui/toast-service';
 import { Router } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
+import { FileService } from '../../services/api/file-service';
 
 @Component({
   selector: 'app-organization-register',
@@ -19,16 +20,17 @@ export class OrganizationRegister {
   registerOrganizationForm: FormGroup<{
     name: FormControl<string | null>,
     description: FormControl<string | null>,
-    profileFile: FormControl<File | null>,
-    bannerFile: FormControl<File | null>,
-    documents: FormControl<File[] | null>,
-    images: FormControl<File[] | null>
+    profileFile: FormControl<FileList | null>,
+    bannerFile: FormControl<FileList | null>,
+    documents: FormControl<FileList | null>,
+    images: FormControl<FileList | null>
   }>;
 
   fb = inject(FormBuilder);
   formValidator = inject(FormValidatorService);
   organizationService = inject(OrganizationService);
   toastService = inject(ToastService);
+  fileService = inject(FileService);
   router = inject(Router);
 
   isLoading = signal<boolean>(false);
@@ -37,69 +39,92 @@ export class OrganizationRegister {
     this.registerOrganizationForm = this.fb.group({
       name: new FormControl<string | null>('', { validators: [Validators.required, Validators.maxLength(100)] }),
       description: new FormControl<string | null>('', { validators: [Validators.minLength(5), Validators.maxLength(500)] }),
-      profileFile: new FormControl<File | null>(null, { validators: [Validators.required] }),
-      bannerFile: new FormControl<File | null>(null, { validators: [Validators.required] }),
-      documents: new FormControl<File[] | null>(null, { validators: [Validators.required] }),
-      images: new FormControl<File[] | null>(null, { validators: [Validators.required] })
+      profileFile: new FormControl<FileList | null>(null, { validators: [Validators.required] }),
+      bannerFile: new FormControl<FileList | null>(null, { validators: [Validators.required] }),
+      documents: new FormControl<FileList | null>(null, { validators: [Validators.required] }),
+      images: new FormControl<FileList | null>(null, { validators: [Validators.required] })
     });
   }
 
   async onSubmit() {
-    if (!this.registerOrganizationForm.valid) return;
-
-    const vals = this.registerOrganizationForm.value;
-
-    const profileId = await this.saveFiles(vals.profileFile!);
-    const bannerId = await this.saveFiles(vals.bannerFile!);
-    const docsIds = await this.saveFiles(vals.documents!);
-    const imgsIds = await this.saveFiles(vals.images!);
-
-    const carrouselImages = Array.isArray(imgsIds)
-      ? imgsIds.map((id, i) => ({
-        imageId: id,
-        orderIndex: i + 1
-      } as CarrouselImage))
-      : undefined;
-
-    const dto: PostOrganizationDto = {
-      name: vals.name ?? '',
-      description: vals.description ?? '',
-      ...(profileId ? { profileFileId: profileId as string } : {}),
-      ...(bannerId ? { bannerFileId: bannerId as string } : {}),
-      ...(docsIds ? { documentsId: docsIds as string[] } : {}),
-      images: carrouselImages ?? []
-    };
-    this.isLoading.set(true);
-
-    this.organizationService.register(dto).pipe(finalize(() => this.isLoading.set(false))).subscribe({
-      next: () => {
-        this.toastService.open('Organización registrada con éxito', 'success', 3000, 'bottom-right');
-        this.router.navigate(['/home']);
-      },
-      error: (err) => {
-        this.toastService.open('Error al registrar la organización: ' + err.message, 'error', 3000, 'bottom-right');
-      }
-    });
-  }
-
-
-  //subir archivos y devolver ids
-  async saveFiles(file: File | File[] | null): Promise<string | string[] | null> {
-    if (!file) return null;
-
-    if (Array.isArray(file)) {
-      //subida multiple devuelve ids
-      const promises = file.map(f => this.uploadFileMock(f));
-      return Promise.all(promises);
+    if (!this.registerOrganizationForm.valid) {
+      this.toastService.open('Por favor complete todos los campos requeridos', 'warning', 3000, 'bottom-right');
+      return;
     }
 
-    //subida simple devuelve id
-    return this.uploadFileMock(file);
-  }
+    const vals = this.registerOrganizationForm.value;
+    
+    // Validar que los archivos existan
+    if (!vals.profileFile || vals.profileFile.length === 0) {
+      this.toastService.open('Debe seleccionar una foto de perfil', 'error', 3000, 'bottom-right');
+      return;
+    }
+    if (!vals.bannerFile || vals.bannerFile.length === 0) {
+      this.toastService.open('Debe seleccionar una foto de portada', 'error', 3000, 'bottom-right');
+      return;
+    }
+    if (!vals.documents || vals.documents.length === 0) {
+      this.toastService.open('Debe adjuntar al menos un documento legal', 'error', 3000, 'bottom-right');
+      return;
+    }
+    if (!vals.images || vals.images.length === 0) {
+      this.toastService.open('Debe adjuntar al menos una foto extra', 'error', 3000, 'bottom-right');
+      return;
+    }
 
-  //mock de subida
-  private async uploadFileMock(f: File): Promise<string> {
-    await new Promise(r => setTimeout(r, 100)); // simula latencia
-    return `${f.name.replace(/\s+/g, '_')}_${Date.now()}`;
+    this.isLoading.set(true);
+
+    // Cargas individuales (tomar el primer archivo de cada FileList)
+    const profile$ = this.fileService.uploadFile(vals.profileFile[0]);
+    const banner$ = this.fileService.uploadFile(vals.bannerFile[0]);
+
+    // Arrays de archivos → arrays de observables (convertir FileList a Array)
+    const docs$ = Array.from(vals.documents).map(f => this.fileService.uploadFile(f));
+    const imgs$ = Array.from(vals.images).map(f => this.fileService.uploadFile(f));
+
+    // Espera a que todas las cargas terminen
+    forkJoin({
+      profileId: profile$,
+      bannerId: banner$,
+      docsIds: docs$.length ? forkJoin(docs$) : [],
+      imgsIds: imgs$.length ? forkJoin(imgs$) : []
+    }).pipe(
+      finalize(() => this.isLoading.set(false))
+    ).subscribe({
+      next: ({ profileId, bannerId, docsIds, imgsIds }) => {
+        const carrouselImages = Array.isArray(imgsIds)
+          ? imgsIds.map((id, i) => ({
+              imageId: id,
+              orderIndex: i + 1
+            } as CarrouselImage))
+          : [];
+
+        const dto: PostOrganizationDto = {
+          name: vals.name ?? '',
+          description: vals.description ?? '',
+          profileFileId: profileId,
+          bannerFileId: bannerId,
+          documentsId: Array.isArray(docsIds) ? docsIds : [],
+          images: carrouselImages
+        };
+        
+        console.log('DTO --->', dto);
+        
+        this.organizationService.register(dto).subscribe({
+          next: () => {
+            this.toastService.open('Organización registrada con éxito', 'success', 3000, 'bottom-right');
+            this.router.navigate(['/home']);
+          },
+          error: (err) => {
+            console.error('Error al registrar organización:', err);
+            this.toastService.open('Error al registrar la organización: ' + (err.error?.message || err.message), 'error', 5000, 'bottom-right');
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error al subir archivos:', err);
+        this.toastService.open('Error al subir archivos: ' + (err.error?.message || err.message), 'error', 5000, 'bottom-right');
+      }
+    });
   }
 }
