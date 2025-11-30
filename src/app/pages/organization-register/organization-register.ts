@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, inject, signal, ViewChild } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { InputComponent } from "../../components/input-component/input-component";
 import { ButtonComponent } from '../../components/button-component/button-component';
@@ -9,10 +9,12 @@ import { ToastService } from '../../services/ui/toast-service';
 import { Router } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
 import { FileService } from '../../services/api/file-service';
+import { ReusableModalComponent } from "../../components/reusable-modal-component/reusable-modal-component";
+import { AuthService } from '../../services/api/auth-service';
 
 @Component({
   selector: 'app-organization-register',
-  imports: [ReactiveFormsModule, InputComponent, ButtonComponent],
+  imports: [ReactiveFormsModule, InputComponent, ButtonComponent, ReusableModalComponent],
   templateUrl: './organization-register.html',
   styleUrl: './organization-register.scss'
 })
@@ -32,8 +34,11 @@ export class OrganizationRegister {
   toastService = inject(ToastService);
   fileService = inject(FileService);
   router = inject(Router);
+  authService = inject(AuthService);
 
   isLoading = signal<boolean>(false);
+
+  @ViewChild('updateStatus') updateStatus!: ReusableModalComponent;
 
   constructor() {
     this.registerOrganizationForm = this.fb.group({
@@ -113,7 +118,7 @@ export class OrganizationRegister {
         this.organizationService.register(dto).subscribe({
           next: () => {
             this.toastService.open('Organización registrada con éxito', 'success', 3000, 'bottom-right');
-            this.router.navigate(['/home']);
+            this.updateStatus.open();
           },
           error: (err) => {
             console.error('Error al registrar organización:', err);
@@ -126,5 +131,14 @@ export class OrganizationRegister {
         this.toastService.open('Error al subir archivos: ' + (err.error?.message || err.message), 'error', 5000, 'bottom-right');
       }
     });
+  }
+
+  closeModal(){
+    this.updateStatus.close();
+    this.router.navigate(['/home']);
+  }
+
+  logout(){
+    this.authService.logout();
   }
 }

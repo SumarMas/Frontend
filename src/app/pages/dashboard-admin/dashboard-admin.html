@@ -50,7 +50,7 @@
                     } @else {
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500 font-medium">Organizaciones</p>
+                            <p class="text-sm text-gray-500 font-medium">Organizaciones totales</p>
                             <h3 class="text-3xl font-bold text-purple-600">{{ stats().totalNGOs }}</h3>
                             @if(stats().newNGOsWeek > 0) {
                             <div class="flex items-center gap-1 mt-2">
@@ -82,7 +82,15 @@
                         <div>
                             <p class="text-sm text-gray-500 font-medium">Recaudado</p>
                             <h3 class="text-2xl font-bold text-green-600">{{ stats().totalAmount | currency:'ARS':'symbol-narrow':'1.0-0' }}</h3>
-                            <p class="text-xs text-gray-500 mt-2">Campañas cerradas</p>
+                            @if(stats().closedCampaigns > 0) {
+                            <div class="flex items-center gap-1 mt-2">
+                                <icon name="check" [size]="'sm'" class="text-green-500"></icon>
+                                <span class="text-xs text-green-600 font-semibold">{{ stats().closedCampaigns }}</span>
+                                <span class="text-xs text-gray-500">campañas cerradas en el período</span>
+                            </div>
+                            } @else {
+                            <p class="text-xs text-gray-500 mt-2">No hay campañas cerradas en el período</p>
+                            }
                         </div>
                         <div class="w-12 h-12 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                             <icon name="bar-chart-4-bars" class="text-green-600 text-2xl"></icon>

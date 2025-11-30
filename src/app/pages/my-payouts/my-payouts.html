@@ -190,8 +190,7 @@
                                         (onClick)="downloadProofFile(pay.proof_file_id)">
                                     </app-button-component>
                                     } @else {
-                                    <div class="badge badge-ghost">
-                                        <icon name="warning" [size]="'sm'" class="text-gray-400 mr-1"></icon>
+                                    <div class="badge badge-warning badge-lg">
                                         Pendiente
                                     </div>
                                     }
@@ -263,7 +262,6 @@
                 label="Cancelar" 
                 icon="close"
                 variant="error"
-                [outline]="true"
                 [rounded]="true"
                 (onClick)="closeModal()">
             </app-button-component>
@@ -271,7 +269,7 @@
             <app-button-component 
                 label="Confirmar Solicitud"
                 icon="check"
-                variant="violet" 
+                variant="success" 
                 [rounded]="true"
                 [isLoading]="isRequestingPayout()"
                 (onClick)="confirmPayoutRequest()">

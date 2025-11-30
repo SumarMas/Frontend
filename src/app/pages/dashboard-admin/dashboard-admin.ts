@@ -56,6 +56,7 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
     newNGOsWeek: 0,
     totalDonations: 0,
     totalAmount: 0,
+    closedCampaigns: 0,
     pendingPayouts: 0,
     approvedPayouts: 0
   });
@@ -177,6 +178,9 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
       categories: this.categoryService.getAllCategories()
     }).subscribe({
       next: (data) => {
+        // Total de organizaciones SIN FILTRAR (todas las que existen)
+        const totalAllNGOs = data.allNGOs.length;
+        
         // Filtrar organizaciones por fecha seleccionada
         const filteredNGOs = data.allNGOs.filter(ngo => 
           this.isWithinDateFilter(ngo.createdDateTime)
@@ -196,10 +200,10 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
         );
         
         // Total de organizaciones en el período filtrado
-        const totalNGOs = filteredNGOs.length;
+        const totalNGOsInPeriod = filteredNGOs.length;
         
         // ONGs por estado (en el período)
-        this.ngosData.total = totalNGOs;
+        this.ngosData.total = totalNGOsInPeriod;
         this.ngosData.byStatus.APPROVED = approvedNGOs.length;
         this.ngosData.byStatus.PENDING = pendingNGOs.length;
         this.ngosData.byStatus.REJECTED = deniedNGOs.length;
@@ -222,10 +226,11 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
         this.stats.set({
           totalUsers: 0, // No hay endpoint
           newUsersWeek: 0, // No hay endpoint
-          totalNGOs: totalNGOs,
-          newNGOsWeek: totalNGOs, // ONGs en el período seleccionado
+          totalNGOs: totalAllNGOs, // Total sin filtrar
+          newNGOsWeek: totalNGOsInPeriod, // ONGs en el período seleccionado
           totalDonations: 0, // Se calculará con donaciones
           totalAmount: totalRecaudado,
+          closedCampaigns: filteredClosedCampaigns.length, // Campañas cerradas en el período
           pendingPayouts: 0, // Se puede calcular si hay endpoint
           approvedPayouts: 0 // Se puede calcular si hay endpoint
         });

@@ -94,7 +94,7 @@
                                             <div class="font-semibold text-gray-800">
                                                 {{ getOrganization(payout.ngo_id)?.name || 'Cargando...' }}
                                             </div>
-                                            <div class="text-xs text-gray-500">{{ payout.ngo_id }}</div>
+                                            <div class="text-xs text-gray-500"><b>ID transacción:</b> {{ payout.payout_request_id }}</div>
                                         </div>
                                     </div>
                                 </td>
@@ -108,9 +108,9 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div class="badge badge-info badge-lg">
-                                        <icon name="volunteer-activism" [size]="'sm'" class="mr-1"></icon>
-                                        {{ payout.donations.length || 0 }} donaciones
+                                    <div class="badge badge-info badge-lg flex items-center gap-1 max-w-full">
+                                        <icon name="volunteer-activism" [size]="'sm'" class="flex-shrink-0"></icon>
+                                        <span class="truncate">{{ payout.donations.length || 0 }} donaciones</span>
                                     </div>
                                 </td>
                                 <td>

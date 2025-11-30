@@ -112,4 +112,15 @@
             </div>
         </form>
     </div>
+
+    <app-reusable-modal-component #updateStatus>
+        <p>Para ver impactados sus cambios debe cerrar sesión y volver a ingresar.</p>
+        <br>
+        <p>¿Desea hacerlo ahora?</p>
+
+        <div class="flex justify-end gap-2 mt-4">
+            <app-button-component label="Cancelar" variant="error" [rounded]="true" (onClick)="closeModal()"></app-button-component>
+            <app-button-component label="Cerrar sesión" variant="success" [rounded]="true" (onClick)="logout()"></app-button-component>
+        </div>
+    </app-reusable-modal-component>
 </section>

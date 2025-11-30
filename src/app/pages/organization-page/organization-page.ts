@@ -19,7 +19,7 @@ import { InputComponent } from '../../components/input-component/input-component
 
 @Component({
   selector: 'app-organization-page',
-  imports: [IconComponent, CommonModule, ButtonComponent, ReusableModalComponent, 
+  imports: [IconComponent, CommonModule, ButtonComponent, ReusableModalComponent,
     ApprovalDetailsComponent, ReactiveFormsModule, CampaignCard, InputComponent],
   templateUrl: './organization-page.html',
   styleUrl: './organization-page.scss'
@@ -31,7 +31,7 @@ export class OrganizationPage implements OnInit {
   isLoading = signal<boolean>(true);
   campaigns = signal<GetCampaignDto[]>([]);
   currentSlideIndex = signal<number>(0);
-  
+
   // Signals para rastrear qué archivos mantener
   documentsToKeep = signal<string[]>([]);
   imagesToKeep = signal<string[]>([]);
@@ -90,7 +90,7 @@ export class OrganizationPage implements OnInit {
     }
 
     console.log(this.authService.roles());
-    
+
   }
 
   loadOrganization(ngoId: string) {
@@ -131,7 +131,7 @@ export class OrganizationPage implements OnInit {
 
         // Cargar campañas de la organización
         this.loadCampaigns();
-        
+
         // Inicializar listas de archivos a mantener
         if (org.documentsId) {
           this.documentsToKeep.set([...org.documentsId]);
@@ -151,7 +151,7 @@ export class OrganizationPage implements OnInit {
 
   loadCampaigns() {
     if (!this.ngoId) return;
-    
+
     this.campaignService.filter(undefined, undefined, undefined, this.ngoId).subscribe({
       next: (campaigns) => {
         this.campaigns.set(campaigns);
@@ -202,7 +202,7 @@ export class OrganizationPage implements OnInit {
     if (!fileId) return null;
     const fileData = this.documentCache.get(fileId);
     if (!fileData) return null;
-    
+
     // Convertir base64 a SafeUrl
     const dataUrl = `data:${fileData.mimeType};base64,${fileData.base64}`;
     return this.sanitizer.bypassSecurityTrustUrl(dataUrl);
@@ -212,7 +212,7 @@ export class OrganizationPage implements OnInit {
   getCarouselImages(): { url: SafeUrl | null, alt: string, imageId: string }[] {
     const org = this.organization();
     if (!org || !org.images || org.images.length === 0) return [];
-    
+
     return org.images
       .sort((a, b) => a.orderIndex - b.orderIndex)
       .map(img => ({
@@ -226,17 +226,17 @@ export class OrganizationPage implements OnInit {
   getDocuments(): { name: string, url: SafeUrl | null, fileId: string, type: string, icon: string }[] {
     const org = this.organization();
     if (!org || !org.documentsId || org.documentsId.length === 0) return [];
-    
+
     return org.documentsId.map((docId) => {
       const fileData = this.documentCache.get(docId);
       let type = 'Archivo';
       let icon = 'description';
       let name = 'Documento';
-      
+
       if (fileData) {
         // Usar el nombre real del archivo
         name = fileData.fileName;
-        
+
         // Determinar tipo basado en mimeType
         if (fileData.mimeType.includes('pdf')) {
           type = 'PDF';
@@ -249,7 +249,7 @@ export class OrganizationPage implements OnInit {
           icon = 'description';
         }
       }
-      
+
       return {
         name: name,
         url: this.getDocumentUrl(docId),
@@ -278,10 +278,10 @@ export class OrganizationPage implements OnInit {
     if (slideElement) {
       // Actualizar el índice actual
       this.currentSlideIndex.set(index - 1);
-      
+
       // Usar scrollIntoView con block: 'nearest' para evitar scroll de toda la página
-      slideElement.scrollIntoView({ 
-        behavior: 'smooth', 
+      slideElement.scrollIntoView({
+        behavior: 'smooth',
         block: 'nearest',
         inline: 'start'
       });
@@ -316,6 +316,9 @@ export class OrganizationPage implements OnInit {
   openApprovalModal() {
     this.approvalModalRef.open();
     this.approvalDetailsRef.resetForm();
+    this.ngoId = this.route.snapshot.paramMap.get('ngoId')?.toString() || null;
+
+    if (this.ngoId) this.loadOrganization(this.ngoId);
   }
 
   onApprovalSuccess() {
@@ -333,24 +336,24 @@ export class OrganizationPage implements OnInit {
 
     // Convertir SafeUrl de vuelta a string para descargar
     const url = (file.url as any).changingThisBreaksApplicationSecurity || file.url.toString();
-    
+
     fetch(url)
       .then(response => response.blob())
       .then(blob => {
         const objectUrl = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = objectUrl;
-        
+
         // Usar el nombre del archivo que ya incluye la extensión
         a.download = file.name;
-        
+
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
-        
+
         // Limpiar la URL después de un tiempo
         setTimeout(() => window.URL.revokeObjectURL(objectUrl), 100);
-        
+
         this.toastService.open(`Descargando ${file.type}...`, 'success', 2000);
       })
       .catch(err => {
@@ -364,7 +367,7 @@ export class OrganizationPage implements OnInit {
   toggleEditMode() {
     const newEditMode = !this.isEditMode();
     this.isEditMode.set(newEditMode);
-    
+
     if (newEditMode) {
       // Al activar el modo edición, cargar valores actuales
       const org = this.organization();
@@ -413,7 +416,7 @@ export class OrganizationPage implements OnInit {
 
       try {
         const formValue = this.editForm.value;
-        
+
         // Arrays para almacenar los IDs finales
         let finalDocumentIds: string[] = [...this.documentsToKeep()];
         let finalImageIds: string[] = [...this.imagesToKeep()];
@@ -437,26 +440,26 @@ export class OrganizationPage implements OnInit {
         // Subir nuevos documentos si hay
         if (formValue.documentsId && formValue.documentsId.length > 0) {
           const docFiles = Array.from(formValue.documentsId);
-          const docUploadPromises = docFiles.map(file => 
+          const docUploadPromises = docFiles.map(file =>
             this.fileService.uploadFile(file).toPromise()
           );
-          
+
           const newDocIds = await Promise.all(docUploadPromises);
           finalDocumentIds = [...finalDocumentIds, ...newDocIds.filter(id => id !== undefined) as string[]];
-          
+
           this.toastService.open(`${docFiles.length} documento(s) subido(s) exitosamente`, 'success', 2000);
         }
 
         // Subir nuevas imágenes si hay
         if (formValue.images && formValue.images.length > 0) {
           const imageFiles = Array.from(formValue.images);
-          const imageUploadPromises = imageFiles.map(file => 
+          const imageUploadPromises = imageFiles.map(file =>
             this.fileService.uploadFile(file).toPromise()
           );
-          
+
           const newImageIds = await Promise.all(imageUploadPromises);
           finalImageIds = [...finalImageIds, ...newImageIds.filter(id => id !== undefined) as string[]];
-          
+
           this.toastService.open(`${imageFiles.length} imagen(es) subida(s) exitosamente`, 'success', 2000);
         }
 
@@ -479,7 +482,7 @@ export class OrganizationPage implements OnInit {
         if (formValue.description && formValue.description.trim() !== '') {
           updateDto.description = formValue.description.trim();
         }
-        
+
         // Agregar profileFileId y bannerFileId si fueron subidos
         if (newProfileFileId) {
           updateDto.profileFileId = newProfileFileId;
@@ -493,10 +496,10 @@ export class OrganizationPage implements OnInit {
         this.toastService.open('Organización actualizada exitosamente', 'success', 3000);
         this.isEditMode.set(false);
         this.editForm.reset();
-        
+
         // Recargar la organización para ver los cambios
         this.loadOrganization(this.ngoId);
-        
+
       } catch (error) {
         console.error('Error al guardar cambios:', error);
         this.toastService.open('Error al subir los archivos', 'error', 3000);
@@ -506,7 +509,7 @@ export class OrganizationPage implements OnInit {
     }
   }
 
-  navigate(url: string){
+  navigate(url: string) {
     this.router.navigate([url]);
   }
 }

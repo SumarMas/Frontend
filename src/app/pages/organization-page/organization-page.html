@@ -105,8 +105,8 @@
                                     [rounded]="true" (onClick)="toggleEditMode()">
                                 </app-button-component>
 
-                                    <app-button-component icon="add" label="Nueva campaña" variant="violet" [disabled]="organization()?.status === 'PENDING'" tooltipPosition="left"
-                                    [tooltip]="organization()?.status === 'PENDING' ? 'No puedes crear una nueva campaña mientras la organización está pendiente de verificación' : ''"  [rounded]="true" (onClick)="navigate('/campaigns/create')">
+                                    <app-button-component icon="add" label="Nueva campaña" variant="violet" [disabled]="organization()?.status !== 'VERIFIED'" tooltipPosition="left"
+                                    [tooltip]="organization()?.status !== 'VERIFIED' ? 'No puedes crear una nueva campaña si la organización no está verificada' : ''" [rounded]="true" (onClick)="navigate('/campaigns/create')">
                                 </app-button-component>
                                 
                                 }
