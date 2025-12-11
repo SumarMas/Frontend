@@ -88,31 +88,33 @@ export class MyDonations implements OnInit {
 
   /**
    * Obtiene la fecha de donación manejando diferentes formatos:
-   * - Array de números [año, mes, día, hora, minuto, segundo]
-   * - String ISO "2025-11-21T22:31:53"
-   * - Date object
+   * - Array de números [año, mes, día, hora, minuto, segundo] (payment_datetime)
+   * - String ISO "2025-11-21T22:31:53" (created_at)
    * - null
    */
   getDonationDate(donation: GetDonationDto): Date | null {
-    const dateValue = donation.payment_datetime || donation.created_at;
-    
-    if (!dateValue) return null;
-    
-    // Si es un array de números, convertirlo
-    if (Array.isArray(dateValue)) {
-      if (dateValue.length < 3) return null;
-      return new Date(
-        dateValue[0], // año
-        dateValue[1] - 1, // mes (0-indexed)
-        dateValue[2], // día
-        dateValue[3] || 0, // hora
-        dateValue[4] || 0, // minuto
-        dateValue[5] || 0  // segundo
-      );
+    // Intentar primero con payment_datetime (array de números)
+    if (donation.payment_datetime && Array.isArray(donation.payment_datetime)) {
+      const arr = donation.payment_datetime;
+      if (arr.length >= 3) {
+        return new Date(
+          arr[0], // año
+          arr[1] - 1, // mes (0-indexed)
+          arr[2], // día
+          arr[3] || 0, // hora
+          arr[4] || 0, // minuto
+          arr[5] || 0  // segundo
+        );
+      }
     }
     
-    // Si es string o Date, dejarlo que Angular lo maneje
-    return dateValue as Date;
+    // Fallback: usar created_at (string ISO)
+    if (donation.created_at) {
+      const parsed = new Date(donation.created_at);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+    
+    return null;
   }
 
   /**

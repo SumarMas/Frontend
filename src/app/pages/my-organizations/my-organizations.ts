@@ -92,11 +92,11 @@ export class MyOrganizations implements OnInit {
   getStatusIcon(status: string): string {
     switch (status) {
       case 'VERIFIED':
-        return 'check-circle';
+        return 'check';
       case 'PENDING':
         return 'schedule';
       case 'DENIED':
-        return 'cancel';
+        return 'close';
       case 'UNVERIFIED':
         return 'info';
       default:

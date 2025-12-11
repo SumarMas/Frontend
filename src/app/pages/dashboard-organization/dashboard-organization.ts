@@ -1,58 +1,54 @@
-import { Component, OnInit, signal, AfterViewInit, PLATFORM_ID, inject, effect } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, AfterViewInit, PLATFORM_ID, inject, effect } from '@angular/core';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import { IconComponent } from '../../components/icon-component/icon-component';
 import { ButtonComponent } from '../../components/button-component/button-component';
-import { CurrencyPipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { isPlatformBrowser } from '@angular/common';
 import { OrganizationService } from '../../services/api/organization-service';
 import { CampaignService } from '../../services/api/campaign-service';
 import { DonationService } from '../../services/api/donation-service';
 import { PayoutService } from '../../services/api/payout-service';
+import { CategoryService } from '../../services/api/category-service';
 import { forkJoin, map, switchMap, of, catchError } from 'rxjs';
-import { GetCampaignDto, CampaignState } from '../../models/api/campaign';
+import { GetCampaignDto } from '../../models/api/campaign';
 import { GetDonationDto } from '../../models/api/donation';
 import { GetOrganizationDto } from '../../models/api/organization';
 import { PayoutDto } from '../../models/api/payouts';
+import { CategoryDto } from '../../models/api/category';
 
 Chart.register(...registerables);
 
 type DateFilter = '7d' | '30d' | '3m' | '1y';
 
-interface Campaign {
-  id: string;
-  name: string;
-}
-
 @Component({
   selector: 'app-dashboard-organization',
-  imports: [IconComponent, ButtonComponent, CurrencyPipe],
+  imports: [IconComponent, ButtonComponent, CurrencyPipe, DatePipe],
   templateUrl: './dashboard-organization.html',
   styleUrl: './dashboard-organization.scss'
 })
-export class DashboardOrganization implements OnInit, AfterViewInit {
+export class DashboardOrganization implements OnInit, AfterViewInit, OnDestroy {
   private platformId = inject(PLATFORM_ID);
   private organizationService = inject(OrganizationService);
   private campaignService = inject(CampaignService);
   private donationService = inject(DonationService);
   private payoutService = inject(PayoutService);
-  
-  // Data from API
+  private categoryService = inject(CategoryService);
+
+  // ==================== DATOS CARGADOS UNA SOLA VEZ ====================
   private myOrganization?: GetOrganizationDto;
   private allCampaigns: GetCampaignDto[] = [];
-  private allDonations: GetDonationDto[] = []; // Todas las donaciones de la organización
-  private selectedCampaignDonations: GetDonationDto[] = []; // Donaciones de la campaña seleccionada
-  private allPayouts: PayoutDto[] = []; // Todos los payouts de la organización
-  
-  isLoading = signal<boolean>(true);
-  organizationName = signal<string>('Mi Organización'); // Nombre de la organización
-  
-  // Charts instances
-  private campaignProgressChart?: Chart;
+  private allDonations: GetDonationDto[] = [];
+  private allPayouts: PayoutDto[] = [];
+  private allCategories: CategoryDto[] = [];
 
-  // Filtros
+  // ==================== ESTADO DE LA UI ====================
+  isLoading = signal<boolean>(true);
+  organizationName = signal<string>('Mi Organización');
+
+  // ==================== FILTROS ====================
   selectedDateFilter = signal<DateFilter>('30d');
-  selectedCampaign = signal<string>(''); // Vacío hasta que se carguen las campañas
-  
+  selectedCampaignId = signal<string>('');
+
   dateFilterOptions = [
     { value: '7d' as DateFilter, label: 'Últimos 7 días' },
     { value: '30d' as DateFilter, label: 'Últimos 30 días' },
@@ -60,501 +56,507 @@ export class DashboardOrganization implements OnInit, AfterViewInit {
     { value: '1y' as DateFilter, label: 'Último año' }
   ];
 
-  campaigns = signal<Campaign[]>([
-    { id: '', name: 'Seleccione una campaña...' }
-  ]);
+  campaignOptions = signal<{ id: string; name: string }[]>([]);
 
-  // Estadísticas generales
+  // ==================== MÉTRICAS CALCULADAS ====================
+  // Stats de la organización (filtrados por fecha)
   stats = signal({
-    totalDonations: 0,
-    totalAmount: 0,
-    activeCampaigns: 0,
-    avgDonation: 0,
-    pendingPayouts: 0,
-    approvedPayouts: 0,
-    campaignsWithDonations: 0
+    totalDonations: 0,      // count(donations) en el período
+    totalAmount: 0,         // sum(donations.amount) en el período
+    avgDonation: 0,         // totalAmount / totalDonations
+    activeCampaigns: 0,     // campañas con state=ACTIVE
+    totalCampaigns: 0,      // todas las campañas
+    pendingPayouts: 0,      // payouts con status=PENDING
+    approvedPayouts: 0      // payouts con status=APPROVED
   });
 
-  // Datos de campaña activa
-  campaignData = {
-    name: 'Cargando...',
+  // Datos de la campaña seleccionada
+  campaignData = signal({
+    name: 'Sin campaña seleccionada',
     goal: 0,
-    raised: 0,
-    daysActive: 0,
-    daysLimit: 0,
-    donationsCount: 0,
-    progress: 0
-  };
+    raised: 0,              // Total recaudado (current_amount - siempre)
+    raisedInPeriod: 0,      // Recaudado en el período (de donaciones)
+    donationsCount: 0,      // Donaciones en el período
+    donationsCountTotal: 0, // Donaciones totales (estimadas)
+    progress: 0,
+    startDate: null as Date | null,  // Fecha de inicio
+    daysRemaining: 0,
+    state: '' as 'ACTIVE' | 'CLOSED' | ''
+  });
+
+  // Datos para gráficos y tablas
+  categoriesData: Record<string, number> = {};
+  topCampaigns: { name: string; amount: number; donationsCount: number }[] = [];
+  
+  // Datos de donaciones por día de la semana para la campaña seleccionada
+  weeklyDonationsData = signal<number[]>([0, 0, 0, 0, 0, 0, 0]);
+
+  get hasCategoriesData(): boolean {
+    return Object.keys(this.categoriesData).length > 0;
+  }
+
+  // ==================== CHARTS ====================
+  private campaignProgressChart?: Chart;
+  private categoriesChart?: Chart;
 
   constructor() {
-    // Effect para reaccionar a cambios en filtros
+    // Effect: cuando cambia el filtro de fecha, recalcular métricas
     effect(() => {
       const dateFilter = this.selectedDateFilter();
-      const campaign = this.selectedCampaign();
-      if (isPlatformBrowser(this.platformId) && !this.isLoading()) {
-        this.updateDataByFilters(dateFilter, campaign);
+      const campaignId = this.selectedCampaignId();
+      
+      if (!this.isLoading() && isPlatformBrowser(this.platformId)) {
+        this.recalculateMetrics();
       }
     });
   }
 
   ngOnInit(): void {
-    this.loadDashboardData();
+    this.loadAllData();
   }
 
-  private loadDashboardData(): void {
+  ngAfterViewInit(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      setTimeout(() => this.recreateCharts(), 200);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.campaignProgressChart?.destroy();
+    this.categoriesChart?.destroy();
+  }
+
+  // ==================== CARGA INICIAL DE DATOS ====================
+  private loadAllData(): void {
     this.isLoading.set(true);
-    
-    // 1. Obtener la organización del usuario autenticado
+
+    // 1. Obtener mi organización
     this.organizationService.getMyOrganizations().pipe(
       catchError(error => {
         console.error('Error getting organization:', error);
-        this.isLoading.set(false);
         throw error;
       }),
-      switchMap(organization => {
-        this.myOrganization = organization;
-        this.organizationName.set(organization.name); // Actualizar nombre de la organización
-        
-        // 2. Obtener todas las campañas de la NGO (sin filtro de estado)
-        return this.campaignService.filter(undefined, undefined, undefined, organization.ngoId).pipe(
-          catchError(error => {
-            console.error('Error getting campaigns:', error);
-            return of([]);
-          })
-        );
+      switchMap(org => {
+        this.myOrganization = org;
+        this.organizationName.set(org.name);
+
+        // 2. Cargar en paralelo: campañas, categorías, payouts
+        return forkJoin({
+          campaigns: this.campaignService.filter(undefined, undefined, undefined, org.ngoId).pipe(
+            catchError(() => of([]))
+          ),
+          categories: this.categoryService.getAllCategories().pipe(
+            catchError(() => of([]))
+          ),
+          payouts: this.payoutService.getMyPayouts().pipe(
+            catchError(() => of([]))
+          )
+        });
       }),
-      switchMap(campaigns => {
+      switchMap(({ campaigns, categories, payouts }) => {
         this.allCampaigns = campaigns;
-        console.log('Loaded campaigns:', campaigns.map(c => ({
-          id: c.id, 
-          title: c.title, 
-          state: c.campaign_state,
-          current: c.current_amount,
-          goal: c.goal_amount
-        })));
+        this.allCategories = categories;
+        this.allPayouts = payouts;
+
+        // Configurar opciones del selector de campañas
+        this.campaignOptions.set(campaigns.map(c => ({ id: c.id, name: c.title })));
         
-        // Construir lista de campañas para el filtro
-        const campaignOptions: Campaign[] = [
-          { id: '', name: 'Seleccione una campaña...' }, // Placeholder deshabilitado
-          ...campaigns.map(c => ({ id: c.id, name: c.title }))
-        ];
-        this.campaigns.set(campaignOptions);
-        
-        // Seleccionar la primera campaña real por defecto
+        // Seleccionar primera campaña por defecto
         if (campaigns.length > 0) {
-          this.selectedCampaign.set(campaigns[0].id);
+          this.selectedCampaignId.set(campaigns[0].id);
         }
-        
-        // 3. Obtener donaciones de todas las campañas en paralelo
+
+        // 3. Cargar donaciones de todas las campañas en paralelo
+        // El backend requiere el parámetro status
+        // Cargamos tanto CONFIRMED como PAID para tener todas las donaciones completadas
         if (campaigns.length === 0) {
           return of([]);
         }
+
+        const donationRequests: ReturnType<typeof this.donationService.getDonationsByCampaign>[] = [];
         
-        const donationRequests = campaigns.map(campaign =>
-          this.donationService.getDonationsByCampaign(campaign.id).pipe(
-            catchError(error => {
-              console.error(`Error getting donations for campaign ${campaign.title}:`, error);
-              return of([]);
-            })
-          )
-        );
-        
+        campaigns.forEach(campaign => {
+          // Cargar donaciones CONFIRMED
+          donationRequests.push(
+            this.donationService.getDonationsByCampaign(campaign.id, 'CONFIRMED').pipe(
+              catchError(() => of([]))
+            )
+          );
+          // Cargar donaciones PAID
+          donationRequests.push(
+            this.donationService.getDonationsByCampaign(campaign.id, 'PAID').pipe(
+              catchError(() => of([]))
+            )
+          );
+        });
+
         return forkJoin(donationRequests).pipe(
-          map(donationArrays => donationArrays.flat())
-        );
-      }),
-      switchMap(allDonations => {
-        this.allDonations = allDonations;
-        console.log('Loaded total donations:', allDonations.length);
-        
-        // 4. Cargar payouts de la organización
-        return this.payoutService.getMyPayouts().pipe(
-          catchError(error => {
-            console.error('Error getting payouts:', error);
-            return of([]);
-          }),
-          map(payouts => ({ allDonations, payouts }))
+          map(arrays => arrays.flat())
         );
       }),
       catchError(error => {
-        console.error('Error in loadDashboardData:', error);
+        console.error('Error loading data:', error);
         this.isLoading.set(false);
-        return of({ allDonations: [], payouts: [] });
+        return of([]);
       })
     ).subscribe({
-      next: ({ allDonations, payouts }) => {
-        this.allDonations = allDonations;
-        this.allPayouts = payouts;
-        console.log('Loaded total payouts:', payouts.length);
-        
-        // Calcular estadísticas globales de la organización
-        this.calculateGlobalStats();
-        
-        // Calcular datos de la campaña seleccionada
-        this.updateSelectedCampaignData();
-        
-        // Recrear gráficos
+      next: (donations) => {
+        this.allDonations = donations;
+
+        this.recalculateMetrics();
+        this.isLoading.set(false);
+
         if (isPlatformBrowser(this.platformId)) {
           setTimeout(() => this.recreateCharts(), 100);
         }
-        
-        this.isLoading.set(false);
       },
-      error: (error) => {
-        console.error('Error loading dashboard data:', error);
-        this.isLoading.set(false);
-      }
+      error: () => this.isLoading.set(false)
     });
   }
 
-  // Calcula estadísticas GLOBALES de toda la organización (no cambian con filtros)
-  private calculateGlobalStats(): void {
-    console.log('calculateGlobalStats - Total campaigns:', this.allCampaigns.length);
-    console.log('calculateGlobalStats - Total donations from API:', this.allDonations.length);
+  // ==================== RECÁLCULO DE MÉTRICAS (cuando cambia filtro) ====================
+  private recalculateMetrics(): void {
+    const dateFilter = this.selectedDateFilter();
+    const startDate = this.getStartDate(dateFilter);
+
+    // Filtrar donaciones por fecha (payment_datetime o created_at)
+    const filteredDonations = this.filterDonationsByDate(this.allDonations, startDate);
+
+    // Filtrar payouts por fecha (request_datetime)
+    const filteredPayouts = this.filterPayoutsByDate(this.allPayouts, startDate);
+
+    // ===== STATS DE LA ORGANIZACIÓN (FILTRADAS POR PERÍODO) =====
+    // Donaciones válidas: CONFIRMED o PAID
+    const validDonations = filteredDonations.filter(d => 
+      d.status === 'PAID' || d.status === 'CONFIRMED'
+    );
     
-    // Si no tenemos donaciones del API, calculamos desde current_amount de las campañas
-    let totalDonations = 0;
-    let totalAmount = 0;
-    let avgDonation = 0;
-    let campaignsWithDonations = 0;
+    const totalDonations = validDonations.length;
     
-    if (this.allDonations.length > 0) {
-      // Opción 1: Tenemos donaciones del API
-      const confirmedDonations = this.allDonations.filter(d => d.status === 'CONFIRMED');
-      totalDonations = confirmedDonations.length;
-      totalAmount = confirmedDonations.reduce((sum, d) => sum + (d.amount || 0), 0);
-      avgDonation = totalDonations > 0 ? totalAmount / totalDonations : 0;
-      
-      const campaignIdsWithDonations = new Set(confirmedDonations.map(d => d.campaign_id));
-      campaignsWithDonations = campaignIdsWithDonations.size;
-    } else {
-      // Opción 2: API devuelve 500, usamos current_amount de las campañas
-      console.log('Using campaign current_amount as fallback');
-      totalAmount = this.allCampaigns.reduce((sum, c) => sum + (c.current_amount || 0), 0);
-      campaignsWithDonations = this.allCampaigns.filter(c => (c.current_amount || 0) > 0).length;
-      
-      // Estimamos número de donaciones (asumiendo promedio de $500 por donación)
-      totalDonations = totalAmount > 0 ? Math.round(totalAmount / 500) : 0;
-      avgDonation = totalDonations > 0 ? totalAmount / totalDonations : 0;
-    }
+    // Total recaudado en el período (de donaciones filtradas)
+    const totalAmount = validDonations.reduce((sum, d) => sum + (d.amount || 0), 0);
     
-    // Campañas activas
+    // Promedio: total / donaciones
+    const avgDonation = totalDonations > 0 ? totalAmount / totalDonations : 0;
+
     const activeCampaigns = this.allCampaigns.filter(c => 
       c.campaign_state?.toString().toUpperCase() === 'ACTIVE'
     ).length;
-    
-    // Calcular payouts pendientes y aprobados
-    const pendingPayouts = this.allPayouts.filter(p => p.status === 'PENDING').length;
-    const approvedPayouts = this.allPayouts.filter(p => p.status === 'APPROVED').length;
-    
+
+    const pendingPayouts = filteredPayouts.filter(p => p.status === 'PENDING').length;
+    const approvedPayouts = filteredPayouts.filter(p => p.status === 'APPROVED').length;
+
     this.stats.set({
       totalDonations,
       totalAmount,
-      activeCampaigns,
       avgDonation,
+      activeCampaigns,
+      totalCampaigns: this.allCampaigns.length,
       pendingPayouts,
-      approvedPayouts,
-      campaignsWithDonations
+      approvedPayouts
     });
-    
-    console.log('Global stats:', this.stats());
-  }
-  
-  // Actualiza los datos de la campaña seleccionada (card grande)
-  private updateSelectedCampaignData(): void {
-    const selectedCampaignId = this.selectedCampaign();
-    console.log('updateSelectedCampaignData - Selected campaign ID:', selectedCampaignId);
-    
-    let campaign: GetCampaignDto | undefined;
-    
-    if (selectedCampaignId && selectedCampaignId !== '') {
-      // Buscar campaña específica
-      campaign = this.allCampaigns.find(c => c.id === selectedCampaignId);
-      console.log('Found campaign:', campaign?.title);
-    } else {
-      // Si no hay campaña seleccionada (placeholder), mostrar la primera
-      campaign = this.allCampaigns[0];
-      console.log('Using first campaign:', campaign?.title);
-    }
-    
-    if (!campaign) {
-      console.warn('No campaign found');
-      return;
-    }
-    
-    // Filtrar donaciones de esta campaña específica
-    const campaignDonations = this.allDonations.filter(d => d.campaign_id === campaign!.id);
-    const confirmedDonations = campaignDonations.filter(d => d.status === 'CONFIRMED');
-    
-    console.log('Campaign donations:', campaignDonations.length, 'confirmed:', confirmedDonations.length);
-    
-    // Si no tenemos donaciones del API, estimamos desde current_amount
-    let donationsCount = confirmedDonations.length;
-    if (donationsCount === 0 && (campaign.current_amount || 0) > 0) {
-      // Estimación: asumimos promedio de $500 por donación
-      donationsCount = Math.round((campaign.current_amount || 0) / 500);
-      console.log('Estimated donations:', donationsCount, 'from amount:', campaign.current_amount);
-    }
-    
-    this.campaignData = {
-      name: campaign.title,
-      goal: campaign.goal_amount || 0,
-      raised: campaign.current_amount || 0,
-      daysActive: this.calculateDaysActive(campaign.create_date_time),
-      daysLimit: this.calculateDaysLimit(campaign.end_date_time, campaign.create_date_time),
-      donationsCount: donationsCount,
-      progress: Math.min(Math.floor(((campaign.current_amount || 0) / (campaign.goal_amount || 1)) * 100), 100)
-    };
-    
-    console.log('Updated campaignData:', this.campaignData);
-  }
-  
-  
-  private calculateDaysActive(create_date_time: Date | string | null | undefined): number {
-    // Calcula cuántos días han pasado desde la creación de la campaña hasta hoy
-    if (!create_date_time) {
-      return 0;
-    }
-    const created = new Date(create_date_time);
-    if (isNaN(created.getTime())) {
-      console.warn('Invalid create_date_time:', create_date_time);
-      return 0;
-    }
-    const now = new Date();
-    const diff = now.getTime() - created.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    return Math.max(0, days);
-  }
-  
-  private calculateDaysLimit(end_date_time: Date | string | null | undefined, create_date_time?: Date | string | null | undefined): number {
-    // Calcula el total de días que la campaña estaba programada para estar activa
-    // (desde create_date_time hasta end_date_time)
-    if (!end_date_time || !create_date_time) {
-      return 0;
-    }
-    const created = new Date(create_date_time);
-    const end = new Date(end_date_time);
-    if (isNaN(created.getTime()) || isNaN(end.getTime())) {
-      console.warn('Invalid dates:', { create_date_time, end_date_time });
-      return 0;
-    }
-    const diff = end.getTime() - created.getTime();
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    return Math.max(0, days); // Total de días programados
-  }
-  
-  ngAfterViewInit(): void {
+
+    // ===== DATOS DE LA CAMPAÑA SELECCIONADA =====
+    this.updateCampaignData(filteredDonations);
+
+    // ===== DONACIONES POR DÍA DE LA SEMANA (CAMPAÑA SELECCIONADA) =====
+    this.calculateWeeklyDonations(filteredDonations);
+
+    // ===== RECAUDACIÓN POR CATEGORÍA =====
+    this.calculateCategoriesData(filteredDonations);
+
+    // ===== TOP 5 CAMPAÑAS =====
+    this.calculateTopCampaigns(filteredDonations);
+
+    // Recrear gráficos con nuevos datos
     if (isPlatformBrowser(this.platformId)) {
-      setTimeout(() => {
-        this.createCampaignProgressChart();
-      }, 100);
+      this.recreateCharts();
     }
   }
 
+  private updateCampaignData(filteredDonations: GetDonationDto[]): void {
+    const campaignId = this.selectedCampaignId();
+    const campaign = this.allCampaigns.find(c => c.id === campaignId);
+
+    if (!campaign) {
+      this.campaignData.set({
+        name: 'Sin campaña seleccionada',
+        goal: 0,
+        raised: 0,
+        raisedInPeriod: 0,
+        donationsCount: 0,
+        donationsCountTotal: 0,
+        progress: 0,
+        startDate: null,
+        daysRemaining: 0,
+        state: ''
+      });
+      return;
+    }
+
+    // IMPORTANTE: Usar current_amount de la campaña como fuente principal
+    // Es el dato más confiable del backend
+    const raised = campaign.current_amount || 0;
+    const goal = campaign.goal_amount || 0;
+    const progress = goal > 0 ? Math.min(Math.floor((raised / goal) * 100), 100) : 0;
+
+    // Donaciones de esta campaña en el período (para mostrar actividad del período)
+    const campaignDonations = filteredDonations.filter(d => 
+      d.campaign_id === campaign.id && (d.status === 'PAID' || d.status === 'CONFIRMED')
+    );
+    const raisedInPeriod = campaignDonations.reduce((sum, d) => sum + (d.amount || 0), 0);
+    const donationsCount = campaignDonations.length;
+
+    // Todas las donaciones de esta campaña (sin filtro de fecha)
+    const allCampaignDonations = this.allDonations.filter(d => 
+      d.campaign_id === campaign.id && (d.status === 'PAID' || d.status === 'CONFIRMED')
+    );
+    const donationsCountTotal = allCampaignDonations.length;
+
+    this.campaignData.set({
+      name: campaign.title,
+      goal,
+      raised,
+      raisedInPeriod,
+      donationsCount,
+      donationsCountTotal,
+      progress,
+      startDate: this.parseDate(campaign.create_date_time),
+      daysRemaining: this.calculateDaysRemaining(campaign.end_date_time),
+      state: campaign.campaign_state || ''
+    });
+  }
+
+  private calculateCategoriesData(filteredDonations: GetDonationDto[]): void {
+    const result: Record<string, number> = {};
+
+    this.allCategories.forEach(category => {
+      // Campañas que tienen esta categoría
+      const campaignsWithCategory = this.allCampaigns.filter(c =>
+        c.categories?.some(cat => cat.id === category.id || cat.name === category.name)
+      );
+
+      // IDs de campañas con esta categoría
+      const campaignIds = campaignsWithCategory.map(c => c.id);
+
+      // Sumar donaciones filtradas que pertenecen a estas campañas
+      const total = filteredDonations
+        .filter(d => campaignIds.includes(d.campaign_id) && (d.status === 'PAID' || d.status === 'CONFIRMED'))
+        .reduce((sum, d) => sum + (d.amount || 0), 0);
+
+      if (total > 0) {
+        result[category.name] = total;
+      }
+    });
+
+    this.categoriesData = result;
+  }
+
+  private calculateWeeklyDonations(filteredDonations: GetDonationDto[]): void {
+    const campaignId = this.selectedCampaignId();
+    
+    // Inicializar array para cada día de la semana (Lun=0, ..., Dom=6)
+    const amounts = [0, 0, 0, 0, 0, 0, 0];
+
+    // Filtrar donaciones de la campaña seleccionada
+    const campaignDonations = filteredDonations.filter(d => 
+      d.campaign_id === campaignId && (d.status === 'PAID' || d.status === 'CONFIRMED')
+    );
+
+    campaignDonations.forEach(donation => {
+      // Usar payment_datetime o created_at
+      const date = this.parseDate(donation.payment_datetime) || this.parseDate(donation.created_at);
+      if (date) {
+        // getDay() retorna 0=Domingo, 1=Lunes, ..., 6=Sábado
+        // Convertir a 0=Lunes, ..., 6=Domingo
+        let dayIndex = date.getDay() - 1;
+        if (dayIndex < 0) dayIndex = 6; // Domingo pasa a índice 6
+        
+        amounts[dayIndex] += donation.amount || 0;
+      }
+    });
+
+    this.weeklyDonationsData.set(amounts);
+  }
+
+  private calculateTopCampaigns(filteredDonations: GetDonationDto[]): void {
+    const campaignTotals = this.allCampaigns.map(campaign => {
+      // Filtrar donaciones de esta campaña dentro del período seleccionado
+      const campaignDonations = filteredDonations.filter(d => 
+        d.campaign_id === campaign.id && (d.status === 'PAID' || d.status === 'CONFIRMED')
+      );
+      
+      // Sumar el monto de las donaciones filtradas
+      const amount = campaignDonations.reduce((sum, d) => sum + (d.amount || 0), 0);
+      
+      return {
+        name: campaign.title,
+        amount,
+        donationsCount: campaignDonations.length
+      };
+    });
+
+    this.topCampaigns = campaignTotals
+      .filter(c => c.amount > 0)
+      .sort((a, b) => b.amount - a.amount)
+      .slice(0, 5);
+  }
+
+  // ==================== UTILIDADES DE FECHA ====================
+  private getStartDate(filter: DateFilter): Date {
+    const now = new Date();
+    switch (filter) {
+      case '7d': return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      case '30d': return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      case '3m': return new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+      case '1y': return new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+    }
+  }
+
+  private parseDate(date: Date | string | number[] | null | undefined): Date | null {
+    if (!date) return null;
+
+    // Si ya es un Date válido
+    if (date instanceof Date && !isNaN(date.getTime())) {
+      return date;
+    }
+
+    // Si es un array de números [año, mes, día, hora, min, seg]
+    if (Array.isArray(date)) {
+      if (date.length < 3) return null;
+      return new Date(
+        date[0],
+        date[1] - 1, // mes 0-indexed
+        date[2],
+        date[3] || 0,
+        date[4] || 0,
+        date[5] || 0
+      );
+    }
+
+    // Si es string, intentar parsear
+    if (typeof date === 'string') {
+      // Reemplazar espacio por T para formato ISO estándar
+      // "2025-11-21 22:08:37" -> "2025-11-21T22:08:37"
+      const normalizedDate = date.replace(' ', 'T');
+      const parsed = new Date(normalizedDate);
+      return isNaN(parsed.getTime()) ? null : parsed;
+    }
+
+    return null;
+  }
+
+  private filterDonationsByDate(donations: GetDonationDto[], startDate: Date): GetDonationDto[] {
+    const now = new Date();
+    return donations.filter(d => {
+      // Intentar con payment_datetime primero, luego created_at como fallback
+      let dateToCheck = this.parseDate(d.payment_datetime);
+      if (!dateToCheck) {
+        dateToCheck = this.parseDate(d.created_at);
+      }
+      // Si no tiene ninguna fecha, incluirla (para no perder datos)
+      if (!dateToCheck) return true;
+      return dateToCheck >= startDate && dateToCheck <= now;
+    });
+  }
+
+  private filterPayoutsByDate(payouts: PayoutDto[], startDate: Date): PayoutDto[] {
+    const now = new Date();
+    return payouts.filter(p => {
+      const requestDate = this.parseDate(p.request_datetime);
+      if (!requestDate) return true; // Incluir si no tiene fecha
+      return requestDate >= startDate && requestDate <= now;
+    });
+  }
+
+  private calculateDaysRemaining(endDate: Date | string | number[] | null | undefined): number {
+    const end = this.parseDate(endDate);
+    if (!end) return 0;
+
+    const now = new Date();
+    const diff = end.getTime() - now.getTime();
+    return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+  }
+
+  // ==================== EVENTOS DE UI ====================
   onDateFilterChange(filter: DateFilter): void {
     this.selectedDateFilter.set(filter);
   }
 
   onCampaignChange(event: Event): void {
     const select = event.target as HTMLSelectElement;
-    this.selectedCampaign.set(select.value);
+    this.selectedCampaignId.set(select.value);
   }
 
-  private updateDataByFilters(dateFilter: DateFilter, campaignId: string): void {
-    console.log('updateDataByFilters - dateFilter:', dateFilter, 'campaignId:', campaignId);
-    
-    // Filtrar donaciones por fecha
-    const filteredDonations = this.filterDonationsByDate(this.allDonations, dateFilter);
-    console.log('Filtered donations:', filteredDonations.length, 'from total:', this.allDonations.length);
-    
-    // Recalcular stats globales con donaciones filtradas
-    this.calculateGlobalStatsFromDonations(filteredDonations);
-    
-    // Actualizar datos de campaña seleccionada con donaciones filtradas
-    this.updateSelectedCampaignDataFromDonations(filteredDonations);
-    
-    this.recreateCharts();
-  }
-  
-  private filterDonationsByDate(donations: GetDonationDto[], dateFilter: DateFilter): GetDonationDto[] {
-    const now = new Date();
-    let startDate: Date;
-    
-    switch (dateFilter) {
-      case '7d':
-        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        break;
-      case '30d':
-        startDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-        break;
-      case '3m':
-        startDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-        break;
-      case '1y':
-        startDate = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
-        break;
-      default:
-        return donations; // Sin filtro
-    }
-    
-    return donations.filter(donation => {
-      if (!donation.payment_datetime) return false;
-      
-      // Manejar diferentes formatos de fecha
-      let paymentDate: Date;
-      if (Array.isArray(donation.payment_datetime)) {
-        // Array de números [año, mes, día, hora, minuto, segundo]
-        if (donation.payment_datetime.length < 3) return false;
-        paymentDate = new Date(
-          donation.payment_datetime[0], // año
-          donation.payment_datetime[1] - 1, // mes (0-indexed)
-          donation.payment_datetime[2], // día
-          donation.payment_datetime[3] || 0, // hora
-          donation.payment_datetime[4] || 0, // minuto
-          donation.payment_datetime[5] || 0  // segundo
-        );
-      } else {
-        // String o Date
-        paymentDate = new Date(donation.payment_datetime);
-      }
-      
-      return paymentDate >= startDate && paymentDate <= now;
-    });
-  }
-  
-  private calculateGlobalStatsFromDonations(donations: GetDonationDto[]): void {
-    const confirmedDonations = donations.filter(d => d.status === 'CONFIRMED');
-    
-    let totalDonations = confirmedDonations.length;
-    let totalAmount = confirmedDonations.reduce((sum, d) => sum + (d.amount || 0), 0);
-    let avgDonation = totalDonations > 0 ? totalAmount / totalDonations : 0;
-    
-    // Si no hay donaciones del API, usar current_amount de campañas (sin filtro de fecha)
-    if (totalDonations === 0 && this.allCampaigns.length > 0) {
-      console.log('No donations in filter range, using campaign current_amount');
-      totalAmount = this.allCampaigns.reduce((sum, c) => sum + (c.current_amount || 0), 0);
-      totalDonations = totalAmount > 0 ? Math.round(totalAmount / 500) : 0;
-      avgDonation = totalDonations > 0 ? totalAmount / totalDonations : 0;
-    }
-    
-    const campaignIdsWithDonations = new Set(confirmedDonations.map(d => d.campaign_id));
-    const campaignsWithDonations = campaignIdsWithDonations.size || this.allCampaigns.filter(c => (c.current_amount || 0) > 0).length;
-    
-    const activeCampaigns = this.allCampaigns.filter(c => 
-      c.campaign_state?.toString().toUpperCase() === 'ACTIVE'
-    ).length;
-    
-    // Calcular payouts pendientes y aprobados (no cambian con filtro de fecha)
-    const pendingPayouts = this.allPayouts.filter(p => p.status === 'PENDING').length;
-    const approvedPayouts = this.allPayouts.filter(p => p.status === 'APPROVED').length;
-    
-    this.stats.set({
-      totalDonations,
-      totalAmount,
-      activeCampaigns,
-      avgDonation,
-      pendingPayouts,
-      approvedPayouts,
-      campaignsWithDonations
-    });
-  }
-  
-  private updateSelectedCampaignDataFromDonations(filteredDonations: GetDonationDto[]): void {
-    const selectedCampaignId = this.selectedCampaign();
-    
-    let campaign: GetCampaignDto | undefined;
-    
-    if (selectedCampaignId && selectedCampaignId !== '') {
-      campaign = this.allCampaigns.find(c => c.id === selectedCampaignId);
-    } else {
-      campaign = this.allCampaigns[0];
-    }
-    
-    if (!campaign) return;
-    
-    // Filtrar donaciones de esta campaña específica
-    const campaignDonations = filteredDonations.filter(d => d.campaign_id === campaign!.id);
-    const confirmedDonations = campaignDonations.filter(d => d.status === 'CONFIRMED');
-    
-    // Calcular total recaudado en el período filtrado
-    let raised = confirmedDonations.reduce((sum, d) => sum + (d.amount || 0), 0);
-    let donationsCount = confirmedDonations.length;
-    
-    // Si no hay donaciones del API, usar current_amount de la campaña
-    if (donationsCount === 0) {
-      raised = campaign.current_amount || 0;
-      donationsCount = raised > 0 ? Math.round(raised / 500) : 0;
-    }
-    
-    this.campaignData = {
-      name: campaign.title,
-      goal: campaign.goal_amount || 0,
-      raised: raised,
-      daysActive: this.calculateDaysActive(campaign.create_date_time),
-      daysLimit: this.calculateDaysLimit(campaign.end_date_time, campaign.create_date_time),
-      donationsCount: donationsCount,
-      progress: Math.min(Math.floor((raised / (campaign.goal_amount || 1)) * 100), 100)
-    };
-  }
-
+  // ==================== GRÁFICOS ====================
   private recreateCharts(): void {
-    this.campaignProgressChart?.destroy();
+    // Destruir charts existentes completamente
+    if (this.campaignProgressChart) {
+      this.campaignProgressChart.destroy();
+      this.campaignProgressChart = undefined;
+    }
+    if (this.categoriesChart) {
+      this.categoriesChart.destroy();
+      this.categoriesChart = undefined;
+    }
 
+    // Pequeño delay para asegurar que el DOM esté listo
     setTimeout(() => {
       this.createCampaignProgressChart();
-    }, 50);
+      this.createCategoriesChart();
+    }, 100);
   }
 
   private createCampaignProgressChart(): void {
     const canvas = document.getElementById('campaignProgressChart') as HTMLCanvasElement;
     if (!canvas) return;
 
-    // Calcular recaudado y faltante correctamente
-    const raised = this.campaignData.raised;
-    const goal = this.campaignData.goal;
-    const remaining = Math.max(0, goal - raised); // No puede ser negativo
-    
-    // Si superó la meta, mostrar 100% recaudado
-    const chartData = raised >= goal 
-      ? [goal, 0] // Meta completa, sin faltante
-      : [raised, remaining]; // Recaudado y faltante
+    // Asegurar que no haya chart existente
+    const existingChart = Chart.getChart(canvas);
+    if (existingChart) {
+      existingChart.destroy();
+    }
+
+    const weeklyData = this.weeklyDonationsData();
+    const labels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
 
     const config: ChartConfiguration = {
-      type: 'doughnut',
+      type: 'bar',
       data: {
-        labels: ['Recaudado', 'Faltante'],
-        datasets: [{
-          data: chartData,
-          backgroundColor: [
-            'rgba(139, 92, 246, 0.8)',
-            'rgba(229, 231, 235, 0.5)'
-          ],
-          borderColor: [
-            'rgb(139, 92, 246)',
-            'rgb(229, 231, 235)'
-          ],
-          borderWidth: 2
-        }]
+        labels,
+        datasets: [
+          {
+            label: 'Monto recaudado',
+            data: weeklyData,
+            backgroundColor: 'rgba(139, 92, 246, 0.8)',
+            borderColor: 'rgb(139, 92, 246)',
+            borderWidth: 1
+          }
+        ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: {
-            position: 'bottom',
-            labels: { padding: 10, font: { size: 11 } }
-          },
+          legend: { display: false },
           tooltip: {
             callbacks: {
-              label: (context) => {
-                const value = context.parsed;
-                // Formatear en miles (K)
-                if (value >= 1000) {
-                  return `$${(value / 1000).toFixed(1)}K`;
-                }
-                return `$${value.toFixed(0)}`;
+              label: (ctx) => {
+                const value = ctx.parsed.y ?? 0;
+                return value >= 1000 ? `$${(value / 1000).toFixed(1)}K` : `$${value.toFixed(0)}`;
               }
             }
+          }
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            title: { display: true, text: 'Monto ($)', font: { size: 10 } },
+            ticks: { font: { size: 9 } }
+          },
+          x: {
+            title: { display: true, text: 'Día', font: { size: 10 } },
+            ticks: { font: { size: 10 } }
           }
         }
       }
@@ -563,9 +565,72 @@ export class DashboardOrganization implements OnInit, AfterViewInit {
     this.campaignProgressChart = new Chart(canvas, config);
   }
 
+  private createCategoriesChart(): void {
+    const canvas = document.getElementById('categoriesChart') as HTMLCanvasElement;
+    if (!canvas || !this.hasCategoriesData) return;
 
+    // Asegurar que no haya chart existente
+    const existingChart = Chart.getChart(canvas);
+    if (existingChart) {
+      existingChart.destroy();
+    }
 
-  ngOnDestroy(): void {
-    this.campaignProgressChart?.destroy();
+    const labels = Object.keys(this.categoriesData);
+    const values = Object.values(this.categoriesData);
+
+    const colors = [
+      'rgba(139, 92, 246, 0.8)',
+      'rgba(168, 85, 247, 0.8)',
+      'rgba(192, 132, 252, 0.8)',
+      'rgba(216, 180, 254, 0.8)',
+      'rgba(233, 213, 255, 0.8)',
+      'rgba(124, 58, 237, 0.8)'
+    ];
+
+    const config: ChartConfiguration = {
+      type: 'bar',
+      data: {
+        labels: labels.map(l => l.replace('_', ' ')),
+        datasets: [{
+          label: 'Recaudación',
+          data: values,
+          backgroundColor: colors.slice(0, labels.length),
+          borderColor: colors.slice(0, labels.length).map(c => c.replace('0.8', '1')),
+          borderWidth: 2,
+          borderRadius: 8
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const value = ctx.parsed.x || 0;
+                return value >= 1000 ? `$${(value / 1000).toFixed(1)}K` : `$${value.toFixed(0)}`;
+              }
+            }
+          }
+        },
+        scales: {
+          x: {
+            beginAtZero: true,
+            ticks: {
+              callback: (v) => {
+                const num = Number(v);
+                return num >= 1000 ? `$${(num / 1000).toFixed(0)}K` : `$${num}`;
+              }
+            },
+            grid: { color: 'rgba(0, 0, 0, 0.05)' }
+          },
+          y: { grid: { display: false } }
+        }
+      }
+    };
+
+    this.categoriesChart = new Chart(canvas, config);
   }
 }

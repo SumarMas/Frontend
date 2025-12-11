@@ -12,11 +12,11 @@ export interface GetDonationDto {
     payment_proof:    string;
     amount:           number;
     currency:         string;
-    status:           string;
+    status:           'CREATED' | 'CONFIRMED' | 'PAID' | 'CANCELLED' | string;
     payment_method:   string;
-    payment_datetime: Date | string | number[] | null;
-    created_at:       Date | string | number[];
-    campaign_data:    CampaignData;
+    payment_datetime: number[] | null;  // Array: [year, month, day, hour, min, sec]
+    created_at:       string;           // ISO string: "2025-11-21T22:27:23"
+    campaign_data?:   CampaignData;     // Opcional según endpoint
 }
 
 export interface CampaignData {

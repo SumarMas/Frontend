@@ -7,7 +7,7 @@
                 <icon name="diversity-1" class="text-violet-600 text-5xl"></icon>
             </div>
             <h1 class="text-4xl font-bold pb-4 bg-gradient-to-r from-violet-600 to-purple-600 bg-clip-text text-transparent">
-                Dashboard de Organización
+                Dashboard de {{ organizationName() }}
             </h1>
             <p class="text-gray-600 text-lg">
                 Análisis de campañas y donaciones
@@ -46,10 +46,10 @@
                         </div>
                         <select 
                             class="select select-bordered w-full"
-                            [value]="selectedCampaign()"
+                            [value]="selectedCampaignId()"
                             (change)="onCampaignChange($event)">
-                            @for(campaign of campaigns(); track campaign.id) {
-                            <option [value]="campaign.id" [disabled]="campaign.id === ''">{{ campaign.name }}</option>
+                            @for(campaign of campaignOptions(); track campaign.id) {
+                            <option [value]="campaign.id">{{ campaign.name }}</option>
                             }
                         </select>
                     </div>
@@ -62,110 +62,230 @@
             <div class="card-body">
                 <h2 class="card-title text-xl mb-4 flex items-center gap-2">
                     <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
-                    Datos de {{ organizationName() }}
+                    Estadísticas del Período
                 </h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                @if(isLoading()) {
+                <div class="flex items-center justify-center h-32">
+                    <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                </div>
+                } @else {
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <!-- Total Donaciones -->
-                    <div class="card bg-base-100 shadow-md hover:shadow-lg transition-shadow">
-                        <div class="card-body">
+                    <div class="card bg-violet-50 hover:bg-violet-100 transition-colors">
+                        <div class="card-body py-4">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-sm text-gray-500 font-medium">Total Donaciones</p>
-                                    <h3 class="text-3xl font-bold text-violet-600">{{ stats().totalDonations }}</h3>
-                                    <p class="text-xs text-gray-500 mt-2">
+                                    <p class="text-xs text-violet-600 font-medium uppercase">Donaciones</p>
+                                    <h3 class="text-2xl font-bold text-violet-700">{{ stats().totalDonations }}</h3>
+                                    <p class="text-xs text-gray-500">
                                         Promedio: {{ stats().avgDonation | currency:'ARS':'symbol-narrow':'1.0-0' }}
                                     </p>
                                 </div>
-                                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-violet-100 to-purple-100 flex items-center justify-center">
-                                    <icon name="volunteer-activism" class="text-violet-600 text-2xl"></icon>
-                                </div>
+                                <icon name="volunteer-activism" class="text-violet-400 text-3xl"></icon>
                             </div>
                         </div>
                     </div>
 
                     <!-- Total Recaudado -->
-                    <div class="card bg-base-100 shadow-md hover:shadow-lg transition-shadow">
-                        <div class="card-body">
+                    <div class="card bg-green-50 hover:bg-green-100 transition-colors">
+                        <div class="card-body py-4">
                             <div class="flex items-center justify-between">
                                 <div>
-                                    <p class="text-sm text-gray-500 font-medium">Total Recaudado</p>
-                                    <h3 class="text-2xl font-bold text-green-600">{{ stats().totalAmount | currency:'ARS':'symbol-narrow':'1.0-0' }}</h3>
-                                    <p class="text-xs text-gray-500 mt-2">
-                                        En {{ stats().campaignsWithDonations }} campaña(s)
+                                    <p class="text-xs text-green-600 font-medium uppercase">Recaudado</p>
+                                    <h3 class="text-2xl font-bold text-green-700">{{ stats().totalAmount | currency:'ARS':'symbol-narrow':'1.0-0' }}</h3>
+                                    <p class="text-xs text-gray-500">
+                                        En {{ stats().totalCampaigns }} campaña(s)
                                     </p>
                                 </div>
-                                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
-                                    <icon name="bar-chart-4-bars" class="text-green-600 text-2xl"></icon>
+                                <icon name="bar-chart-4-bars" class="text-green-400 text-3xl"></icon>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campañas Activas -->
+                    <div class="card bg-blue-50 hover:bg-blue-100 transition-colors">
+                        <div class="card-body py-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <p class="text-xs text-blue-600 font-medium uppercase">Campañas Activas</p>
+                                    <h3 class="text-2xl font-bold text-blue-700">{{ stats().activeCampaigns }}</h3>
+                                    <p class="text-xs text-gray-500">
+                                        de {{ stats().totalCampaigns }} totales
+                                    </p>
                                 </div>
+                                <icon name="search-insights" class="text-blue-400 text-3xl"></icon>
                             </div>
                         </div>
                     </div>
 
                     <!-- Órdenes de Pago -->
-                    <div class="card bg-base-100 shadow-md hover:shadow-lg transition-shadow">
-                        <div class="card-body">
+                    <div class="card bg-purple-50 hover:bg-purple-100 transition-colors">
+                        <div class="card-body py-4">
                             <div class="flex items-center justify-between">
-                                <div class="flex-1">
-                                    <p class="text-sm text-gray-500 font-medium">Órdenes de Pago</p>
-                                    <h3 class="text-3xl font-bold text-purple-600">{{ stats().approvedPayouts }}</h3>
-                                    <p class="text-xs text-gray-500 mt-1">Confirmadas</p>
-                                    @if(stats().pendingPayouts > 0) {
-                                        <div class="badge badge-sm badge-warning mt-2">{{ stats().pendingPayouts }} pendiente(s)</div>
-                                    }
+                                <div>
+                                    <p class="text-xs text-purple-600 font-medium uppercase">Órdenes de Pago</p>
+                                    <h3 class="text-2xl font-bold text-purple-700">{{ stats().approvedPayouts }}</h3>
+                                    <p class="text-xs text-gray-500">
+                                        @if(stats().pendingPayouts > 0) {
+                                            {{ stats().pendingPayouts }} pendiente(s)
+                                        } @else {
+                                            Aprobadas
+                                        }
+                                    </p>
                                 </div>
-                                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
-                                    <icon name="search-insights" class="text-purple-600 text-2xl"></icon>
-                                </div>
+                                <icon name="check" class="text-purple-400 text-3xl"></icon>
                             </div>
                         </div>
                     </div>
                 </div>
+                }
             </div>
         </div>
 
-        <!-- Campaña Destacada -->
+        <!-- Campaña Seleccionada -->
         <div class="card bg-white shadow-xl mb-8">
             <div class="card-body">
-                <h2 class="card-title text-2xl mb-4 flex items-center gap-2">
-                    <div class="w-1 h-8 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
-                    {{ campaignData.name }}
+                <h2 class="card-title text-xl mb-4 flex items-center gap-2">
+                    <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
+                    {{ campaignData().name }}
+                    @if(campaignData().state === 'ACTIVE') {
+                        <span class="badge badge-success badge-sm">Activa</span>
+                    } @else if(campaignData().state === 'CLOSED') {
+                        <span class="badge badge-error badge-sm">Cerrada</span>
+                    }
                 </h2>
+                @if(isLoading()) {
+                <div class="flex items-center justify-center h-48">
+                    <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                </div>
+                } @else {
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Info de Campaña -->
                     <div class="lg:col-span-2">
                         <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div class="stat bg-violet-50 rounded-lg">
-                                <div class="stat-title text-violet-600">Meta</div>
-                                <div class="stat-value text-2xl text-violet-600">{{ campaignData.goal | currency:'ARS':'symbol-narrow':'1.0-0' }}</div>
+                            <div class="stat bg-violet-50 rounded-lg p-4">
+                                <div class="stat-title text-violet-600 text-xs">Meta</div>
+                                <div class="stat-value text-xl text-violet-700">{{ campaignData().goal | currency:'ARS':'symbol-narrow':'1.0-0' }}</div>
                             </div>
-                            <div class="stat bg-green-50 rounded-lg">
-                                <div class="stat-title text-green-600">Recaudado</div>
-                                <div class="stat-value text-2xl text-green-600">{{ campaignData.raised | currency:'ARS':'symbol-narrow':'1.0-0' }}</div>
+                            <div class="stat bg-green-50 rounded-lg p-4">
+                                <div class="stat-title text-green-600 text-xs">Recaudado (total)</div>
+                                <div class="stat-value text-xl text-green-700">{{ campaignData().raised | currency:'ARS':'symbol-narrow':'1.0-0' }}</div>
                             </div>
-                            <div class="stat bg-blue-50 rounded-lg">
-                                <div class="stat-title text-blue-600">Días Activa</div>
-                                <div class="stat-value text-2xl text-blue-600">{{ campaignData.daysActive }} / {{ campaignData.daysLimit }}</div>
+                            <div class="stat bg-blue-50 rounded-lg p-4">
+                                <div class="stat-title text-blue-600 text-xs">Fecha de Inicio</div>
+                                <div class="stat-value text-lg text-blue-700">
+                                    @if(campaignData().startDate) {
+                                        {{ campaignData().startDate | date:'dd/MM/yyyy' }}
+                                    } @else {
+                                        -
+                                    }
+                                </div>
+                                @if(campaignData().daysRemaining > 0) {
+                                    <div class="stat-desc text-xs">{{ campaignData().daysRemaining }} días restantes</div>
+                                }
                             </div>
-                            <div class="stat bg-purple-50 rounded-lg">
-                                <div class="stat-title text-purple-600">Donaciones</div>
-                                <div class="stat-value text-2xl text-purple-600">{{ campaignData.donationsCount }}</div>
+                            <div class="stat bg-purple-50 rounded-lg p-4">
+                                <div class="stat-title text-purple-600 text-xs">Donaciones (total)</div>
+                                <div class="stat-value text-xl text-purple-700">{{ campaignData().donationsCountTotal }}</div>
                             </div>
                         </div>
                         <div class="mb-2 flex justify-between text-sm">
-                            <span class="font-semibold text-gray-700">Progreso</span>
-                            <span class="font-bold text-violet-600">{{ campaignData.progress }}%</span>
+                            <span class="font-semibold text-gray-700">Progreso hacia la meta</span>
+                            <span class="font-bold text-violet-600">{{ campaignData().progress }}%</span>
                         </div>
-                        <div class="w-full bg-gray-200 rounded-full h-4">
-                            <div class="bg-gradient-to-r from-violet-500 to-purple-500 h-4 rounded-full transition-all" [style.width.%]="campaignData.progress"></div>
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-gradient-to-r from-violet-500 to-purple-500 h-3 rounded-full transition-all" 
+                                 [style.width.%]="campaignData().progress"></div>
                         </div>
                     </div>
 
-                    <!-- Gráfico de Progreso -->
-                    <div class="flex flex-col items-center justify-center">
-                        <div class="h-48 w-48">
+                    <!-- Gráfico de Donaciones por Día -->
+                    <div class="flex flex-col">
+                        <h3 class="text-sm font-semibold text-gray-700 mb-2">Donaciones por Día (en período)</h3>
+                        <div class="h-48 w-full">
                             <canvas id="campaignProgressChart"></canvas>
                         </div>
                     </div>
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Gráficos y Tablas -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <!-- Recaudación por Categoría -->
+            <div class="card bg-white shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-lg mb-4 flex items-center gap-2">
+                        <div class="w-1 h-5 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
+                        Recaudación por Categoría
+                    </h2>
+                    @if(isLoading()) {
+                    <div class="h-64 flex items-center justify-center">
+                        <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                    </div>
+                    } @else if(!hasCategoriesData) {
+                    <div class="h-64 flex items-center justify-center">
+                        <p class="text-gray-400">No hay datos en el período seleccionado</p>
+                    </div>
+                    } @else {
+                    <div class="h-64">
+                        <canvas id="categoriesChart"></canvas>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Top 5 Campañas -->
+            <div class="card bg-white shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-lg mb-4 flex items-center gap-2">
+                        <div class="w-1 h-5 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
+                        Top 5 Campañas
+                    </h2>
+                    @if(isLoading()) {
+                    <div class="h-64 flex items-center justify-center">
+                        <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                    </div>
+                    } @else {
+                    <div class="overflow-x-auto">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th class="text-gray-500">#</th>
+                                    <th class="text-gray-500">Campaña</th>
+                                    <th class="text-gray-500 text-right">Donaciones</th>
+                                    <th class="text-gray-500 text-right">Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @for(campaign of topCampaigns; track $index) {
+                                <tr class="hover">
+                                    <td>
+                                        <div class="w-7 h-7 rounded-full bg-gradient-to-br from-violet-400 to-purple-400 flex items-center justify-center text-white font-bold text-xs">
+                                            {{ $index + 1 }}
+                                        </div>
+                                    </td>
+                                    <td class="font-medium text-sm">{{ campaign.name }}</td>
+                                    <td class="text-right">
+                                        <span class="badge badge-ghost badge-sm">{{ campaign.donationsCount }}</span>
+                                    </td>
+                                    <td class="text-right font-semibold text-green-600 text-sm">
+                                        {{ campaign.amount | currency:'ARS':'symbol-narrow':'1.0-0' }}
+                                    </td>
+                                </tr>
+                                }
+                                @empty {
+                                <tr>
+                                    <td colspan="4" class="text-center text-gray-400 py-8">
+                                        No hay datos en el período seleccionado
+                                    </td>
+                                </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    }
                 </div>
             </div>
         </div>
