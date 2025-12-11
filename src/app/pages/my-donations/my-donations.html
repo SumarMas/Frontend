@@ -98,7 +98,7 @@
                             [block]="true"
                             size="sm"
                             [rounded]="true"
-                            (onClick)="navigate('organizations/:ngoId/campaign/:campaignId', { ngoId: donation.campaign_data.ngo.ngoId, campaignId: donation.campaign_data.id })">
+                            (onClick)="navigate('organizations/:ngoId/campaign/:campaignId', { ngoId: donation.campaign_data?.ngo?.ngoId || '', campaignId: donation.campaign_data?.id || '' })">
                         </app-button-component>
                         } @else {
                         <div class="text-center text-sm text-gray-400">

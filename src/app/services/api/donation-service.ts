@@ -19,11 +19,20 @@ export class DonationService {
     return this.http.get<GetDonationDto[]>(`${this.apiUrl}/get-my-donations`);
   }
 
-  getDonationsByCampaign(campaignId: string, status?: 'CONFIRMED' | 'PENDING' | 'REJECTED'): Observable<GetDonationDto[]> {
-    let params: any = {};
+  getDonationsByCampaign(campaignId: string, status?: 'CONFIRMED' | 'PENDING' | 'REJECTED' | 'PAID'): Observable<GetDonationDto[]> {
+    let params: any = { campaign: campaignId };
     if (status) {
       params.status = status;
     }
-    return this.http.get<GetDonationDto[]>(`${this.apiUrl}/campaign/${campaignId}`, status ? { params } : {});
+    return this.http.get<{ donations: { [key: string]: GetDonationDto[] } }>(`${this.apiUrl}`, { params }).pipe(
+      map(response => {
+        // El backend devuelve { donations: { campaignId: [...] } }
+        // Extraemos el array de donaciones
+        if (response && response.donations) {
+          return Object.values(response.donations).flat();
+        }
+        return [];
+      })
+    );
   }
 }

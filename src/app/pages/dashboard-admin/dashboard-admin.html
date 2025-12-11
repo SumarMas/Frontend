@@ -19,7 +19,7 @@
             <div class="card-body py-4">
                 <div class="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div class="flex items-center gap-2">
-                        <icon name="schedule" class="text-violet-600"></icon>
+                        <icon name="search-insights" class="text-violet-600"></icon>
                         <span class="font-semibold text-gray-700">Período:</span>
                     </div>
                     <div class="flex flex-wrap gap-2 justify-center">
@@ -38,8 +38,9 @@
             </div>
         </div>
 
-        <!-- Stats Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <!-- Stats Cards Grid - 3 columnas -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+
             <!-- Total ONGs -->
             <div class="card bg-white shadow-xl hover:shadow-2xl transition-shadow">
                 <div class="card-body">
@@ -50,17 +51,11 @@
                     } @else {
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500 font-medium">Organizaciones totales</p>
+                            <p class="text-sm text-gray-500 font-medium">ONGs Totales</p>
                             <h3 class="text-3xl font-bold text-purple-600">{{ stats().totalNGOs }}</h3>
-                            @if(stats().newNGOsWeek > 0) {
-                            <div class="flex items-center gap-1 mt-2">
-                                <icon name="arrow-drop-up" [size]="'sm'" class="text-green-500"></icon>
-                                <span class="text-xs text-green-600 font-semibold">{{ stats().newNGOsWeek }}</span>
-                                <span class="text-xs text-gray-500">en el período</span>
-                            </div>
-                            } @else {
-                            <p class="text-xs text-gray-500 mt-2">No hay datos en el período</p>
-                            }
+                            <p class="text-xs text-gray-500 mt-2">
+                                <span class="text-violet-600 font-semibold">{{ stats().ngosInPeriod }}</span> en el período
+                            </p>
                         </div>
                         <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-100 to-pink-100 flex items-center justify-center">
                             <icon name="diversity-1" class="text-purple-600 text-2xl"></icon>
@@ -70,7 +65,7 @@
                 </div>
             </div>
 
-            <!-- Monto Total -->
+            <!-- Total Campañas -->
             <div class="card bg-white shadow-xl hover:shadow-2xl transition-shadow">
                 <div class="card-body">
                     @if(isLoading()) {
@@ -80,17 +75,35 @@
                     } @else {
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500 font-medium">Recaudado</p>
+                            <p class="text-sm text-gray-500 font-medium">Campañas Totales</p>
+                            <h3 class="text-3xl font-bold text-violet-600">{{ stats().totalCampaigns }}</h3>
+                            <p class="text-xs text-gray-500 mt-2">
+                                <span class="text-green-600 font-semibold">{{ stats().activeCampaigns }}</span> activas
+                            </p>
+                        </div>
+                        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-violet-100 to-indigo-100 flex items-center justify-center">
+                            <icon name="volunteer-activism" class="text-violet-600 text-2xl"></icon>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Total Recaudado -->
+            <div class="card bg-white shadow-xl hover:shadow-2xl transition-shadow">
+                <div class="card-body">
+                    @if(isLoading()) {
+                    <div class="flex items-center justify-center h-24">
+                        <span class="loading loading-spinner loading-md text-violet-600"></span>
+                    </div>
+                    } @else {
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-sm text-gray-500 font-medium">Recaudado en el Período</p>
                             <h3 class="text-2xl font-bold text-green-600">{{ stats().totalAmount | currency:'ARS':'symbol-narrow':'1.0-0' }}</h3>
-                            @if(stats().closedCampaigns > 0) {
-                            <div class="flex items-center gap-1 mt-2">
-                                <icon name="check" [size]="'sm'" class="text-green-500"></icon>
-                                <span class="text-xs text-green-600 font-semibold">{{ stats().closedCampaigns }}</span>
-                                <span class="text-xs text-gray-500">campañas cerradas en el período</span>
-                            </div>
-                            } @else {
-                            <p class="text-xs text-gray-500 mt-2">No hay campañas cerradas en el período</p>
-                            }
+                            <p class="text-xs text-gray-500 mt-2">
+                                <span class="text-violet-600 font-semibold">{{ stats().totalDonations }}</span> donaciones
+                            </p>
                         </div>
                         <div class="w-12 h-12 rounded-full bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
                             <icon name="bar-chart-4-bars" class="text-green-600 text-2xl"></icon>
@@ -99,52 +112,103 @@
                     }
                 </div>
             </div>
+
         </div>
 
-        <!-- ONGs por Estado (Full Width) -->
-        <div class="card bg-white shadow-xl mb-8">
-            <div class="card-body">
-                <h2 class="card-title text-xl mb-4 flex items-center gap-2">
-                    <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
-                    ONGs por Estado
-                </h2>
-                @if(isLoading()) {
-                <div class="h-80 flex items-center justify-center">
-                    <span class="loading loading-spinner loading-lg text-violet-600"></span>
-                </div>
-                } @else {
-                <div class="h-80 flex items-center justify-center">
-                    <canvas id="ngosChart"></canvas>
-                </div>
-                <div class="mt-2 grid grid-cols-3 gap-4 text-center">
-                    <div>
-                        <p class="text-2xl font-bold text-green-600">{{ ngosData.byStatus.APPROVED }}</p>
+        <!-- Gráficos Grid: ONGs por Estado y Campañas Finalizadas -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+            <!-- ONGs por Estado -->
+            <div class="card bg-white shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-xl mb-4 flex items-center gap-2">
+                        <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
+                        ONGs por Estado
+                        <span class="text-sm font-normal text-gray-500">(en el período)</span>
+                    </h2>
+                    @if(isLoading()) {
+                    <div class="h-64 flex items-center justify-center">
+                        <span class="loading loading-spinner loading-lg text-violet-600"></span>
                     </div>
-                    <div>
-                        <p class="text-2xl font-bold text-yellow-600">{{ ngosData.byStatus.PENDING }}</p>
+                    } @else {
+                    <div class="h-48 flex items-center justify-center">
+                        <canvas id="ngosChart"></canvas>
                     </div>
-                    <div>
-                        <p class="text-2xl font-bold text-red-600">{{ ngosData.byStatus.REJECTED }}</p>
+                    <div class="mt-4 grid grid-cols-3 gap-2 text-center">
+                        <div class="p-2 bg-green-50 rounded-lg">
+                            <p class="text-xs text-gray-600 mb-1">Verificadas</p>
+                            <p class="text-xl font-bold text-green-600">{{ ngosData().verified }}</p>
+                        </div>
+                        <div class="p-2 bg-yellow-50 rounded-lg">
+                            <p class="text-xs text-gray-600 mb-1">Pendientes</p>
+                            <p class="text-xl font-bold text-yellow-600">{{ ngosData().pending }}</p>
+                        </div>
+                        <div class="p-2 bg-red-50 rounded-lg">
+                            <p class="text-xs text-gray-600 mb-1">Denegadas</p>
+                            <p class="text-xl font-bold text-red-600">{{ ngosData().denied }}</p>
+                        </div>
                     </div>
+                    }
                 </div>
-                }
             </div>
+
+            <!-- Campañas Finalizadas por Tipo -->
+            <div class="card bg-white shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title text-xl mb-4 flex items-center gap-2">
+                        <div class="w-1 h-6 bg-gradient-to-b from-amber-500 to-orange-500 rounded-full"></div>
+                        Campañas Finalizadas
+                        <span class="text-sm font-normal text-gray-500">(motivo de cierre)</span>
+                    </h2>
+                    @if(isLoading()) {
+                    <div class="h-64 flex items-center justify-center">
+                        <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                    </div>
+                    } @else if(closedCampaignsData().byGoal + closedCampaignsData().byDate === 0) {
+                    <div class="h-64 flex flex-col items-center justify-center text-gray-400">
+                        <icon name="check" class="text-4xl mb-2 opacity-50"></icon>
+                        <p>No hay campañas cerradas</p>
+                    </div>
+                    } @else {
+                    <div class="h-48 flex items-center justify-center">
+                        <canvas id="closedCampaignsChart"></canvas>
+                    </div>
+                    <div class="mt-4 grid grid-cols-2 gap-4 text-center">
+                        <div class="p-3 bg-green-50 rounded-lg">
+                            <p class="text-xs text-gray-600 mb-1">Alcanzaron la Meta</p>
+                            <p class="text-2xl font-bold text-green-600">{{ closedCampaignsData().byGoal }}</p>
+                        </div>
+                        <div class="p-3 bg-amber-50 rounded-lg">
+                            <p class="text-xs text-gray-600 mb-1">Finalizaron por Fecha</p>
+                            <p class="text-2xl font-bold text-amber-600">{{ closedCampaignsData().byDate }}</p>
+                        </div>
+                    </div>
+                    }
+                </div>
+            </div>
+
         </div>
 
-        <!-- Donaciones por Categoría (Full Width) -->
+        <!-- Recaudación por Categoría (Full Width) -->
         <div class="card bg-white shadow-xl mb-8">
             <div class="card-body">
                 <h2 class="card-title text-xl mb-4 flex items-center gap-2">
                     <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
                     Recaudación por Categoría
+                    <span class="text-sm font-normal text-gray-500">(en el período)</span>
                 </h2>
                 @if(isLoading()) {
                 <div class="h-96 flex items-center justify-center">
                     <span class="loading loading-spinner loading-lg text-violet-600"></span>
                 </div>
+                } @else if(!hasCategoriesData) {
+                <div class="h-64 flex flex-col items-center justify-center text-gray-400">
+                    <icon name="bar-chart-4-bars" class="text-4xl mb-2 opacity-50"></icon>
+                    <p>No hay datos de recaudación en el período</p>
+                </div>
                 } @else {
                 <div class="h-96 flex items-center justify-center">
-                    <canvas id="donationsChart"></canvas>
+                    <canvas id="categoriesChart"></canvas>
                 </div>
                 }
             </div>
@@ -152,16 +216,22 @@
 
         <!-- Top 5 Tables Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
             <!-- Top ONGs por Campañas -->
             <div class="card bg-white shadow-xl">
                 <div class="card-body">
                     <h2 class="card-title text-xl mb-4 flex items-center gap-2">
                         <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
-                        Top 5 ONGs con más campañas
+                        Top 5 ONGs - Más Campañas
                     </h2>
                     @if(isLoading()) {
                     <div class="flex items-center justify-center h-64">
                         <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                    </div>
+                    } @else if(topNGOsByCampaigns.length === 0) {
+                    <div class="h-64 flex flex-col items-center justify-center text-gray-400">
+                        <icon name="diversity-1" class="text-4xl mb-2 opacity-50"></icon>
+                        <p>No hay datos disponibles</p>
                     </div>
                     } @else {
                     <div class="overflow-x-auto">
@@ -174,7 +244,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @for(ngo of ngosData.topByCampaigns; track $index) {
+                                @for(ngo of topNGOsByCampaigns; track $index) {
                                 <tr class="hover">
                                     <td>
                                         <div class="w-8 h-8 rounded-full bg-gradient-to-br from-violet-400 to-purple-400 flex items-center justify-center text-white font-bold text-sm">
@@ -183,13 +253,8 @@
                                     </td>
                                     <td class="font-medium">{{ ngo.name }}</td>
                                     <td class="text-right">
-                                        <div class="badge badge-violet badge-lg">{{ ngo.campaigns }}</div>
+                                        <span class="badge badge-primary badge-lg">{{ ngo.count }}</span>
                                     </td>
-                                </tr>
-                                }
-                                @empty {
-                                <tr>
-                                    <td colspan="3" class="text-center text-gray-400 py-8">No hay datos disponibles</td>
                                 </tr>
                                 }
                             </tbody>
@@ -199,16 +264,21 @@
                 </div>
             </div>
 
-            <!-- Top ONGs por Donaciones -->
+            <!-- Top ONGs por Recaudación -->
             <div class="card bg-white shadow-xl">
                 <div class="card-body">
                     <h2 class="card-title text-xl mb-4 flex items-center gap-2">
-                        <div class="w-1 h-6 bg-gradient-to-b from-violet-500 to-purple-500 rounded-full"></div>
-                        Top 5 ONGs - Volumen de Donaciones
+                        <div class="w-1 h-6 bg-gradient-to-b from-green-500 to-emerald-500 rounded-full"></div>
+                        Top 5 ONGs - Mayor Recaudación
                     </h2>
                     @if(isLoading()) {
                     <div class="flex items-center justify-center h-64">
                         <span class="loading loading-spinner loading-lg text-violet-600"></span>
+                    </div>
+                    } @else if(topNGOsByAmount.length === 0) {
+                    <div class="h-64 flex flex-col items-center justify-center text-gray-400">
+                        <icon name="bar-chart-4-bars" class="text-4xl mb-2 opacity-50"></icon>
+                        <p>No hay datos disponibles</p>
                     </div>
                     } @else {
                     <div class="overflow-x-auto">
@@ -221,7 +291,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                @for(ngo of ngosData.topByDonations; track $index) {
+                                @for(ngo of topNGOsByAmount; track $index) {
                                 <tr class="hover">
                                     <td>
                                         <div class="w-8 h-8 rounded-full bg-gradient-to-br from-green-400 to-emerald-400 flex items-center justify-center text-white font-bold text-sm">
@@ -234,17 +304,13 @@
                                     </td>
                                 </tr>
                                 }
-                                @empty {
-                                <tr>
-                                    <td colspan="3" class="text-center text-gray-400 py-8">No hay datos disponibles</td>
-                                </tr>
-                                }
                             </tbody>
                         </table>
                     </div>
                     }
                 </div>
             </div>
+
         </div>
 
     </div>
