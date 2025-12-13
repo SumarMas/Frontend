@@ -6,6 +6,7 @@ import { GetDonationDto } from '../../models/api/donation';
 import { DonationService } from '../../services/api/donation-service';
 import { finalize } from 'rxjs';
 import { Router } from '@angular/router';
+import {Donation} from '../../models/api/payouts';
 
 // Interfaz temporal para donaciones (hasta que exista el DTO real)
 interface DonationDto {
@@ -43,9 +44,10 @@ export class MyDonations implements OnInit {
     this.donationService.getDonationsByUser().pipe(finalize(() => this.isLoading.set(false))).subscribe({
       next: (donations) => {
         this.donations.set(donations);
+        this.donations().sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
         this.calculateTotal();
         console.log(this.donations());
-        
+
       },
       error: (error) => {
         console.error('Error loading donations:', error);
@@ -60,6 +62,7 @@ export class MyDonations implements OnInit {
 
   getStatusClass(status: string): string {
     const classes = {
+      'CREATED': 'badge badge-warning',
       'CONFIRMED': 'badge badge-success',
       'PENDING': 'badge badge-warning',
       'CANCELLED': 'badge badge-error',
@@ -70,10 +73,11 @@ export class MyDonations implements OnInit {
 
   getStatusText(status: string): string {
     const texts = {
+      'CREATED': 'Pendiente',
       'CONFIRMED': 'Completada',
       'PENDING': 'Pendiente',
       'CANCELLED': 'Cancelada',
-      'PAID': 'Paga'
+      'PAID': 'Completada',
     };
     return texts[status as keyof typeof texts] || status;
   }
@@ -94,26 +98,26 @@ export class MyDonations implements OnInit {
    */
   getDonationDate(donation: GetDonationDto): Date | null {
     // Intentar primero con payment_datetime (array de números)
-    if (donation.payment_datetime && Array.isArray(donation.payment_datetime)) {
-      const arr = donation.payment_datetime;
-      if (arr.length >= 3) {
-        return new Date(
-          arr[0], // año
-          arr[1] - 1, // mes (0-indexed)
-          arr[2], // día
-          arr[3] || 0, // hora
-          arr[4] || 0, // minuto
-          arr[5] || 0  // segundo
-        );
-      }
-    }
-    
+    // if (donation.created_at && Array.isArray(donation.payment_datetime)) {
+    //   const arr = donation.payment_datetime;
+    //   if (arr.length >= 3) {
+    //     return new Date(
+    //       arr[0], // año
+    //       arr[1] - 1, // mes (0-indexed)
+    //       arr[2], // día
+    //       arr[3] || 0, // hora
+    //       arr[4] || 0, // minuto
+    //       arr[5] || 0  // segundo
+    //     );
+    //   }
+    // }
+
     // Fallback: usar created_at (string ISO)
     if (donation.created_at) {
       const parsed = new Date(donation.created_at);
       return isNaN(parsed.getTime()) ? null : parsed;
     }
-    
+
     return null;
   }
 
@@ -124,7 +128,7 @@ export class MyDonations implements OnInit {
    */
   // convertArrayToDate(dateArray: number[] | null): Date | null {
   //   if (!dateArray || !Array.isArray(dateArray) || dateArray.length < 3) return null;
-  //   
+  //
   //   // El mes en JavaScript es 0-indexed, por eso restamos 1
   //   return new Date(
   //     dateArray[0], // año

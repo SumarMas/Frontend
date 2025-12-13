@@ -324,6 +324,7 @@ export class OrganizationPage implements OnInit {
   onApprovalSuccess() {
     this.approvalModalRef.close();
     this.approvalDetailsRef.resetForm();
+    if (this.ngoId) this.loadOrganization(this.ngoId);
   }
 
   //------------------------------------Files para descargar------------------------------------
