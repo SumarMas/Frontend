@@ -49,7 +49,10 @@
                     @if(campaign.ngo.userCreator.userId === authService.userId()){
                     <app-button-component [icon]="isEditMode() ? 'close' : 'edit'"
                         [label]="isEditMode() ? 'Cancelar' : 'Editar campaña'"
-                        [variant]="isEditMode() ? 'error' : 'white'" [rounded]="true" (onClick)="toggleEditMode()">
+                        [variant]="isEditMode() ? 'error' : 'white'" [rounded]="true"
+                        [disabled]="!isEditMode() && campaign.campaign_state !== 'ACTIVE'"
+                        [tooltip]="campaign.campaign_state !== 'ACTIVE' ? 'No se puede editar una campaña finalizada' : null"
+                        (onClick)="toggleEditMode()">
                     </app-button-component>
                     }
                 </div>

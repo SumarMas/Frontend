@@ -1,5 +1,5 @@
 <input type="text" id="tag-input" placeholder="Añada tags para facilitar la búsqueda..." class="input w-full"
-    [(ngModel)]="tagValue" (keyup.enter)="addTag()" />
+    [(ngModel)]="tagValue" (keydown.enter)="$event.preventDefault(); addTag()" />
 @if(tags.length > 0) {
 <div class="flex flex-wrap gap-2 m-2 w-full">
     @for (tag of tags; track $index) {
