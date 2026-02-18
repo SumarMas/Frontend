@@ -45,11 +45,14 @@ export class Login {
         },
         error: (err) => {
           this.isLoading.set(false);
-          this.toastService.open('Error al iniciar sesión: ' + err.message, 'error', 3000, 'bottom-right');
+          this.loginForm.enable();
+          if (err.status === 500 || err.status === 503) {
+            this.toastService.open('Algo salió mal, intente nuevamente más tarde', 'error', 4000, 'bottom-right');
+          } else {
+            this.toastService.open('Error al iniciar sesión', 'error', 3000, 'bottom-right');
+          }
         }
       });
-      this.loginForm.reset();
-      this.loginForm.enable();
     }
   }
 }
