@@ -117,8 +117,9 @@ export class OrganizationRegister {
         
         this.organizationService.register(dto).subscribe({
           next: () => {
+            this.authService.pushNgoRole();
             this.toastService.open('Organización registrada con éxito', 'success', 3000, 'bottom-right');
-            this.updateStatus.open();
+            this.router.navigate(['/organizations/my-organizations']);
           },
           error: (err) => {
             console.error('Error al registrar organización:', err);
@@ -133,12 +134,4 @@ export class OrganizationRegister {
     });
   }
 
-  closeModal(){
-    this.updateStatus.close();
-    this.router.navigate(['/home']);
-  }
-
-  logout(){
-    this.authService.logout();
-  }
 }

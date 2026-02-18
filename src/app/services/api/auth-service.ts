@@ -28,6 +28,11 @@ export class AuthService {
   _token = signal<string | null>(localStorage.getItem('token'));
   _userName = signal<string | null>(localStorage.getItem('user_name'));
 
+  // Roles adicionales que se agregan en tiempo de ejecución (ej: tras registrar una organización)
+  private _extraRoles = signal<string[]>(
+    JSON.parse(localStorage.getItem('extra_roles') ?? '[]')
+  );
+
   private _tokenExpTs = signal<number | null>(
     localStorage.getItem('token_exp_ts') ? Number(localStorage.getItem('token_exp_ts')) : null
   );
@@ -133,8 +138,13 @@ export class AuthService {
   });
 
 
-  //obtener los roles y el userId
-  readonly roles = computed(() => this.parseRoles(this.payload()?.roles ?? []));
+  //obtener los roles y el userId (fusiona roles del token + roles extra locales)
+  readonly roles = computed(() => {
+    const tokenRoles = this.parseRoles(this.payload()?.roles ?? []);
+    const extra = this._extraRoles();
+    // Unir sin duplicados
+    return [...new Set([...tokenRoles, ...extra])];
+  });
   readonly userId = computed(() => this.payload()?.user_id ?? '');
 
   setToken(token: string, expiresInSeconds?: number) {
@@ -157,9 +167,11 @@ export class AuthService {
     this._token.set(null);
     this._tokenExpTs.set(null);
     this._userName.set(null);
+    this._extraRoles.set([]);
     localStorage.removeItem('token');
     localStorage.removeItem('token_exp_ts');
     localStorage.removeItem('user_name');
+    localStorage.removeItem('extra_roles');
   }
 
 
@@ -177,5 +189,14 @@ export class AuthService {
     if (err.status === 401) return new Error('Credenciales incorrectas.');
     if (err.status === 403) return new Error('No tenés permisos para acceder.');
     return new Error(err.error?.message || 'Error inesperado. Intentalo de nuevo.');
+  }
+
+  pushNgoRole() {
+    const currentRoles = this.roles();
+    if (!currentRoles.includes('ORGANIZATION')) {
+      const updated = [...this._extraRoles(), 'ORGANIZATION'];
+      this._extraRoles.set(updated);
+      localStorage.setItem('extra_roles', JSON.stringify(updated));
+    }
   }
 }

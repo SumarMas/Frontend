@@ -30,15 +30,15 @@ export class CategoryFilterChip implements OnChanges {
 
   get iconName(): string {
     switch (this.category?.name.toLowerCase()) {
-      case 'animal welfare':
+      case 'animal':
         return 'animal';
-      case 'community development':
+      case 'comunidad':
         return 'community';
-      case 'education':
+      case 'educación':
         return 'school';
-      case 'environment':
+      case 'medio ambiente':
         return 'eco';
-      case 'health':
+      case 'salud':
         return 'health-cross';
       default:
         return 'default';
