@@ -31,6 +31,10 @@ export class UserService {
     return this.http.get<GetUserDto>(this.apiUrl + '/my-profile');
   }
 
+  getUserById(userId: string): Observable<GetUserDto> {
+    return this.http.get<GetUserDto>(`${this.apiUrl}/${userId}/profile`);
+  }
+
   updateUser(userData: PutUserDto, userId: string): Observable<void> {
     return this.http.put<void>(`${this.apiUrl}/${userId}/update`, userData);
   }
