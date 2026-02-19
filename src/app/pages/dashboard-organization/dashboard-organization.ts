@@ -46,7 +46,7 @@ export class DashboardOrganization implements OnInit, AfterViewInit, OnDestroy {
   organizationName = signal<string>('Mi Organización');
 
   // ==================== FILTROS ====================
-  selectedDateFilter = signal<DateFilter>('30d');
+  selectedDateFilter = signal<DateFilter>('1y');
   selectedCampaignId = signal<string>('');
 
   dateFilterOptions = [
@@ -219,7 +219,7 @@ export class DashboardOrganization implements OnInit, AfterViewInit, OnDestroy {
     const dateFilter = this.selectedDateFilter();
     const startDate = this.getStartDate(dateFilter);
 
-    // Filtrar donaciones por fecha (payment_datetime o created_at)
+    // Filtrar donaciones por fecha (created_at como referencia)
     const filteredDonations = this.filterDonationsByDate(this.allDonations, startDate);
 
     // Filtrar payouts por fecha (request_datetime)
@@ -259,14 +259,14 @@ export class DashboardOrganization implements OnInit, AfterViewInit, OnDestroy {
     // ===== DATOS DE LA CAMPAÑA SELECCIONADA =====
     this.updateCampaignData(filteredDonations);
 
-    // ===== DONACIONES POR DÍA DE LA SEMANA (CAMPAÑA SELECCIONADA) =====
-    this.calculateWeeklyDonations(filteredDonations);
+    // ===== DONACIONES POR DÍA DE LA SEMANA (CAMPAÑA SELECCIONADA - SIN FILTRO DE FECHA) =====
+    this.calculateWeeklyDonations(this.allDonations);
 
     // ===== RECAUDACIÓN POR CATEGORÍA =====
     this.calculateCategoriesData(filteredDonations);
 
-    // ===== TOP 5 CAMPAÑAS =====
-    this.calculateTopCampaigns(filteredDonations);
+    // ===== TOP 5 CAMPAÑAS (filtrar campañas por fecha, con TODAS sus donaciones) =====
+    this.calculateTopCampaigns(startDate);
 
     // Recrear gráficos con nuevos datos
     if (isPlatformBrowser(this.platformId)) {
@@ -379,14 +379,21 @@ export class DashboardOrganization implements OnInit, AfterViewInit, OnDestroy {
     this.weeklyDonationsData.set(amounts);
   }
 
-  private calculateTopCampaigns(filteredDonations: GetDonationDto[]): void {
-    const campaignTotals = this.allCampaigns.map(campaign => {
-      // Filtrar donaciones de esta campaña dentro del período seleccionado
-      const campaignDonations = filteredDonations.filter(d => 
+  private calculateTopCampaigns(startDate: Date): void {
+    // Filtrar campañas creadas dentro del período seleccionado
+    const filteredCampaigns = this.allCampaigns.filter(c => {
+      const createdDate = this.parseDate(c.create_date_time);
+      if (!createdDate) return true; // Incluir si no tiene fecha
+      return createdDate >= startDate;
+    });
+
+    const campaignTotals = filteredCampaigns.map(campaign => {
+      // Usar TODAS las donaciones de esta campaña (sin filtro de fecha)
+      const campaignDonations = this.allDonations.filter(d => 
         d.campaign_id === campaign.id && (d.status === 'PAID' || d.status === 'CONFIRMED')
       );
       
-      // Sumar el monto de las donaciones filtradas
+      // Sumar el monto total de donaciones
       const amount = campaignDonations.reduce((sum, d) => sum + (d.amount || 0), 0);
       
       return {
@@ -447,25 +454,25 @@ export class DashboardOrganization implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private filterDonationsByDate(donations: GetDonationDto[], startDate: Date): GetDonationDto[] {
-    const now = new Date();
     return donations.filter(d => {
-      // Intentar con payment_datetime primero, luego created_at como fallback
-      let dateToCheck = this.parseDate(d.payment_datetime);
+      // Usar created_at como fecha principal (cuándo se hizo la donación)
+      // payment_datetime es cuándo se procesó el pago, puede tener timestamps desfasados
+      let dateToCheck = this.parseDate(d.created_at);
       if (!dateToCheck) {
-        dateToCheck = this.parseDate(d.created_at);
+        dateToCheck = this.parseDate(d.payment_datetime);
       }
       // Si no tiene ninguna fecha, incluirla (para no perder datos)
       if (!dateToCheck) return true;
-      return dateToCheck >= startDate && dateToCheck <= now;
+      // Solo verificar que la donación sea posterior al inicio del período
+      return dateToCheck >= startDate;
     });
   }
 
   private filterPayoutsByDate(payouts: PayoutDto[], startDate: Date): PayoutDto[] {
-    const now = new Date();
     return payouts.filter(p => {
       const requestDate = this.parseDate(p.request_datetime);
       if (!requestDate) return true; // Incluir si no tiene fecha
-      return requestDate >= startDate && requestDate <= now;
+      return requestDate >= startDate;
     });
   }
 
