@@ -3,12 +3,13 @@ import { inject, Injectable } from '@angular/core';
 import { PostUserDto, GetUserDto, PutUserDto } from '../../models/api/user';
 import { catchError, delay, map, Observable, of, switchMap, tap } from 'rxjs';
 import { AuthService } from './auth-service';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
-  private apiUrl = 'http://sumar-mas.dynns.com:9080/users/api/v1/users';
+  private apiUrl = `${environment.apiBaseUrl}/users/api/v1/users`;
 
   private http = inject(HttpClient);
   private authService = inject(AuthService);

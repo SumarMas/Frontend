@@ -2,12 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { GetCommentDto, PostCommentDto } from '../../models/api/comment';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CommentService {
-    private apiUrl = 'http://sumar-mas.dynns.com:9080/campaigns/api/v1/comments';
+    private apiUrl = `${environment.apiBaseUrl}/campaigns/api/v1/comments`;
 
   http = inject(HttpClient);
 

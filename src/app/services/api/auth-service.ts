@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
 import { catchError, delay, map, Observable, of, switchMap, tap, throwError } from 'rxjs';
 import { GetUserDto } from '../../models/api/user';
+import { environment } from '../../../environments/environment';
 
 interface JwtPayload {
   user_id?: string; //usuario
@@ -15,8 +16,8 @@ interface JwtPayload {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://sumar-mas.dynns.com:9080/auth/api/v1/auth';
-  private userUrl = 'http://sumar-mas.dynns.com:9080/users/api/v1/users';
+  private apiUrl = `${environment.apiBaseUrl}/auth/api/v1/auth`;
+  private userUrl = `${environment.apiBaseUrl}/users/api/v1/users`;
 
   //contiene Camila Lopez, [ 'DONOR', 'ORGANIZATION' ], exp: 9999999999
   private fakeToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWJqZWN0IjoiQ2FtaWxhIExvcGV6Iiwicm9sZXMiOlsiRE9OT1IiLCJPUkdBTklaQVRJT04iXSwiZXhwIjo5OTk5OTk5OTk5fQ.signature';

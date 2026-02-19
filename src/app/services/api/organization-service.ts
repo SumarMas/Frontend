@@ -2,12 +2,13 @@ import { inject, Injectable } from '@angular/core';
 import { GetOrganizationDto, PostOrganizationDto, PutOrganizationDto, ValidateOrganizationDto } from '../../models/api/organization';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class OrganizationService {
-  private apiUrl = 'http://sumar-mas.dynns.com:9080/users/api/v1/ngos';
+  private apiUrl = `${environment.apiBaseUrl}/users/api/v1/ngos`;
 
   private http = inject(HttpClient);
 

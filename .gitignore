@@ -40,3 +40,7 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+# Environment files (mantener solo el .example)
+.env
+.env.local

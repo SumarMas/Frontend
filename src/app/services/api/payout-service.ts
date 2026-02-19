@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable, pipe, tap } from 'rxjs';
 import { PayoutDto } from '../../models/api/payouts';
+import { environment } from '../../../environments/environment';
 
 export enum DonationStatus {
     CREATED = 'CREATED',
@@ -91,7 +92,7 @@ export interface PayoutResponse {
 
 @Injectable({ providedIn: 'root' })
 export class PayoutService {
-    private apiUrl = 'http://sumar-mas.dynns.com:9080/payouts/api/v1/payouts';
+    private apiUrl = `${environment.apiBaseUrl}/payouts/api/v1/payouts`;
 
     http = inject(HttpClient);
 

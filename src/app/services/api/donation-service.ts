@@ -2,12 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { map, Observable } from 'rxjs';
 import { GetDonationDto, PostDonationDto } from '../../models/api/donation';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class DonationService {
-  private apiUrl = 'http://sumar-mas.dynns.com:9080/donations/api/v1/donations';
+  private apiUrl = `${environment.apiBaseUrl}/donations/api/v1/donations`;
 
   private http = inject(HttpClient);
 

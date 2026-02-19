@@ -2,12 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { GetMessageDto, PostMessageDto } from '../../models/api/message';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MessageService {
-  private apiUrl = 'http://sumar-mas.dynns.com:9080/campaigns/api/v1/message-campaigns';
+  private apiUrl = `${environment.apiBaseUrl}/campaigns/api/v1/message-campaigns`;
 
   private http = inject(HttpClient);
 
