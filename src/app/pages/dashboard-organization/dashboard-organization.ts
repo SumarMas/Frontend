@@ -259,8 +259,8 @@ export class DashboardOrganization implements OnInit, AfterViewInit, OnDestroy {
     // ===== DATOS DE LA CAMPAÑA SELECCIONADA =====
     this.updateCampaignData(filteredDonations);
 
-    // ===== DONACIONES POR DÍA DE LA SEMANA (CAMPAÑA SELECCIONADA) =====
-    this.calculateWeeklyDonations(filteredDonations);
+    // ===== DONACIONES POR DÍA DE LA SEMANA (CAMPAÑA SELECCIONADA - SIN FILTRO DE FECHA) =====
+    this.calculateWeeklyDonations(this.allDonations);
 
     // ===== RECAUDACIÓN POR CATEGORÍA =====
     this.calculateCategoriesData(filteredDonations);
