@@ -5,6 +5,7 @@ import { StepsShowcaseComponent } from "../../components/steps-showcase-componen
 import { FooterComponent } from "../../components/footer-component/footer-component";
 import { Router } from '@angular/router';
 import { IconComponent } from "../../components/icon-component/icon-component";
+import { AuthService } from '../../services/api/auth-service';
 
 type Step = { title: string; status: 'completed' | 'failed' | 'pending' };
 
@@ -17,6 +18,7 @@ type Step = { title: string; status: 'completed' | 'failed' | 'pending' };
 export class Home {
 
   private router = inject(Router);
+  authService = inject(AuthService);
 
   cardInfo: { title: string, icon: string }[] = [
     { title: 'Seguridad', icon: 'lock' },
