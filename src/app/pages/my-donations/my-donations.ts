@@ -66,7 +66,7 @@ export class MyDonations implements OnInit {
       'CONFIRMED': 'badge badge-success',
       'PENDING': 'badge badge-warning',
       'CANCELLED': 'badge badge-error',
-      'PAID': 'badge badge-primary'
+      'PAID': 'badge badge-success'
     };
     return classes[status as keyof typeof classes] || '';
   }
