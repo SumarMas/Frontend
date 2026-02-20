@@ -21,3 +21,28 @@
 
 /*tooltips*/
 @source inline('tooltip-{top,left,right,bottom}');
+
+/* Violet focus style for all inputs globally (DaisyUI override) */
+.input,
+input,
+textarea,
+select,
+.file-input {
+    transition: all 0.3s ease;
+}
+
+.input:focus,
+.input:focus-within,
+.input:focus-visible,
+input:focus,
+input:focus-visible,
+textarea:focus,
+textarea:focus-visible,
+select:focus,
+select:focus-visible,
+.file-input:focus,
+.file-input:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    border-color: #8b5cf6 !important;
+}

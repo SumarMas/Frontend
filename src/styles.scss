@@ -18,6 +18,17 @@
 
 hr{ @apply border-t-1 border-gray-300; }
 
+/* Violet focus style for all inputs (DaisyUI override) */
+input, textarea, select, .input {
+    transition: all 0.3s ease;
+
+    &:focus, &:focus-within, &:focus-visible {
+        outline: none !important;
+        box-shadow: none !important;
+        border-color: #8b5cf6 !important;
+    }
+}
+
 //Skeleton styles
 .skeleton-input{ @apply rounded-sm; }
 .skeleton-avatar{ @apply rounded-full; }

@@ -21,15 +21,7 @@
     -webkit-text-fill-color: transparent;
 }
 
-// Transiciones suaves para inputs
-.input {
-    transition: all 0.3s ease;
-
-    &:focus-within {
-        box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
-        border-color: #8b5cf6;
-    }
-}
+// Focus style is now global (styles.scss / tailwind.css)
 
 // Efecto de pulso sutil en las estadísticas (deshabilitado)
 .text-center {
