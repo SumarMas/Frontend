@@ -324,8 +324,6 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private calculateClosedCampaignsData(startDate: Date): void {
-    const now = new Date();
-    
     // Obtener campañas cerradas
     const closedCampaigns = this.allCampaigns.filter(c => 
       c.campaign_state?.toString().toUpperCase() === 'CLOSED'
@@ -371,7 +369,7 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
         closedDate = goalReachedDate || endDate;
 
         // Filtrar por fecha: solo contar si se cerró dentro del período
-        if (closedDate && closedDate >= startDate && closedDate <= now) {
+        if (closedDate && closedDate >= startDate) {
           if (goalReachedDate && (!endDate || goalReachedDate <= endDate)) {
             byGoal++;
           } else {
@@ -383,7 +381,7 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
         closedDate = endDate;
         
         // Filtrar por fecha: solo contar si se cerró dentro del período
-        if (closedDate && closedDate >= startDate && closedDate <= now) {
+        if (closedDate && closedDate >= startDate) {
           byDate++;
         }
       }
@@ -432,30 +430,33 @@ export class DashboardAdmin implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private filterNGOsByDate(ngos: GetOrganizationDto[], startDate: Date): GetOrganizationDto[] {
-    const now = new Date();
     return ngos.filter(n => {
       const createdDate = this.parseDate(n.createdDateTime);
       if (!createdDate) return true;
-      return createdDate >= startDate && createdDate <= now;
+      return createdDate >= startDate;
     });
   }
 
   private filterCampaignsByDate(campaigns: GetCampaignDto[], startDate: Date): GetCampaignDto[] {
-    const now = new Date();
     return campaigns.filter(c => {
       const createdDate = this.parseDate(c.create_date_time);
       if (!createdDate) return true;
-      return createdDate >= startDate && createdDate <= now;
+      return createdDate >= startDate;
     });
   }
 
   private filterDonationsByDate(donations: GetDonationDto[], startDate: Date): GetDonationDto[] {
-    const now = new Date();
     return donations.filter(d => {
-      // Usar payment_datetime si existe, sino created_at
-      const donationDate = this.parseDate(d.payment_datetime) || this.parseDate(d.created_at);
-      if (!donationDate) return true;
-      return donationDate >= startDate && donationDate <= now;
+      // Usar created_at como fecha principal (cuándo se hizo la donación)
+      // payment_datetime es cuándo se procesó el pago, puede tener timestamps desfasados
+      let dateToCheck = this.parseDate(d.created_at);
+      if (!dateToCheck) {
+        dateToCheck = this.parseDate(d.payment_datetime);
+      }
+      // Si no tiene ninguna fecha, incluirla (para no perder datos)
+      if (!dateToCheck) return true;
+      // Solo verificar que la donación sea posterior al inicio del período
+      return dateToCheck >= startDate;
     });
   }
 
